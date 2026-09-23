@@ -52,6 +52,7 @@ pdv1 bridge-validate tests/vectors/bridge-session.jsonl
 pdv1 validate-compatibility compatibility
 pdv1 export-compatibility compatibility --output build/compatibility.json
 pdv1 validate-provider-index tests/vectors/provider-index-demo.json
+pdv1 scan-local-library ~/Music --output build/local-provider-index.json
 pytest
 ```
 
@@ -107,6 +108,10 @@ Draft 0.2 includes a structured compatibility schema and deterministic export so
 ## Cross-service resolution core
 
 Draft 0.2 now includes deterministic canonical-recording resolution that can be tested without provider accounts or network access. Provider/local-library indexes map exact MusicBrainz Recording MBIDs and ISRCs to playable resources; explicit provider overrides win, contradictory or duplicate matches stay ambiguous, and missing recordings stay missing. Human title/artist text is never fuzzy identity. This gives future Spotify/Apple/local plugins a common semantic core instead of letting each service silently interpret a physical disc differently. See `docs/RESOLUTION.md`.
+
+## Local music libraries
+
+With the optional `local-library` extra, Draft 0.2 can scan tagged local audio into the same provider-index contract used by the cross-service resolver. Only MusicBrainz Recording MBIDs and/or ISRCs are accepted as identity; title/artist-only files are skipped rather than fuzzy-matched. Duplicate local representations remain ambiguous until explicitly preferred. The generated index contains local `file://` paths and should remain private. See `docs/LOCAL-LIBRARY.md`.
 
 ## Public-ID evolution guard
 

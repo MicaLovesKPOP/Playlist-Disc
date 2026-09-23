@@ -39,6 +39,7 @@ from .local import (
     iter_local_entries,
     validate_local_library,
 )
+from .local_scan import scan_local_library, write_local_provider_index
 from .mastering import build_bundle
 from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
@@ -404,6 +405,26 @@ def cmd_local_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_scan_local_library(args: argparse.Namespace) -> int:
+    try:
+        report = scan_local_library(args.root, recursive=not args.no_recursive)
+        output = write_local_provider_index(report, args.output)
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(output)
+    print(
+        f"scanned={report.scanned_files} indexed={report.indexed_files} "
+        f"unidentified={report.unidentified_files} unreadable={report.unreadable_files}"
+    )
+    if args.show_errors:
+        for message in report.unreadable:
+            print(message, file=sys.stderr)
+    if args.strict and (report.unidentified_files or report.unreadable_files):
+        return 3
+    return 0
+
+
 def cmd_build_site(args: argparse.Namespace) -> int:
     try:
         output = build_static_site(args.catalog, args.output)
@@ -614,6 +635,21 @@ def build_parser() -> argparse.ArgumentParser:
     local_list_p.add_argument("library")
     local_list_p.add_argument("--json", action="store_true")
     local_list_p.set_defaults(func=cmd_local_list)
+
+    local_scan_p = sub.add_parser(
+        "scan-local-library",
+        help="build a provider=local index from MusicBrainz/ISRC-tagged audio files",
+    )
+    local_scan_p.add_argument("root")
+    local_scan_p.add_argument("--output", default="build/local-provider-index.json")
+    local_scan_p.add_argument("--no-recursive", action="store_true")
+    local_scan_p.add_argument("--show-errors", action="store_true")
+    local_scan_p.add_argument(
+        "--strict",
+        action="store_true",
+        help="return exit code 3 when any candidate file is unidentified or unreadable",
+    )
+    local_scan_p.set_defaults(func=cmd_scan_local_library)
 
     site_build_p = sub.add_parser(
         "build-site",

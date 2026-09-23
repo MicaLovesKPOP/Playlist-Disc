@@ -25,7 +25,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+local-library = ["mutagen>=1.47"]
+dev = ["pytest>=8.0", "mutagen>=1.47"]
 release = ["build>=1.2", "twine>=5.1"]
 
 [project.urls]
