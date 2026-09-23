@@ -14,7 +14,10 @@ from jsonschema import Draft202012Validator
 from .beacon import decode_beacon_wav
 from .identity import PDIdentity, decode_track_durations
 
-_MACHINE_ID_RE = re.compile(r"PD1-\d{6}-\d", re.IGNORECASE)
+_MACHINE_ID_RE = re.compile(
+    r"(?<![A-Z0-9])PD1-\\d{6}-\\d(?!\\d)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
