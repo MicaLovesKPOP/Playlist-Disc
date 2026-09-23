@@ -99,6 +99,14 @@
 - Added provider-index validation plus `pdv1 resolve-canonical` with machine-readable resolution plans and optional complete-coverage enforcement.
 - Added offline fixtures/tests and ADR 0007 documenting the no-fuzzy-resolution rule.
 
+### Playback bridge semantic hardening
+
+- Extended transcript validation from structural sequencing into capability contracts: observed detection methods, media controls, source switching, and now-playing support must match the sender's announced session capabilities.
+- Fixed selection-counter semantics so counters stay strictly monotonic across remove/reinsert cycles and state-sync cannot regress them.
+- Repeated `hello` / `hello_ack` announcements may support reconnects but cannot silently mutate identity/capabilities within one sender session.
+- Made acknowledgements reconnect-safe by requiring both peer `ack_session` and `ack_seq`; optional error references now use the same session+sequence pairing.
+- Added display-capability self-consistency checks, expanded bridge tests, and ADR 0009.
+
 ### Playback bridge groundwork
 
 - Replaced the bridge sketch with a versioned transport-neutral logical protocol.

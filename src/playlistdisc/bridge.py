@@ -78,20 +78,50 @@ def read_bridge_jsonl(path: str | Path) -> list[dict[str, Any]]:
             except json.JSONDecodeError as exc:
                 raise ValueError(f"line {line_number}: invalid JSON: {exc.msg}") from exc
             if not isinstance(value, dict):
-                raise ValueError(f"line {line_number}: bridge message must be a JSON object")
+                raise ValueError(
+                    f"line {line_number}: bridge message must be a JSON object"
+                )
             messages.append(value)
     return messages
+
+
+def _payload_fingerprint(payload: dict[str, Any]) -> str:
+    return json.dumps(
+        payload,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _peer(source: str) -> str:
+    return "host" if source == "adapter" else "adapter"
 
 
 def validate_bridge_transcript(
     messages: Iterable[dict[str, Any]],
     schema: dict[str, Any] | None = None,
 ) -> list[str]:
-    """Validate structure plus sequence/selection invariants across a transcript."""
+    """Validate sequence, selection, capability, and reply invariants.
+
+    Transcript validation remains useful for partial captures: capability checks are
+    applied only after the corresponding hello or hello_ack has been observed.
+    """
     schema = schema or load_bridge_schema()
     errors: list[str] = []
+
     last_seq: dict[tuple[str, str], int] = {}
-    active_selection: dict[str, int | None] = {}
+    seen_seq: set[tuple[str, str, int]] = set()
+
+    active_selection: dict[str, tuple[int, str] | None] = {}
+    last_selection_counter: dict[str, int] = {}
+
+    adapter_hello: dict[str, str] = {}
+    adapter_capabilities: dict[str, dict[str, Any]] = {}
+    latest_adapter_session: str | None = None
+
+    host_hello: dict[str, str] = {}
+    host_capabilities: dict[str, dict[str, Any]] = {}
 
     for index, message in enumerate(messages, start=1):
         message_errors = validate_bridge_message(message, schema)
@@ -102,6 +132,9 @@ def validate_bridge_transcript(
         source = message["source"]
         session = message["session"]
         seq = message["seq"]
+        msg_type = message["type"]
+        payload = message["payload"]
+
         key = (source, session)
         if key in last_seq and seq <= last_seq[key]:
             errors.append(
@@ -109,40 +142,164 @@ def validate_bridge_transcript(
                 f"strictly ({seq} <= {last_seq[key]})"
             )
         last_seq[key] = seq
+        seen_seq.add((source, session, seq))
 
-        if source != "adapter":
-            continue
+        if msg_type == "hello":
+            fingerprint = _payload_fingerprint(payload)
+            previous = adapter_hello.get(session)
+            if previous is not None and previous != fingerprint:
+                errors.append(
+                    f"message {index}:payload: adapter hello changed within "
+                    f"session {session!r}"
+                )
+            adapter_hello[session] = fingerprint
+            capabilities = payload["capabilities"]
+            adapter_capabilities[session] = capabilities
+            latest_adapter_session = session
 
-        msg_type = message["type"]
-        payload = message["payload"]
-        if msg_type == "state_sync":
-            disc = payload["disc"]
-            active_selection[session] = (
-                None if disc is None else disc["selection_counter"]
+            display = capabilities["metadata_display"]
+            if display["supported"] and not display["fields"]:
+                errors.append(
+                    f"message {index}:payload.capabilities.metadata_display.fields: "
+                    "supported display must advertise at least one field"
+                )
+            if not display["supported"] and display["fields"]:
+                errors.append(
+                    f"message {index}:payload.capabilities.metadata_display.fields: "
+                    "unsupported display must advertise no fields"
+                )
+
+        elif msg_type == "hello_ack":
+            fingerprint = _payload_fingerprint(payload)
+            previous = host_hello.get(session)
+            if previous is not None and previous != fingerprint:
+                errors.append(
+                    f"message {index}:payload: host hello_ack changed within "
+                    f"session {session!r}"
+                )
+            host_hello[session] = fingerprint
+            host_capabilities[session] = payload["capabilities"]
+
+        if source == "adapter":
+            capabilities = adapter_capabilities.get(session)
+
+            if msg_type == "state_sync":
+                disc = payload["disc"]
+                if disc is None:
+                    active_selection[session] = None
+                else:
+                    evidence = disc["evidence"]
+                    if (
+                        capabilities is not None
+                        and evidence not in capabilities["disc_detection"]
+                    ):
+                        errors.append(
+                            f"message {index}:payload.disc.evidence: {evidence!r} "
+                            "was not advertised by adapter"
+                        )
+                    counter = disc["selection_counter"]
+                    previous_counter = last_selection_counter.get(session)
+                    if previous_counter is not None and counter < previous_counter:
+                        errors.append(
+                            f"message {index}:payload.disc.selection_counter: "
+                            f"state sync regressed ({counter} < {previous_counter})"
+                        )
+                    else:
+                        last_selection_counter[session] = counter
+                    active_selection[session] = (counter, disc["machine_id"])
+
+            elif msg_type == "disc_selected":
+                evidence = payload["evidence"]
+                if (
+                    capabilities is not None
+                    and evidence not in capabilities["disc_detection"]
+                ):
+                    errors.append(
+                        f"message {index}:payload.evidence: {evidence!r} "
+                        "was not advertised by adapter"
+                    )
+
+                counter = payload["selection_counter"]
+                previous_counter = last_selection_counter.get(session)
+                if previous_counter is not None and counter <= previous_counter:
+                    errors.append(
+                        f"message {index}:payload.selection_counter: selection counter "
+                        f"must increase ({counter} <= {previous_counter})"
+                    )
+                else:
+                    last_selection_counter[session] = counter
+                active_selection[session] = (counter, payload["machine_id"])
+
+            elif msg_type == "disc_removed":
+                counter = payload["selection_counter"]
+                active = active_selection.get(session)
+                if active is None:
+                    errors.append(
+                        f"message {index}:payload.selection_counter: no active disc "
+                        "selection exists for removal"
+                    )
+                elif counter != active[0]:
+                    errors.append(
+                        f"message {index}:payload.selection_counter: removal counter "
+                        f"{counter} does not match active selection {active[0]}"
+                    )
+                else:
+                    active_selection[session] = None
+
+            elif msg_type == "media_control" and capabilities is not None:
+                action = payload["action"]
+                if action not in capabilities["media_controls"]:
+                    errors.append(
+                        f"message {index}:payload.action: {action!r} was not "
+                        "advertised by adapter"
+                    )
+
+        else:
+            capabilities = host_capabilities.get(session)
+
+            if msg_type == "now_playing" and capabilities is not None:
+                if not capabilities["now_playing"]:
+                    errors.append(
+                        f"message {index}:type: host emitted now_playing after "
+                        "advertising now_playing=false"
+                    )
+
+            elif msg_type == "source_request":
+                if capabilities is not None and not capabilities["source_request"]:
+                    errors.append(
+                        f"message {index}:type: host emitted source_request after "
+                        "advertising source_request=false"
+                    )
+
+                if latest_adapter_session is not None:
+                    adapter_caps = adapter_capabilities.get(latest_adapter_session)
+                    if (
+                        adapter_caps is not None
+                        and not adapter_caps["auto_source_switch"]
+                    ):
+                        errors.append(
+                            f"message {index}:type: source_request targets an adapter "
+                            "that advertised auto_source_switch=false"
+                        )
+
+        if msg_type == "ack":
+            target = (_peer(source), payload["ack_session"], payload["ack_seq"])
+            if target not in seen_seq:
+                errors.append(
+                    f"message {index}:payload.ack_seq: acknowledgement target "
+                    f"{target[0]}/{target[1]} seq {target[2]} has not been seen"
+                )
+
+        elif msg_type == "error" and "related_seq" in payload:
+            target = (
+                _peer(source),
+                payload["related_session"],
+                payload["related_seq"],
             )
-        elif msg_type == "disc_selected":
-            counter = payload["selection_counter"]
-            previous = active_selection.get(session)
-            if previous is not None and counter <= previous:
+            if target not in seen_seq:
                 errors.append(
-                    f"message {index}:payload.selection_counter: selection counter "
-                    f"must increase ({counter} <= {previous})"
+                    f"message {index}:payload.related_seq: error target "
+                    f"{target[0]}/{target[1]} seq {target[2]} has not been seen"
                 )
-            active_selection[session] = counter
-        elif msg_type == "disc_removed":
-            counter = payload["selection_counter"]
-            previous = active_selection.get(session)
-            if previous is None:
-                errors.append(
-                    f"message {index}:payload.selection_counter: no active disc "
-                    "selection exists for removal"
-                )
-            elif counter != previous:
-                errors.append(
-                    f"message {index}:payload.selection_counter: removal counter "
-                    f"{counter} does not match active selection {previous}"
-                )
-            else:
-                active_selection[session] = None
 
     return errors

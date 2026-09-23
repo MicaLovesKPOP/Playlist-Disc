@@ -415,9 +415,16 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "ack_session",
         "ack_seq"
       ],
       "properties": {
+        "ack_session": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
         "ack_seq": {
           "type": "integer",
           "minimum": 0
@@ -446,7 +453,21 @@
         "related_seq": {
           "type": "integer",
           "minimum": 0
+        },
+        "related_session": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
         }
+      },
+      "dependentRequired": {
+        "related_seq": [
+          "related_session"
+        ],
+        "related_session": [
+          "related_seq"
+        ]
       }
     }
   },

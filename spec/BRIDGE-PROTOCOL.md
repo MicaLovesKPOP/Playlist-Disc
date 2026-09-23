@@ -25,11 +25,17 @@ Every message contains:
 
 The machine-readable schema is shipped as `playlistdisc/schemas/bridge-message.schema.json`.
 
+A transcript validator may be run on a partial capture. Capability-dependent checks are therefore applied only after the corresponding `hello` or `hello_ack` has appeared.
+
 ## 3. Adapter → host messages
 
 ### `hello`
 
 Announces adapter identity and capabilities: available PD detection channels, physical media controls, automatic streaming-source switching, and whether/how the adapter can render metadata onto OEM displays.
+
+If `metadata_display.supported` is true, at least one supported field must be advertised. If it is false, the field list must be empty.
+
+Repeating `hello` in the same adapter session is allowed (for example after a transport reconnect), but the adapter identity/capabilities must not mutate until a new session identifier is used.
 
 ### `state_sync`
 
@@ -37,9 +43,15 @@ Sent after connection/reconnection to describe current vehicle power state, curr
 
 This is important when a Playlist Disc is left inserted across an ignition cycle or phone reconnect.
 
+A state-sync may repeat the current selection counter, but must never move that adapter session's counter backwards.
+
 ### `disc_selected`
 
 Reports a strongly recognized PDv1 machine ID, monotonic selection counter, and evidence channel (`toc`, `cdtext`, `audio_beacon`, or `manual`). Weak/ambiguous recognition is deliberately not a bridge event; the vehicle layer must fail open as ordinary CD playback instead.
+
+The evidence channel must have been advertised in the adapter's `disc_detection` capability when a `hello` is available in the transcript.
+
+A new selection counter is strictly monotonic across the whole adapter session, including across remove/reinsert cycles. Removing a disc does not make its counter reusable.
 
 ### `disc_removed`
 
@@ -47,7 +59,7 @@ Clears the active selection. Its selection counter must match the selection bein
 
 ### `media_control`
 
-Reports OEM user controls normalized to `next`, `previous`, or `play_pause`.
+Reports OEM user controls normalized to `next`, `previous`, or `play_pause`. When adapter capabilities have been observed, the adapter must not emit actions it did not advertise.
 
 ### `source_state`
 
@@ -57,29 +69,45 @@ Reports whether the car-side streaming source is currently active.
 
 ### `hello_ack`
 
-Announces host implementation and whether it can provide now-playing metadata and accept automatic source requests.
+Announces host implementation and whether it can provide now-playing metadata and emit automatic source requests.
+
+Repeating `hello_ack` with the same host session is allowed, but host identity/capabilities remain stable for that session.
 
 ### `source_request`
 
-Requests `activate_streaming` or `deactivate_streaming`. An adapter without automatic source switching simply advertises that limitation in `hello` and need not pretend otherwise.
+Requests `activate_streaming` or `deactivate_streaming`.
+
+A host that advertised `source_request=false` must not emit this message. Likewise, after an adapter has advertised `auto_source_switch=false`, the host must degrade gracefully instead of sending a source request that the adapter said it cannot perform.
 
 ### `playback_state`
 
-Reports normalized host playback state. An optional `context_id` ties playback to the selected PD machine ID; provider name is diagnostic/UX metadata only.
+Reports normalized host playback state. An optional `context_id` ties playback to a PD machine ID; provider name is diagnostic/UX metadata only.
 
 ### `now_playing`
 
 Carries semantic metadata such as title, artist, album, position, and duration. Vehicle integrations choose how much can be rendered on their OEM displays.
 
+A host that advertised `now_playing=false` must not emit this message.
+
 ## 5. Bidirectional control messages
 
-`ack` acknowledges a sender sequence number when a transport/integration wants explicit acknowledgements. `error` reports a machine-readable code and human diagnostic message. Logical protocol users must not assume every ordinary event receives an ack.
+### `ack`
+
+An acknowledgement contains both `ack_session` (the peer session identifier) and `ack_seq` (the sequence number within that peer session). The explicit session is required because sequence numbers restart when a sender creates a new session. In a chronological transcript, an acknowledgement target must already have been observed.
+
+Logical protocol users must not assume every ordinary event receives an acknowledgement.
+
+### `error`
+
+An error carries a machine-readable code and human diagnostic message. It may refer to a peer message using `related_session` + `related_seq`; those two fields are a pair and neither is meaningful without the other.
+
+In a chronological transcript, a referenced peer message must already have been observed.
 
 ## 6. Sequence and reconnect rules
 
 `seq` is monotonic per sender session; it is not a global clock.
 
-Adapter selection counters are monotonic within an adapter session. A fresh `disc_selected` event must increment the counter. `disc_removed` must refer to the active counter.
+Adapter selection counters are monotonic within an adapter session. A fresh `disc_selected` event must increment beyond every earlier selection counter in that session, not merely the currently active disc. `disc_removed` must refer to the active counter.
 
 After a reconnect, `state_sync` communicates current state rather than requiring the host to reconstruct it from old traffic. A newly booted adapter may use a new session identifier and begin its sequence/counter space again.
 
@@ -93,16 +121,27 @@ Transport pairing/encryption is the responsibility of the chosen transport profi
 
 ## 8. Capability negotiation
 
-Adapters truthfully advertise what they can do. Examples:
+Adapters and hosts truthfully advertise what they can do. The validator treats observed capability announcements as contracts for the remainder of that sender session.
 
-- Shadow may initially provide head-unit controls and CDC audio but no metadata display;
-- Choco may eventually support OEM steering controls, automatic source switching, and MOST-backed display metadata;
-- Misty may support steering-stalk controls and metadata on the separate PSA multifunction display.
+The reference vehicle profiles may eventually expose very different capabilities:
 
-The host must degrade gracefully when a capability is absent.
+- an Alfa 147 adapter may initially have head-unit controls and changer audio but no writable metadata display;
+- an R55/RAD2 adapter may eventually combine steering controls with MOST-backed source/display integration;
+- a C3/RD4 adapter may eventually use steering-stalk controls and a separate multifunction display.
+
+The logical host must degrade gracefully when a capability is absent.
 
 ## 9. Validation
 
-`pdv1 bridge-validate <transcript.jsonl>` validates JSON Schema, PD machine-ID check digits, per-session sequence monotonicity, and adapter selection/removal counters.
+`pdv1 bridge-validate <transcript.jsonl>` validates:
 
-The repository includes a deterministic reference transcript for software integration tests.
+- JSON Schema and PD machine-ID check digits;
+- per-session message sequence monotonicity;
+- selection-counter monotonicity across remove/reinsert cycles;
+- state-sync counter non-regression;
+- declared detection/control/source/now-playing capabilities;
+- stable repeated capability announcements within a session;
+- display-capability self-consistency;
+- acknowledgement and related-error references against explicit peer sessions.
+
+The repository includes deterministic reference transcripts for software integration tests.

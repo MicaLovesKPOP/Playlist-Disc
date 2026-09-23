@@ -31,7 +31,7 @@
 
 ## Milestone 4 — playback bridge
 
-- transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and validator implemented in Draft 0.2;
+- transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and semantic validator implemented in Draft 0.2, including capability contracts, reconnect-safe selection counters, and explicit acknowledgement targets;
 - BLE or equivalent transport profile;
 - deterministic canonical-recording resolution core and provider/local index contract implemented in Draft 0.2;
 - live provider plugins (Spotify/Apple/etc. authentication/catalog lookup/materialization);
