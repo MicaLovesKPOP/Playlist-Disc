@@ -30,7 +30,8 @@
 
 ## Milestone 4 — playback bridge
 
-- BLE or equivalent service-neutral bridge protocol;
+- transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and validator implemented in Draft 0.2;
+- BLE or equivalent transport profile;
 - provider plugins;
 - local-library resolver;
 - cached/materialized cross-service collections.

@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from .audit import assert_reference_audit, audit_encoding
+from .bridge import read_bridge_jsonl, validate_bridge_transcript
 from .catalog import (
     find_entry,
     iter_entries,
@@ -341,6 +342,20 @@ def cmd_verify_site(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bridge_validate(args: argparse.Namespace) -> int:
+    try:
+        messages = read_bridge_jsonl(args.transcript)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    errors = validate_bridge_transcript(messages)
+    if errors:
+        _print_errors(errors)
+        return 1
+    print(f"validated {len(messages)} bridge messages")
+    return 0
+
+
 def cmd_burn(args: argparse.Namespace) -> int:
     toc = Path(args.toc)
     if not toc.exists():
@@ -492,6 +507,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     site_verify_p.add_argument("site", nargs="?", default="build/site")
     site_verify_p.set_defaults(func=cmd_verify_site)
+
+    bridge_validate_p = sub.add_parser(
+        "bridge-validate",
+        help="validate a PD Bridge JSONL transcript and state invariants",
+    )
+    bridge_validate_p.add_argument("transcript")
+    bridge_validate_p.set_defaults(func=cmd_bridge_validate)
 
     burn_p = sub.add_parser("burn", help="write a generated disc.toc using cdrdao")
     burn_p.add_argument("toc")
