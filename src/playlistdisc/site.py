@@ -89,7 +89,7 @@ _SCRIPT = """\
   if (!query || !status || !type || !portability) return;
 
   function update() {
-    const tokens = query.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const tokens = query.value.trim().toLocaleLowerCase().split(/\\s+/).filter(Boolean);
     let visible = 0;
     for (const card of cards) {
       const text = card.dataset.search || '';
