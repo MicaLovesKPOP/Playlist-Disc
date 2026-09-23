@@ -114,6 +114,8 @@ Strong evidence includes:
 
 Track count, total duration, or a vaguely similar TOC alone are not sufficient for automatic activation.
 
+When multiple strong channels are available, each is validated independently. Matching identities corroborate one another. If two independently valid strong channels disagree, runtime recognition must return a conflict and select **no** PD identity; there is no normative TOC/CD-TEXT/beacon precedence rule.
+
 ## 8. Catalog semantics
 
 A physical PD ID identifies a musical intent, not a streaming provider, except when a record explicitly declares itself provider-native.

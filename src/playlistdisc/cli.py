@@ -44,6 +44,7 @@ from .local import (
 from .local_scan import scan_local_library, write_local_provider_index
 from .mastering import build_bundle
 from .materialization import read_materialization, write_materialization
+from .recognition import recognize_observations
 from .playback import (
     compile_catalog_playback,
     compile_local_playback,
@@ -159,6 +160,37 @@ def cmd_verify_build(args: argparse.Namespace) -> int:
     print(f"audio beacon: PASS ({report.beacon_frames} matching frames)")
     print("cross-channel identity: PASS")
     print(f"bundle SHA-256: {report.bundle_sha256}")
+    return 0
+
+
+def cmd_recognize(args: argparse.Namespace) -> int:
+    if args.toc is None and not args.cdtext and args.beacon_wav is None:
+        print(
+            "error: provide at least one of --toc, --cdtext, or --beacon-wav",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        result = recognize_observations(
+            track_durations=args.toc,
+            toc_tolerance=args.tolerance,
+            cdtext_values=args.cdtext,
+            beacon_wav=args.beacon_wav,
+        )
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        json.dumps(
+            result.to_dict(),
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        )
+    )
+    if args.require_recognized and result.status != "recognized":
+        return 3
     return 0
 
 
@@ -758,6 +790,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     verify_p.add_argument("bundle")
     verify_p.set_defaults(func=cmd_verify_build)
+
+    recognize_p = sub.add_parser(
+        "recognize",
+        help="combine observed TOC, CD-TEXT, and/or beacon evidence with fail-open conflict handling",
+    )
+    recognize_p.add_argument(
+        "--toc",
+        nargs=8,
+        type=float,
+        metavar=("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"),
+        help="eight observed track durations in seconds",
+    )
+    recognize_p.add_argument(
+        "--tolerance",
+        type=float,
+        default=0.0,
+        help="TOC duration tolerance in seconds; must remain below 2",
+    )
+    recognize_p.add_argument(
+        "--cdtext",
+        action="append",
+        default=[],
+        help="observed CD-TEXT/message string; repeat for multiple fields",
+    )
+    recognize_p.add_argument("--beacon-wav")
+    recognize_p.add_argument("--require-recognized", action="store_true")
+    recognize_p.set_defaults(func=cmd_recognize)
 
     audit_p = sub.add_parser(
         "audit-encoding",

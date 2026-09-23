@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/recognition-result.schema.json",
+  "title": "PDv1 runtime recognition result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "format",
+    "status",
+    "evidence",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "format": {
+      "const": "PDv1-recognition"
+    },
+    "status": {
+      "enum": [
+        "recognized",
+        "unknown",
+        "conflict"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "machine_id": {
+      "type": "string",
+      "pattern": "^PD1-[0-9]{6}-[0-9]$"
+    },
+    "evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "channel",
+          "machine_id"
+        ],
+        "properties": {
+          "channel": {
+            "enum": [
+              "toc",
+              "cdtext",
+              "audio_beacon"
+            ]
+          },
+          "machine_id": {
+            "type": "string",
+            "pattern": "^PD1-[0-9]{6}-[0-9]$"
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

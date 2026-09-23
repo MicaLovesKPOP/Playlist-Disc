@@ -8,6 +8,7 @@
 - Damm validation;
 - cdrdao bundle generator plus real-tool `toc-info`/`toc-size` parser preflight in CI;
 - experimental audio beacon;
+- fail-open runtime recognition aggregator for strong TOC/CD-TEXT/beacon evidence implemented in Draft 0.2;
 - catalog schema and development vectors;
 - CI validation.
 
