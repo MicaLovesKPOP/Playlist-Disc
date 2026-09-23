@@ -78,6 +78,13 @@
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
 - Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.
 
+### Local-library resolution
+
+- Added an optional Mutagen-backed scanner for local audio tagged with MusicBrainz Recording MBIDs and/or ISRCs.
+- The scanner emits the standard `provider=local` index with private `file://` resources, skips unidentified files, records unreadable files, and never fuzzy-matches title/artist text.
+- Duplicate local representations deliberately remain resolver candidates rather than being arbitrarily ranked by format/path.
+- Added `pdv1 scan-local-library`, strict/error-reporting modes, real tagged-WAV integration coverage, documentation, optional dependency packaging, and ADR 0008.
+
 ### Cross-service resolution groundwork
 
 - Added a packaged provider/local-library resolution-index schema using exact MusicBrainz Recording MBIDs and ISRCs.

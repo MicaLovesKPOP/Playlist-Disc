@@ -34,6 +34,7 @@ jobs:
       - run: pdv1 validate-compatibility compatibility
       - run: pdv1 export-compatibility compatibility --output /tmp/compatibility.json
       - run: pdv1 validate-provider-index tests/vectors/provider-index-demo.json
+      - run: pytest tests/test_local_scan.py
       - run: >-
           pdv1 local-create /tmp/pdv1-local
           --title "CI private playlist"
@@ -120,3 +121,15 @@ jobs:
           from playlistdisc.resolver import load_provider_index_schema;
           assert load_bridge_schema()['title'];
           assert load_provider_index_schema()['title']"
+
+
+  local-library-extra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e '.[local-library,dev]'
+      - run: pytest tests/test_local_scan.py
