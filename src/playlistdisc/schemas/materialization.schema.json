@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/materialization.schema.json",
+  "title": "PDv1 deterministic track-list materialization cache record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "format",
+    "provider",
+    "disc_id",
+    "machine_id",
+    "scope_sha256",
+    "plan_sha256",
+    "plan_status",
+    "mode",
+    "source_count",
+    "materialized_resource"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "format": {
+      "const": "PDv1-materialization"
+    },
+    "provider": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "maxLength": 64
+    },
+    "disc_id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "machine_id": {
+      "type": "string",
+      "pattern": "^PD1-[0-9]{6}-[0-9]$"
+    },
+    "scope_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "plan_status": {
+      "enum": [
+        "ready",
+        "partial"
+      ]
+    },
+    "mode": {
+      "const": "track_list"
+    },
+    "source_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "materialized_resource": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "provider_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

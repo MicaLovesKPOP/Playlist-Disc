@@ -55,6 +55,9 @@ pdv1 verify-site build/site
 pdv1 bridge-validate tests/vectors/bridge-session.jsonl
 pdv1 host-replay tests/vectors/host-adapter-session.jsonl \\
   --plan tests/vectors/host-playback-plan.json
+pdv1 materialization-put tests/vectors/materialization-plan.json \\
+  --cache ~/.playlistdisc/materializations --scope default \\
+  --resource demo:playlist:generated
 pdv1 validate-compatibility compatibility
 pdv1 export-compatibility compatibility --output build/compatibility.json
 pdv1 validate-provider-index tests/vectors/provider-index-demo.json
@@ -131,6 +134,10 @@ Draft 0.2 can compile any catalog/private disc into one normalized offline playb
 ## Local music libraries
 
 With the optional `local-library` extra, Draft 0.2 can scan tagged local audio into the same provider-index contract used by the cross-service resolver. Only MusicBrainz Recording MBIDs and/or ISRCs are accepted as identity; title/artist-only files are skipped rather than fuzzy-matched. Duplicate local representations remain ambiguous until explicitly preferred. The generated index contains local `file://` paths and should remain private. See `docs/LOCAL-LIBRARY.md`.
+
+## Materialization cache contract
+
+Draft 0.2 includes a local cache contract for provider playlists/resources created from deterministic `track_list` playback plans. The complete playback plan is SHA-256 fingerprinted, so changes to canonical membership, provider resolution, coverage, or playback policy automatically stale the cached result. Cache scope is separated per local provider/account profile using a hashed scope; no OAuth tokens are stored. Direct provider resources and unresolved entity lookups are deliberately not cached by this generic layer. See `docs/MATERIALIZATION-CACHE.md`.
 
 ## Public-ID evolution guard
 

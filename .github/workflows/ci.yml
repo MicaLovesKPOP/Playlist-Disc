@@ -35,6 +35,13 @@ jobs:
           pdv1 host-replay tests/vectors/host-adapter-session.jsonl
           --plan tests/vectors/host-playback-plan.json
           --output /tmp/host-actions.jsonl
+      - run: >-
+          pdv1 materialization-put tests/vectors/materialization-plan.json
+          --cache /tmp/pdv1-materializations --scope ci-account
+          --resource demo:playlist:materialized
+      - run: >-
+          pdv1 materialization-check tests/vectors/materialization-plan.json
+          --cache /tmp/pdv1-materializations --scope ci-account
       - run: pdv1 validate-compatibility compatibility
       - run: pdv1 export-compatibility compatibility --output /tmp/compatibility.json
       - run: pdv1 validate-provider-index tests/vectors/provider-index-demo.json
@@ -126,10 +133,12 @@ jobs:
           from playlistdisc.playback import load_playback_plan_schema;
           from playlistdisc.resolver import load_provider_index_schema;
           from playlistdisc.host import load_host_action_schema;
+          from playlistdisc.materialization import load_materialization_schema;
           assert load_bridge_schema()['title'];
           assert load_playback_plan_schema()['title'];
           assert load_provider_index_schema()['title'];
-          assert load_host_action_schema()['title']"
+          assert load_host_action_schema()['title'];
+          assert load_materialization_schema()['title']"
 
 
   local-library-extra:

@@ -113,6 +113,14 @@
 - Added provider-index validation plus `pdv1 resolve-canonical` with machine-readable resolution plans and optional complete-coverage enforcement.
 - Added offline fixtures/tests and ADR 0007 documenting the no-fuzzy-resolution rule.
 
+### Deterministic materialization cache
+
+- Added a packaged `PDv1-materialization` record for provider/local playlists generated from deterministic track-list playback plans.
+- Cache validity is keyed by the complete canonical playback-plan SHA-256, provider, disc identity, resolved source count, and hashed local account/profile scope; plan evolution automatically produces a stale cache miss.
+- Added atomic local cache writes plus `pdv1 materialization-put` / `materialization-check` commands and package/CI coverage.
+- Restricted the generic cache to ready/partial `track_list` plans; direct resources do not need materialization and unresolved entity/provider lookups require provider-specific freshness rules.
+- Added privacy/freshness documentation and ADR 0013.
+
 ### Offline host orchestration
 
 - Added a packaged `PDv1-host-action` contract and deterministic host-runtime state machine that consumes adapter-side PD Bridge events and emits source/provider actions.
