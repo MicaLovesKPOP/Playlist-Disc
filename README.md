@@ -102,7 +102,7 @@ Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a ma
 
 ## Compatibility test preparation
 
-Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. See `docs/COMPATIBILITY-TESTING.md`.
+Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations and sourced pre-hardware research are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. The first source-typed integration research pass covers the Alfa 937 radio/CAN/changer architecture in `docs/research/ALFA-937.md`. See `docs/COMPATIBILITY-TESTING.md`.
 
 ## Cross-service resolution core
 
@@ -127,7 +127,7 @@ Draft 0.2 includes a catalog-evolution guard for the future permanent public reg
 
 - `spec/` — physical format, catalog model, future bridge protocol
 - `catalog/` — public/test registry, canonical manifests, packs, and schemas
-- `compatibility/` — measured legacy-player/vehicle results
+- `compatibility/` — vehicle/head-unit profiles, sourced research evidence, and measured results
 - `src/playlistdisc/` — reference library and CLI
 - `tests/` — algorithm tests and golden vectors
 - `docs/` — burning, validation, compatibility testing, library/local workflows, ADRs, and roadmap

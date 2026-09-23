@@ -118,6 +118,9 @@ def compatibility_snapshot(root: str | Path) -> dict[str, Any]:
         "summary": {
             "profile_count": len(profiles),
             "report_count": sum(item["report_count"] for item in profiles),
+            "research_evidence_count": sum(
+                len(item.get("research_evidence", [])) for item in profiles
+            ),
             "statuses": {
                 status: sum(1 for item in profiles if item["status"] == status)
                 for status in ("planned", "partial", "tested")

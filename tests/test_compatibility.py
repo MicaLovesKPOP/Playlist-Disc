@@ -87,4 +87,35 @@ def test_snapshot_is_deterministic_and_counts_profiles():
     assert first["format"] == "PDv1-compatibility"
     assert first["summary"]["profile_count"] == 3
     assert first["summary"]["report_count"] == 0
+    assert first["summary"]["research_evidence_count"] == 8
     assert first["summary"]["statuses"]["planned"] == 3
+
+
+def _research_evidence() -> dict:
+    return {
+        "topic": "cd_changer",
+        "claim": "A documented changer interface exists.",
+        "implication": "Treat it as planning evidence until the target unit is tested.",
+        "source": {
+            "source_type": "component_vendor",
+            "title": "Example interface",
+            "publisher": "Example Vendor",
+            "url": "https://example.test/interface",
+            "accessed": "2026-09-23",
+        },
+    }
+
+
+def test_planned_profile_accepts_documentation_research_without_becoming_tested():
+    profile = _base_profile()
+    profile["research_evidence"] = [_research_evidence()]
+    assert validate_compatibility_profile(profile, SCHEMA) == []
+
+
+def test_research_evidence_requires_https_source():
+    profile = _base_profile()
+    evidence = _research_evidence()
+    evidence["source"]["url"] = "http://example.test/interface"
+    profile["research_evidence"] = [evidence]
+    errors = validate_compatibility_profile(profile, SCHEMA)
+    assert any("research_evidence.0.source.url" in error for error in errors)
