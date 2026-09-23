@@ -2,6 +2,13 @@
 
 ## 0.2.0a1 — Draft 0.2 pre-hardware development
 
+### Installability and contribution workflow
+
+- Added source/pipx installation and packaging documentation while keeping `cdrdao` explicitly optional until physical burning.
+- Added wheel/sdist build checks and installed-wheel smoke tests on Ubuntu, Windows, and macOS, including packaged schema loading.
+- Added package project URLs, keywords, and a `release` dependency extra for reproducible artifact checks.
+- Added structured GitHub issue forms for compatibility evidence, catalog proposals, and bugs plus a pull-request safety/review checklist.
+
 ### Physical-format software validation
 
 - Added an exhaustive 1,000,000-ID encode/decode audit with a golden physical-mapping digest.

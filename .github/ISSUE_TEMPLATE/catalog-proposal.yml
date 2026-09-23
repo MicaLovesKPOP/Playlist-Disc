@@ -1,0 +1,65 @@
+name: Public catalog proposal
+description: Propose a future public Playlist Disc meaning or collection.
+title: "[catalog proposal] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PDv1 Draft 0.2 does not allow permanent public IDs to become active yet. Proposals may still be discussed and modeled as draft records.
+  - type: input
+    id: title
+    attributes:
+      label: Proposed disc title
+      placeholder: K-Pop Girl Group Singles
+    validations:
+      required: true
+  - type: dropdown
+    id: definition
+    attributes:
+      label: Definition type
+      options:
+        - artist_catalog
+        - album
+        - canonical_manifest
+        - federated_collection
+        - provider_native
+    validations:
+      required: true
+  - type: dropdown
+    id: lifecycle
+    attributes:
+      label: Lifecycle
+      options:
+        - snapshot
+        - living
+    validations:
+      required: true
+  - type: dropdown
+    id: portability
+    attributes:
+      label: Portability
+      options:
+        - canonical
+        - federated
+        - provider_native
+    validations:
+      required: true
+  - type: textarea
+    id: meaning
+    attributes:
+      label: Exact semantic meaning
+      description: Define what should and should not belong to this disc in a way that can remain stable for years.
+    validations:
+      required: true
+  - type: textarea
+    id: services
+    attributes:
+      label: Provider/service notes
+      description: If provider-native or federated, explain the intended provider resources/equivalents. Canonical proposals should stay provider-neutral.
+  - type: checkboxes
+    id: draft
+    attributes:
+      label: Draft acknowledgement
+      options:
+        - label: I understand permanent public activation is closed until PDv1.0.
+          required: true

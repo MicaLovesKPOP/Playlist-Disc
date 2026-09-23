@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible problem in the toolkit, schemas, generated site, or validators.
+title: "[bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: 0.2.0a1 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and Python version
+      placeholder: Windows 11, Python 3.13
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or API call
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Actual output / traceback
+      render: text
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Safety
+      options:
+        - label: I removed credentials, OAuth tokens, cookies, private playlist secrets, and unnecessary personal data.
+          required: true

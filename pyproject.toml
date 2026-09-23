@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
 authors = [{name = "Playlist Disc contributors"}]
+keywords = ["audio-cd", "car-audio", "playlist", "cd-da", "oem"]
 dependencies = [
   "PyYAML>=6.0",
   "jsonschema>=4.21",
@@ -25,6 +26,12 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+release = ["build>=1.2", "twine>=5.1"]
+
+[project.urls]
+Homepage = "https://github.com/MicaLovesKPOP/Playlist-Disc"
+Repository = "https://github.com/MicaLovesKPOP/Playlist-Disc"
+Issues = "https://github.com/MicaLovesKPOP/Playlist-Disc/issues"
 
 [project.scripts]
 pdv1 = "playlistdisc.cli:main"

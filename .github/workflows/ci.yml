@@ -87,3 +87,32 @@ jobs:
           fi
           git worktree add --detach /tmp/pdv1-base "$BASE_SHA"
           pdv1 check-catalog-evolution /tmp/pdv1-base/catalog catalog
+
+
+  package-smoke:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install build twine
+      - run: python -m build
+      - if: runner.os == 'Linux'
+        run: python -m twine check dist/*
+      - name: Install built wheel
+        run: >-
+          python -c "import glob, subprocess, sys;
+          wheels=glob.glob('dist/*.whl'); assert len(wheels)==1, wheels;
+          subprocess.check_call([sys.executable,'-m','pip','install','--force-reinstall',wheels[0]])"
+      - run: pdv1 inspect 999901
+      - name: Verify packaged schemas
+        run: >-
+          python -c "from playlistdisc.bridge import load_bridge_schema;
+          from playlistdisc.resolver import load_provider_index_schema;
+          assert load_bridge_schema()['title'];
+          assert load_provider_index_schema()['title']"

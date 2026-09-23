@@ -1,5 +1,7 @@
 # Contributing
 
+GitHub provides structured issue forms for bugs, compatibility observations, and catalog proposals, plus a pull-request checklist. Use the closest template so reports contain the evidence reviewers need without leaking personal data or credentials.
+
 Playlist Disc is currently a physical-format draft. Contributions that improve tests, documentation, catalog modeling, burner compatibility, or measured vehicle behavior are welcome.
 
 ## Important draft rule
@@ -44,6 +46,7 @@ pdv1 export-catalog catalog --output /tmp/catalog.json
 pdv1 export-library catalog --output /tmp/library.json
 pdv1 pack-list catalog
 pytest
+python -m build
 ```
 
 Exports intentionally refuse an invalid registry.
