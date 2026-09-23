@@ -40,6 +40,7 @@ pdv1 inspect 999901
 pdv1 audit-encoding
 pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
+pdv1 recognize --toc 9 48 48 48 48 12 16 40 --cdtext PD1-999901-7
 pdv1 build-test-kit --output build/test-kit
 pdv1 verify-test-kit build/test-kit
 # Optional when cdrdao is installed: parse the exact mastering file with the real tool
@@ -117,6 +118,10 @@ Draft 0.2 includes a structured compatibility schema and deterministic export so
 ## Cross-service resolution core
 
 Draft 0.2 now includes deterministic canonical-recording resolution that can be tested without provider accounts or network access. Provider/local-library indexes map exact MusicBrainz Recording MBIDs and ISRCs to playable resources; explicit provider overrides win, contradictory or duplicate matches stay ambiguous, and missing recordings stay missing. Human title/artist text is never fuzzy identity. This gives future Spotify/Apple/local plugins a common semantic core instead of letting each service silently interpret a physical disc differently. See `docs/RESOLUTION.md`.
+
+## Runtime disc recognition
+
+Draft 0.2 now has a fail-open runtime recognizer for the same independent channels the physical format defines. A full checksum-valid eight-track TOC, a checksum-valid PD machine ID found in CD-TEXT, or the repeated decoded audio beacon can each identify a disc; multiple matching channels reinforce the result, while two valid channels that disagree produce `conflict` and **no identity**. Bad or absent optional channels never manufacture a match, and coarse observations such as track count/total duration alone are deliberately insufficient. See `docs/RECOGNITION.md`.
 
 ## Provider-neutral playback plans
 

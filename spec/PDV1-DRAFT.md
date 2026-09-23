@@ -114,6 +114,8 @@ Strong evidence includes:
 
 Track count, total duration, or a vaguely similar TOC alone are not sufficient for automatic activation.
 
+The Draft 0.2 reference recognizer implements these rules directly. Any one accepted strong channel can identify a disc. If multiple accepted channels resolve to the same identity they are combined as corroborating evidence. If two checksum-valid/strong channels resolve to different identities, recognition returns a conflict and **no disc identity**; implementations must fail open rather than pick a preferred channel. A malformed optional channel may be recorded diagnostically while another independent strong channel remains usable.
+
 ## 8. Catalog semantics
 
 A physical PD ID identifies a musical intent, not a streaming provider, except when a record explicitly declares itself provider-native.

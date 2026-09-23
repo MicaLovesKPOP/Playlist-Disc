@@ -23,6 +23,13 @@
 - Added `pdv1 build-test-kit` / `verify-test-kit` and `pdv1 build --no-cdtext`.
 - Restricted the official Draft 0.2 `pdv1 burn` path to verified test-namespace bundles so unfinished public/private physical identities cannot be minted accidentally.
 
+### Runtime recognition
+
+- Added a packaged `PDv1-recognition` result schema and runtime recognition engine spanning full TOC, CD-TEXT machine IDs, and the repeated audio beacon.
+- Each valid strong channel can recognize independently; matching channels converge, while two valid identities that disagree return `conflict` with no selected disc.
+- Malformed/absent optional channels remain diagnostic errors and cannot suppress a different valid strong channel or create a false identity.
+- Added explicit rounded-TOC tolerance tests, rejection of partial/coarse TOC observations, `pdv1 recognize`, package-schema smoke coverage, documentation, and ADR 0012.
+
 ### Physical-format software validation
 
 - Added an exhaustive 1,000,000-ID encode/decode audit with a golden physical-mapping digest.

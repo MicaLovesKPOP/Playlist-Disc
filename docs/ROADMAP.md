@@ -4,7 +4,7 @@
 
 - normative draft specification;
 - reference Python library and CLI;
-- deterministic TOC encoder/decoder;
+- deterministic TOC encoder/decoder plus fail-open multi-channel runtime recognizer for TOC/CD-TEXT/beacon evidence;
 - Damm validation;
 - cdrdao bundle generator plus real-tool `toc-info`/`toc-size` parser preflight in CI;
 - experimental audio beacon;
