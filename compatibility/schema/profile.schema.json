@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/compatibility-profile.schema.json",
+  "title": "PDv1 compatibility profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "status",
+    "vehicle",
+    "audio_system",
+    "test_plan",
+    "reports"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "maxLength": 100
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "partial",
+        "tested"
+      ]
+    },
+    "vehicle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "make",
+        "model"
+      ],
+      "properties": {
+        "make": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "generation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      }
+    },
+    "audio_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head_unit",
+        "controls"
+      ],
+      "properties": {
+        "manufacturer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "head_unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "firmware": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "controls": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "head_unit",
+              "steering_wheel",
+              "steering_stalk"
+            ]
+          }
+        },
+        "display": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "test_plan": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "cd_r",
+          "cd_rw",
+          "cd_text_on",
+          "cd_text_off",
+          "cold_start_inserted",
+          "eject_reinsert",
+          "visible_timing",
+          "vehicle_bus_visibility",
+          "audio_beacon_path"
+        ]
+      }
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "report_id",
+          "date",
+          "disc_machine_id",
+          "media",
+          "results"
+        ],
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "maxLength": 100
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "disc_machine_id": {
+            "type": "string",
+            "pattern": "^PD1-[0-9]{6}-[0-9]$"
+          },
+          "media": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "finalized",
+              "cd_text"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "cd_r",
+                  "cd_rw"
+                ]
+              },
+              "nominal_minutes": {
+                "type": "integer",
+                "minimum": 60,
+                "maximum": 100
+              },
+              "finalized": {
+                "const": true
+              },
+              "cd_text": {
+                "type": "boolean"
+              },
+              "brand": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "product": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            }
+          },
+          "write": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode"
+            ],
+            "properties": {
+              "mode": {
+                "const": "dao"
+              },
+              "writer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "speed_x": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 80
+              }
+            }
+          },
+          "attempts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "total",
+              "successful_loads"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "successful_loads": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          },
+          "results": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "load",
+              "tracks",
+              "toc_duration",
+              "cd_text",
+              "cold_start",
+              "reinsert",
+              "vehicle_bus_toc",
+              "audio_beacon"
+            ],
+            "properties": {
+              "load": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "partial"
+                ]
+              },
+              "tracks": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "partial",
+                  "not_tested"
+                ]
+              },
+              "toc_duration": {
+                "enum": [
+                  "exact",
+                  "rounded",
+                  "offset",
+                  "not_observable",
+                  "not_tested"
+                ]
+              },
+              "cd_text": {
+                "enum": [
+                  "displayed",
+                  "ignored",
+                  "garbled",
+                  "not_observable",
+                  "not_tested"
+                ]
+              },
+              "cold_start": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "not_tested"
+                ]
+              },
+              "reinsert": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "not_tested"
+                ]
+              },
+              "vehicle_bus_toc": {
+                "enum": [
+                  "observed",
+                  "not_observed",
+                  "not_tested"
+                ]
+              },
+              "audio_beacon": {
+                "enum": [
+                  "decoded",
+                  "not_decoded",
+                  "audible_only",
+                  "not_tested"
+                ]
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      }
+    },
+    "preexisting_observations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  }
+}

@@ -1,13 +1,27 @@
 schema_version: 1
-vehicle: "Alfa Romeo 147"
-head_unit: "Blaupunkt ALFA-937"
-firmware: "3.17"
+profile_id: alfa-romeo-147-alfa937-sw317
 status: planned
-media:
-  cd_r: unknown
-  cd_rw: unknown
-features:
-  cd_text_display: false
-  toc_visibility: unknown
-  audio_beacon_path: unknown
-notes: "Reference candidate for conservative legacy-CD compatibility testing."
+vehicle:
+  make: Alfa Romeo
+  model: "147"
+  generation: "937"
+audio_system:
+  manufacturer: Blaupunkt
+  head_unit: ALFA-937 CD
+  firmware: "3.17"
+  controls:
+    - head_unit
+test_plan:
+  - cd_r
+  - cd_rw
+  - cd_text_on
+  - cd_text_off
+  - cold_start_inserted
+  - eject_reinsert
+  - visible_timing
+  - vehicle_bus_visibility
+  - audio_beacon_path
+reports: []
+preexisting_observations:
+  - The current car has no steering-area media controls; media interaction is through the head unit.
+notes: Reference profile for conservative legacy-CD compatibility testing.

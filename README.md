@@ -38,6 +38,8 @@ pdv1 export-library catalog --output build/library.json
 pdv1 build-site catalog --output build/site
 pdv1 verify-site build/site
 pdv1 bridge-validate tests/vectors/bridge-session.jsonl
+pdv1 validate-compatibility compatibility
+pdv1 export-compatibility compatibility --output build/compatibility.json
 pytest
 ```
 
@@ -85,6 +87,10 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 ## Vehicle/phone bridge
 
 Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+
+## Compatibility test preparation
+
+Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. See `docs/COMPATIBILITY-TESTING.md`.
 
 ## Public-ID evolution guard
 
