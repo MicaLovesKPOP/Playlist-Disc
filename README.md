@@ -34,6 +34,8 @@ pdv1 search-catalog diagnostic --catalog catalog
 pdv1 pack-list catalog
 pdv1 pack-show draft-0-2-test-vectors --catalog catalog
 pdv1 export-library catalog --output build/library.json
+pdv1 build-site catalog --output build/site
+pdv1 verify-site build/site
 pytest
 ```
 
@@ -54,6 +56,8 @@ total: 3:09
 The validated public/test catalog can be searched locally and exported as deterministic static JSON. Packs are ordered views of existing disc IDs and resolve to explicit 1-based wallet slots; they never redefine disc identity.
 
 `pdv1 export-library` produces a provider-neutral payload suitable for a future static website, offline browser, mirror, or desktop client without adding accounts, telemetry, or a hosted search dependency. See `docs/LIBRARY.md` and `catalog/packs/README.md`.
+
+Draft 0.2 can also generate a dependency-free static HTML library with `pdv1 build-site`. It includes searchable/filterable disc cards, individual disc pages, pack/wallet pages, and the machine-readable `library.json`; `pdv1 verify-site` checks required files and all internal links. See `docs/STATIC-SITE.md`.
 
 ## Local/private workflow
 

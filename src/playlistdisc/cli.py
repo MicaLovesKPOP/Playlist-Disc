@@ -32,6 +32,7 @@ from .local import (
     validate_local_library,
 )
 from .mastering import build_bundle
+from .site import build_static_site, verify_static_site
 from .verify import verify_build
 
 
@@ -321,6 +322,25 @@ def cmd_local_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_build_site(args: argparse.Namespace) -> int:
+    try:
+        output = build_static_site(args.catalog, args.output)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(output)
+    return 0
+
+
+def cmd_verify_site(args: argparse.Namespace) -> int:
+    errors = verify_static_site(args.site)
+    if errors:
+        _print_errors(errors)
+        return 1
+    print("static site: PASS")
+    return 0
+
+
 def cmd_burn(args: argparse.Namespace) -> int:
     toc = Path(args.toc)
     if not toc.exists():
@@ -457,6 +477,21 @@ def build_parser() -> argparse.ArgumentParser:
     local_list_p.add_argument("library")
     local_list_p.add_argument("--json", action="store_true")
     local_list_p.set_defaults(func=cmd_local_list)
+
+    site_build_p = sub.add_parser(
+        "build-site",
+        help="build a dependency-free static HTML library from the validated catalog",
+    )
+    site_build_p.add_argument("catalog", nargs="?", default="catalog")
+    site_build_p.add_argument("--output", default="build/site")
+    site_build_p.set_defaults(func=cmd_build_site)
+
+    site_verify_p = sub.add_parser(
+        "verify-site",
+        help="verify generated static-site structure and internal links",
+    )
+    site_verify_p.add_argument("site", nargs="?", default="build/site")
+    site_verify_p.set_defaults(func=cmd_verify_site)
 
     burn_p = sub.add_parser("burn", help="write a generated disc.toc using cdrdao")
     burn_p.add_argument("toc")

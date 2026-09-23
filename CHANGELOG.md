@@ -39,6 +39,7 @@
 - Added `pdv1 pack-list` and `pdv1 pack-show` with resolved 1-based wallet slots.
 - Added `pdv1 export-library`, a validated static JSON snapshot containing entries, resolved packs, and browsing facets.
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
+- Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.
 
 ## 0.1.0a1 — initial draft
 
