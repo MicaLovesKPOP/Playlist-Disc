@@ -87,8 +87,18 @@ def test_snapshot_is_deterministic_and_counts_profiles():
     assert first["format"] == "PDv1-compatibility"
     assert first["summary"]["profile_count"] == 3
     assert first["summary"]["report_count"] == 0
-    assert first["summary"]["research_evidence_count"] == 8
+    source_count = sum(
+        len(
+            (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get(
+                "research_evidence", []
+            )
+        )
+        for path in sorted((COMPAT / "vehicles").glob("*.yaml"))
+    )
+    assert source_count >= 8
+    assert first["summary"]["research_evidence_count"] == source_count
     assert first["summary"]["statuses"]["planned"] == 3
+
 
 
 def _research_evidence() -> dict:
