@@ -36,6 +36,7 @@
 - Migrated the Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4 reference profiles while keeping them honestly marked `planned`.
 - Added deterministic compatibility JSON export plus `pdv1 validate-compatibility` / `export-compatibility` and CI coverage.
 - Added schema-validated, source-typed pre-hardware research evidence that remains distinct from physical reports, plus an eight-item Alfa 147 / ALFA-937 SW3.17 research set covering documented CAN participation, changer support, commercial changer-emulator evidence, and the community-reported SW3.17 AUX boundary.
+- Added a sourced MINI R55 Boost CD / RAD2 research set covering option-6FC/RAD2 identification, MOST/K-CAN gateway architecture, native CD/MP3/WMA support, optical MOST changer integration, factory steering-wheel controls/display targets, and the distinction between OBD diagnostics and direct MOST access.
 
 ### Catalog evolution safety
 

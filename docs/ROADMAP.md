@@ -41,6 +41,6 @@
 ## Milestone 5 — OEM vehicle integrations
 
 - Alfa 147 / 937 pre-hardware research — sourced CAN/changer/control groundwork implemented; exact bus/changer protocol remains capture-gated;
-- MINI Boost CD/RAD2 research;
+- MINI R55 Boost CD/RAD2 pre-hardware research — sourced K-CAN/MOST/gateway/changer/control groundwork implemented; exact bus/MOST behavior remains capture-gated;
 - PSA RD4 family research;
 - OEM controls and now-playing metadata where technically feasible.

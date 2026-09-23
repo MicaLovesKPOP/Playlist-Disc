@@ -24,4 +24,85 @@ reports: []
 preexisting_observations:
   - Steering-wheel media controls are present.
   - Vehicle diagnostics are available separately through the OBD diagnostic setup.
-notes: Reference profile for the pre-LCI R55 Boost CD system.
+research_evidence:
+  - topic: head_unit
+    claim: A MINI technical service bulletin identifies R55, R56, and R57 vehicles equipped with option 6FC (Radio MINI Boost CD) as RAD2-equipped vehicles.
+    implication: The pre-LCI R55 Boost CD reference profile can defensibly use RAD2 service documentation as its head-unit family baseline, while the exact hardware/software revision in the target car still needs diagnostic confirmation.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: SI M09 01 09 - RAD2 Programming with ISTA/P 2.34.2 - No MOST Communication
+      publisher: MINI Technical Service (mirror by Operation CHARM)
+      url: https://charm.li/Mini/2009/Cooper%20JCW%20%28R56%29%20L4-1.6L%20Turbo%20%28N14%29/Repair%20and%20Diagnosis/Technical%20Service%20Bulletins/Customer%20Interest/Audio%20System%20-%20RAD2%28R%29%20Locks%20Up%20When%20Programming/
+      accessed: "2026-09-24"
+      locator: MODEL and SUBJECT sections; option 6FC / RAD2 identification
+  - topic: vehicle_bus
+    claim: MINI service-technique documentation describes the MINI Boost CD as a MOST-network radio whose gateway converts data between MOST and K-CAN and acts as system, power, and network master for the MOST network.
+    implication: Future PDv1 integration research must treat RAD2 as a gatewayed K-CAN/MOST architecture rather than assuming one simple CAN-attached radio. K-CAN observation and MOST integration are separate technical paths.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: Communication Systems - Service Techniques - BMW Professional / MINI Boost CD radio
+      publisher: MINI service information (mirror by DiagnostData)
+      url: https://diagnostdata.com/mini/cooper/ii-2006-2010/remont/communication-devices/communication-systems-service-techniques-cooper-cooper-s-r56/other/
+      accessed: "2026-09-24"
+      locator: BMW Professional / MINI Boost CD radio; Gateway paragraphs
+  - topic: head_unit
+    claim: The same MINI service-technique documentation says the Boost CD drive can play standard audio CDs and compressed MP3/WMA discs.
+    implication: The head-unit family natively parses more than plain Red Book audio media, but PDv1 should still keep CD-DA as its compatibility baseline; this documentation does not prove which TOC or metadata fields are exposed externally.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: Communication Systems - Service Techniques - BMW Professional / MINI Boost CD radio
+      publisher: MINI service information (mirror by DiagnostData)
+      url: https://diagnostdata.com/mini/cooper/ii-2006-2010/remont/communication-devices/communication-systems-service-techniques-cooper-cooper-s-r56/other/
+      accessed: "2026-09-24"
+      locator: BMW Professional / MINI Boost CD radio; CD-drive capability paragraph
+  - topic: cd_changer
+    claim: R55 service instructions for removing the CD changer explicitly require the optical-fibre handling procedure before disconnecting the changer.
+    implication: The optional R55 changer is an optical/MOST component, so a changer-emulating playback path is fundamentally different from Shadow's analogue Mini-ISO changer path and should not be designed as a simple electrical CDC clone.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: 65 11 072 Removing and installing/replacing CD changer - Clubman R55
+      publisher: MINI repair information (mirror by DiagnostData)
+      url: https://diagnostdata.com/mini/cooper/ii-2006-2010/remont/airbag-audio-navigation-and-anti-theft-repair-s-clubman-r55/65-11-072-removing-and-installingreplacing-cd-changer/65-11-072-removing-and-installingreplacing-cd-changer/
+      accessed: "2026-09-24"
+      locator: Preliminary tasks; optical-fibre handling note and changer plug disconnection
+  - topic: controls
+    claim: The official 2008 MINI Clubman owner's manual documents steering-wheel buttons for changing radio stations and selecting music tracks.
+    implication: The reference vehicle's existing steering-wheel controls are a legitimate future PD Bridge input surface; the underlying transport/message path remains a capture question.
+    source:
+      source_type: manufacturer_documentation
+      title: 2008 MINI / MINI Clubman Owner's Manual
+      publisher: BMW AG / MINI USA
+      url: https://www.miniusa.com/content/dam/mini/PDF/archiveownermanuals/MY08/01410014701_basis_r5556_1207_ue_1107__2008.pdf
+      accessed: "2026-09-24"
+      locator: Cockpit; steering-wheel buttons, page 11
+  - topic: display
+    claim: The official 2008 MINI Clubman owner's manual identifies a dedicated radio display and separate radio controls in the center dashboard.
+    implication: OEM-visible metadata is a real future integration target, but documentation alone does not establish which text or track metadata can be injected through RAD2/MOST/K-CAN.
+    source:
+      source_type: manufacturer_documentation
+      title: 2008 MINI / MINI Clubman Owner's Manual
+      publisher: BMW AG / MINI USA
+      url: https://www.miniusa.com/content/dam/mini/PDF/archiveownermanuals/MY08/01410014701_basis_r5556_1207_ue_1107__2008.pdf
+      accessed: "2026-09-24"
+      locator: Cockpit display description and center-console audio controls, pages 12-15
+  - topic: vehicle_bus
+    claim: MINI MOST service documentation states that the RAD2 head-unit gateway is connected to both MOST and K-CAN, and that the head unit is the interface between those buses for diagnosis and communication.
+    implication: A future adapter may obtain some useful state from K-CAN while leaving digital audio/other infotainment functions on MOST, but no PDv1 design should assume that optical-disc TOC or metadata crosses that gateway until captures prove it.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: MOST Functions - head unit / RAD2 gateway
+      publisher: MINI service information (mirror by Workshop Service Manuals)
+      url: https://workshop-manuals.com/mini/cooper_s_%28r56%29/l4-1.6l_turbo_%28n14%29/powertrain_management/computers_and_control_systems/information_bus/component_information/description_and_operation/most_functions_%28without_rad_radio%29/
+      accessed: "2026-09-24"
+      locator: MOST bus and Head unit sections
+  - topic: vehicle_bus
+    claim: BMW/MINI ISTA/P user documentation says R55/R56 programming can use OBD-connected ICOM A, while MOST multichannel programming uses ICOM A plus ICOM B when a MOST direct-access port exists; it also notes that RAD2 vehicles do not always have that direct-access port.
+    implication: Existing OBD diagnostics are useful for module identification/coding research, but OBD access should not be treated as equivalent to unrestricted direct MOST capture. The exact diagnostic interface present in the target car remains to be checked.
+    source:
+      source_type: manufacturer_documentation
+      title: ISTA/P User Documentation - MINI vehicle interfaces and MOST
+      publisher: BMW AG (manual mirror by ManualShelf)
+      url: https://www.manualshelf.com/manual/bmw/ag-icom/user-guide-english.html
+      accessed: "2026-09-24"
+      locator: MINI R55/R56 vehicle-interface table and RAD2/MOST direct-access-port note, pages 108-110
+notes: Reference profile for the pre-LCI R55 Boost CD/RAD2 system. Research evidence establishes architecture and planning inputs only; it does not substitute for PDv1 physical tests or bus captures.
