@@ -66,6 +66,14 @@ Provider-specific exact-track overrides may be stored when automated resolution 
 
 Within one manifest, the same MBID or ISRC cannot identify two different recording rows. Ambiguous manifests are rejected by validation.
 
+## Provider/local resolution
+
+Canonical manifest membership is service-neutral. Provider and local-library adapters resolve each recording using explicit provider overrides or exact MusicBrainz Recording MBIDs / ISRCs. Title and artist hints are not identity and must not be used for fuzzy automatic substitution.
+
+If exact identifiers produce contradictory candidate sets, the result is ambiguous. If multiple provider resources represent the same recording, an adapter/index may designate exactly one preferred resource; otherwise ambiguity remains visible. Missing recordings remain missing and reduce provider coverage rather than changing the canonical collection.
+
+The Draft 0.2 reference `provider-index` format exists as an offline/testing interchange and can also represent local-library URIs. Live provider plugins may construct equivalent indexes in memory.
+
 ## Packs and wallet order
 
 Packs are curated ordered views over existing catalog IDs. They do not allocate IDs and do not alter disc meaning.

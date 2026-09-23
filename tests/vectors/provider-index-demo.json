@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "provider": "demo",
+  "market": "NL",
+  "tracks": [
+    {
+      "resource": "demo:track:reference",
+      "musicbrainz_recording_id": "11111111-2222-3333-4444-555555555555",
+      "isrcs": [
+        "KRABC2600001"
+      ],
+      "preferred": true,
+      "title_hint": "Reference Track",
+      "artist_hint": "Reference Artist"
+    }
+  ],
+  "notes": "Synthetic provider index used only for offline validator/CI smoke tests."
+}

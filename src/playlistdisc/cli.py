@@ -15,6 +15,7 @@ from .catalog import (
     find_entry,
     iter_entries,
     iter_packs,
+    load_json,
     load_yaml,
     validate_catalog,
 )
@@ -39,6 +40,7 @@ from .local import (
     validate_local_library,
 )
 from .mastering import build_bundle
+from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
 from .verify import verify_build
 
@@ -204,6 +206,49 @@ def cmd_export_compatibility(args: argparse.Namespace) -> int:
         return 1
     path = write_compatibility_snapshot(args.compatibility, args.output)
     print(path)
+    return 0
+
+
+def cmd_validate_provider_index(args: argparse.Namespace) -> int:
+    try:
+        index = load_provider_index(args.provider_index)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(f"provider index: PASS ({index['provider']}, {len(index['tracks'])} tracks)")
+    return 0
+
+
+def cmd_resolve_canonical(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to resolve against invalid catalog", file=sys.stderr)
+        return 1
+    try:
+        identity = PDIdentity.parse(args.id)
+        found = find_entry(args.catalog, identity)
+        if found is None:
+            raise ValueError(f"catalog entry {identity.canonical} does not exist")
+        _, entry = found
+        if entry.get("definition", {}).get("type") != "canonical_manifest":
+            raise ValueError("entry is not a canonical_manifest definition")
+        manifest_path = Path(args.catalog) / entry["definition"]["manifest"]
+        manifest = load_json(manifest_path)
+        provider_index = load_provider_index(args.provider_index)
+        plan = resolve_canonical_manifest(entry, manifest, provider_index)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    payload = plan.to_dict()
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(encoded, encoding="utf-8")
+        print(output)
+    else:
+        print(encoded, end="")
+    if args.require_complete and (plan.missing_count or plan.ambiguous_count):
+        return 3
     return 0
 
 
@@ -483,6 +528,24 @@ def build_parser() -> argparse.ArgumentParser:
     compat_export_p.add_argument("compatibility", nargs="?", default="compatibility")
     compat_export_p.add_argument("--output", default="build/compatibility.json")
     compat_export_p.set_defaults(func=cmd_export_compatibility)
+
+    provider_validate_p = sub.add_parser(
+        "validate-provider-index",
+        help="validate an offline provider/local-library resolution index",
+    )
+    provider_validate_p.add_argument("provider_index")
+    provider_validate_p.set_defaults(func=cmd_validate_provider_index)
+
+    resolve_p = sub.add_parser(
+        "resolve-canonical",
+        help="resolve one canonical manifest against a provider/local-library index",
+    )
+    resolve_p.add_argument("id")
+    resolve_p.add_argument("--catalog", default="catalog")
+    resolve_p.add_argument("--provider-index", required=True)
+    resolve_p.add_argument("--output")
+    resolve_p.add_argument("--require-complete", action="store_true")
+    resolve_p.set_defaults(func=cmd_resolve_canonical)
 
     export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")
