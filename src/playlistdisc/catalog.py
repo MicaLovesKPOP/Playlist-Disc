@@ -1,4 +1,4 @@
-"""PDv1 catalog loading, schema validation, and cross-file invariants."""
+"""PDv1 catalog loading, schema validation, packs, and cross-file invariants."""
 
 from __future__ import annotations
 
@@ -82,9 +82,21 @@ def validate_manifest(data: dict[str, Any], schema: dict[str, Any]) -> list[str]
     return messages
 
 
+def validate_pack(data: dict[str, Any], schema: dict[str, Any]) -> list[str]:
+    """Validate one pack independently of referenced catalog entries."""
+    return _schema_errors(data, schema)
+
+
 def iter_entries(catalog_dir: str | Path) -> Iterable[Path]:
     root = Path(catalog_dir) / "discs"
     yield from sorted(root.rglob("*.yaml"))
+
+
+def iter_packs(catalog_dir: str | Path) -> Iterable[Path]:
+    root = Path(catalog_dir) / "packs"
+    if not root.exists():
+        return
+    yield from sorted(root.glob("*.yaml"))
 
 
 def find_entry(
@@ -97,12 +109,25 @@ def find_entry(
     return None
 
 
+def find_pack(
+    catalog_dir: str | Path, slug: str
+) -> tuple[Path, dict[str, Any]] | None:
+    path = Path(catalog_dir) / "packs" / f"{slug}.yaml"
+    if not path.is_file():
+        return None
+    return path, load_yaml(path)
+
+
 def _expected_entry_path(catalog_root: Path, id6: str) -> Path:
     return catalog_root / "discs" / id6[:3] / f"{id6}.yaml"
 
 
 def _expected_manifest_path(catalog_root: Path, id6: str) -> Path:
     return catalog_root / "manifests" / id6[:3] / f"{id6}.json"
+
+
+def _expected_pack_path(catalog_root: Path, slug: str) -> Path:
+    return catalog_root / "packs" / f"{slug}.yaml"
 
 
 def _safe_catalog_relative_path(catalog_root: Path, value: str) -> Path | None:
@@ -213,13 +238,42 @@ def _entry_semantic_errors(
     return messages
 
 
+def _pack_semantic_errors(
+    data: dict[str, Any],
+    *,
+    path: Path,
+    catalog_root: Path,
+    entries_by_id: dict[str, tuple[Path, dict[str, Any]]],
+) -> list[str]:
+    messages: list[str] = []
+    slug = data["slug"]
+    expected_path = _expected_pack_path(catalog_root, slug)
+    if path.resolve() != expected_path.resolve():
+        messages.append(
+            "path: pack must live at "
+            f"{expected_path.relative_to(catalog_root).as_posix()}"
+        )
+
+    if len(data["discs"]) > data["capacity"]:
+        messages.append(
+            f"discs: pack has {len(data['discs'])} discs but capacity is {data['capacity']}"
+        )
+
+    for index, id6 in enumerate(data["discs"]):
+        if id6 not in entries_by_id:
+            messages.append(f"discs.{index}: referenced catalog ID {id6} does not exist")
+
+    return messages
+
+
 def validate_catalog(
     catalog_dir: str | Path,
     *,
     entry_schema_path: str | Path | None = None,
     manifest_schema_path: str | Path | None = None,
+    pack_schema_path: str | Path | None = None,
 ) -> list[str]:
-    """Validate the whole public catalog, including cross-file invariants."""
+    """Validate public entries, canonical manifests, packs, and cross-file invariants."""
     catalog_root = Path(catalog_dir)
     entry_schema = load_schema(
         entry_schema_path or catalog_root / "schema" / "disc.schema.json"
@@ -228,6 +282,12 @@ def validate_catalog(
         manifest_schema_path
         or catalog_root / "schema" / "canonical-manifest.schema.json"
     )
+
+    pack_paths = list(iter_packs(catalog_root))
+    default_pack_schema = catalog_root / "schema" / "pack.schema.json"
+    pack_schema: dict[str, Any] | None = None
+    if pack_schema_path is not None or pack_paths or default_pack_schema.is_file():
+        pack_schema = load_schema(pack_schema_path or default_pack_schema)
 
     messages: list[str] = []
     parsed: list[tuple[Path, dict[str, Any]]] = []
@@ -262,6 +322,34 @@ def validate_catalog(
             manifest_schema=manifest_schema,
         ):
             messages.append(f"{path}:{message}")
+
+    if pack_schema is not None:
+        seen_slugs: dict[str, Path] = {}
+        for path in pack_paths:
+            try:
+                data = load_yaml(path)
+            except (OSError, ValueError, yaml.YAMLError) as exc:
+                messages.append(f"{path}: {exc}")
+                continue
+
+            errors = validate_pack(data, pack_schema)
+            if errors:
+                messages.extend(f"{path}:{message}" for message in errors)
+                continue
+
+            slug = data["slug"]
+            if slug in seen_slugs:
+                messages.append(f"{path}:slug: duplicate of {seen_slugs[slug]}")
+                continue
+            seen_slugs[slug] = path
+
+            for message in _pack_semantic_errors(
+                data,
+                path=path,
+                catalog_root=catalog_root,
+                entries_by_id=entries_by_id,
+            ):
+                messages.append(f"{path}:{message}")
 
     return messages
 

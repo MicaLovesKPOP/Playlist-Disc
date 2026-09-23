@@ -20,6 +20,10 @@ jobs:
       - run: pytest
       - run: pdv1 validate-catalog catalog
       - run: pdv1 export-catalog catalog --output /tmp/catalog.json
+      - run: pdv1 export-library catalog --output /tmp/library.json
+      - run: pdv1 search-catalog "diagnostic beacon" --catalog catalog --json
+      - run: pdv1 pack-list catalog
+      - run: pdv1 pack-show draft-0-2-test-vectors --catalog catalog --json
       - run: pdv1 build 999901 --output /tmp/PD1-999901
       - run: pdv1 verify-build /tmp/PD1-999901
       - run: >-

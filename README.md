@@ -30,6 +30,10 @@ pdv1 audit-encoding
 pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
 pdv1 validate-catalog catalog
+pdv1 search-catalog diagnostic --catalog catalog
+pdv1 pack-list catalog
+pdv1 pack-show draft-0-2-test-vectors --catalog catalog
+pdv1 export-library catalog --output build/library.json
 pytest
 ```
 
@@ -44,6 +48,12 @@ check digit: 3
 tracks: 0:09, 0:16, 0:20, 0:24, 0:28, 0:32, 0:36, 0:24
 total: 3:09
 ```
+
+## Library, search, packs, and wallets
+
+The validated public/test catalog can be searched locally and exported as deterministic static JSON. Packs are ordered views of existing disc IDs and resolve to explicit 1-based wallet slots; they never redefine disc identity.
+
+`pdv1 export-library` produces a provider-neutral payload suitable for a future static website, offline browser, mirror, or desktop client without adding accounts, telemetry, or a hosted search dependency. See `docs/LIBRARY.md` and `catalog/packs/README.md`.
 
 ## Local/private workflow
 
@@ -74,16 +84,17 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 - **Fail open:** an unrecognized or ambiguous disc behaves as a normal audio CD.
 - **Immutable physical meaning:** once PDv1.0 allocates a public ID, it is never recycled or silently repurposed.
 - **Private by default when desired:** a local-only namespace requires no account, registration, or telemetry.
+- **Packs are views:** wallet organization can evolve without changing or duplicating disc identity.
 - **Prove software claims in software:** physical tests should answer only hardware questions that cannot be settled beforehand.
 
 ## Repository layout
 
 - `spec/` — physical format, catalog model, future bridge protocol
-- `catalog/` — public/test registry and schemas
+- `catalog/` — public/test registry, canonical manifests, packs, and schemas
 - `compatibility/` — measured legacy-player/vehicle results
 - `src/playlistdisc/` — reference library and CLI
 - `tests/` — algorithm tests and golden vectors
-- `docs/` — burning, validation, compatibility testing, local/private workflow, and roadmap
+- `docs/` — burning, validation, compatibility testing, library/local workflows, ADRs, and roadmap
 
 ## Planned namespace
 
@@ -99,7 +110,7 @@ The exact ranges remain draft until PDv1.0.
 
 ## Current boundary
 
-Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon loopback, internal mastering-bundle consistency, catalog invariants, and local/private allocation/lookup behavior without hardware. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, or analogue-path beacon survival. Those remain explicit physical-test gates.
+Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon loopback, internal mastering-bundle consistency, catalog/pack invariants, deterministic library/search behavior, and local/private allocation/lookup behavior without hardware. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, physical wallet ergonomics, or analogue-path beacon survival. Those remain explicit physical-test gates.
 
 ## Licensing
 
