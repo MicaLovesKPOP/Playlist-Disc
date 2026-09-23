@@ -1,4 +1,4 @@
-# Playlist Disc v1 — Draft 0.1
+# Playlist Disc v1 — Draft 0.2
 
 **Status:** experimental. Do not allocate permanent public music IDs from this document yet.
 
@@ -6,7 +6,7 @@
 
 PDv1 defines a provider-neutral physical token encoded as an ordinary CD-DA disc. The disc identifies a musical intent or catalog record. It does **not** encode a streaming-service URL, vehicle type, phone type, or Bluetooth implementation.
 
-A vehicle adapter resolves a physical disc to a PD identifier. Playback software then resolves the PD identifier to the user's chosen provider or local library.
+A vehicle adapter resolves a physical disc to a PD identifier. Playback software then resolves that identifier to the user's chosen provider or local library.
 
 ## 2. Canonical identifier
 
@@ -61,13 +61,21 @@ Example `PD1-123456-3`:
 
 `9, 16, 20, 24, 28, 32, 36, 24 seconds`
 
-The minimum draft disc program length is 93 seconds. The maximum is 345 seconds.
+The raw duration lattice has a theoretical 93–345 second envelope. Exhaustive Draft 0.2 validation of all one million six-digit identities shows that checksum-valid identities actually span 97 seconds (PD1-010000) through 341 seconds (PD1-999899).
 
 ### 4.1 Fuzzy readers
 
 Implementations that receive integer/rounded duration reports may decode to the nearest legal digit duration only when the configured tolerance is strictly less than two seconds. Exact-TOC readers should use exact durations.
 
-The Damm check must validate before a TOC-derived identity is considered strong evidence.
+The Damm check must validate before a TOC-derived identity is considered strong evidence. Because legal digit durations are four seconds apart, any tolerance below two seconds preserves a unique nearest lattice point.
+
+### 4.2 Reference mapping audit
+
+The reference implementation exhaustively round-trips every identity 000000–999999 and hashes the complete mapping. Draft 0.2's golden mapping digest is:
+
+`5048cb0d893e1949573c28ea10ef480bd9dd81bfdda0fdd3afc95e1c1825f618`
+
+Changing this digest before PDv1.0 is permitted only as an explicit physical-format revision, never accidentally.
 
 ## 5. CD-TEXT
 
@@ -84,7 +92,7 @@ PDv1 does not manufacture ISRC or UPC/EAN identifiers solely to carry PD metadat
 
 ## 6. Audio beacon
 
-Draft 0.1 defines an **experimental** `dtmf-draft-a` fallback beacon in the first four seconds of track 1. The exact waveform may change before PDv1.0.
+Draft 0.2 retains the **experimental** `dtmf-draft-a` fallback beacon in the first four seconds of track 1. The waveform is not frozen until physical analogue-path testing.
 
 Frame symbols are:
 
@@ -92,7 +100,7 @@ Frame symbols are:
 
 where `V` is version (`1`), `DDDDDD` is the six-digit identity, and `C` is the Damm digit. The reference waveform sends two identical frames. Track 1 remains exactly nine seconds long.
 
-The beacon exists so a legacy implementation can identify a disc from the analogue CD-audio path when no useful TOC or metadata is exposed by the head unit.
+Strong beacon recognition requires at least two matching, checksum-valid frames. The reference decoder uses activity segmentation plus Goertzel analysis and is tested against synthetic attenuation, noise, clipping, and basic band-limiting. Those software tests do not replace physical car-path validation.
 
 ## 7. Recognition safety
 
@@ -134,7 +142,11 @@ No provider receives its own numeric namespace.
 
 Once PDv1.0 allocates a public ID, it is never recycled. Provider links, tags, maintainers, and availability may change; the underlying semantic identity must not silently change. Retired entries remain in the registry and may point to a successor.
 
-## 11. Draft freeze criteria
+## 11. Software verification
+
+A generated mastering bundle should be verifiable before consuming optical media. The reference `verify-build` operation reconstructs identity independently from the manifest, TOC durations, CD-TEXT message, and decoded repeated beacon. All channels must agree.
+
+## 12. Draft freeze criteria
 
 PDv1.0 is not frozen until physical test discs have been checked in multiple burners and legacy car players, including at minimum:
 
@@ -144,4 +156,6 @@ PDv1.0 is not frozen until physical test discs have been checked in multiple bur
 - exact and rounded TOC reporting;
 - the eight-track short-disc layout;
 - audio-beacon survival through a real analogue path;
-- deterministic regeneration of the same TOC.
+- deterministic regeneration of the same physical TOC.
+
+See `docs/PREHARDWARE-VALIDATION.md` for what Draft 0.2 proves in software and what remains deliberately unclaimed.

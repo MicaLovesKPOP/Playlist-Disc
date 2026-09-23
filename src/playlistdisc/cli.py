@@ -9,14 +9,20 @@ import shutil
 import subprocess
 import sys
 
+from .audit import assert_reference_audit, audit_encoding
 from .catalog import find_entry, iter_entries, load_schema, load_yaml, validate_entry
 from .identity import PDIdentity, decode_track_durations
 from .mastering import build_bundle
+from .verify import verify_build
 
 
-def _format_duration(seconds: int) -> str:
-    m, s = divmod(seconds, 60)
-    return f"{m}:{s:02d}"
+def _format_duration(seconds: float) -> str:
+    rounded = round(seconds)
+    if abs(seconds - rounded) < 1e-9:
+        minutes, sec = divmod(rounded, 60)
+        return f"{minutes}:{sec:02d}"
+    minutes = int(seconds // 60)
+    return f"{minutes}:{seconds - minutes * 60:05.2f}"
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
@@ -52,6 +58,35 @@ def cmd_build(args: argparse.Namespace) -> int:
     output = Path(args.output or f"build/{ident.canonical}")
     build_bundle(ident, output, title=title, short_title=short_title)
     print(output)
+    return 0
+
+
+def cmd_verify_build(args: argparse.Namespace) -> int:
+    report = verify_build(args.bundle)
+    print(report.identity.machine_id)
+    print("manifest: PASS")
+    print("TOC: PASS")
+    print("CD-TEXT: PASS")
+    print(f"audio beacon: PASS ({report.beacon_frames} matching frames)")
+    print("cross-channel identity: PASS")
+    return 0
+
+
+def cmd_audit_encoding(args: argparse.Namespace) -> int:
+    report = audit_encoding()
+    assert_reference_audit(report)
+    print(f"identities: {report.identities_checked:,}")
+    print(
+        "namespaces: "
+        + ", ".join(f"{name}={count:,}" for name, count in report.namespace_counts.items())
+    )
+    print(
+        f"duration extrema: {report.minimum_total_seconds}s "
+        f"(PD1-{report.minimum_total_id}) .. "
+        f"{report.maximum_total_seconds}s (PD1-{report.maximum_total_id})"
+    )
+    print(f"golden vector SHA-256: {report.vector_sha256}")
+    print("reference mapping: PASS")
     return 0
 
 
@@ -142,6 +177,19 @@ def build_parser() -> argparse.ArgumentParser:
     build_p.add_argument("--catalog", default="catalog")
     build_p.add_argument("--output")
     build_p.set_defaults(func=cmd_build)
+
+    verify_p = sub.add_parser(
+        "verify-build",
+        help="independently verify TOC, CD-TEXT, manifest, and beacon in a generated bundle",
+    )
+    verify_p.add_argument("bundle")
+    verify_p.set_defaults(func=cmd_verify_build)
+
+    audit_p = sub.add_parser(
+        "audit-encoding",
+        help="exhaustively round-trip all 1,000,000 Draft 0.2 identities",
+    )
+    audit_p.set_defaults(func=cmd_audit_encoding)
 
     val_p = sub.add_parser("validate-catalog", help="validate all registry entries")
     val_p.add_argument("catalog", nargs="?", default="catalog")

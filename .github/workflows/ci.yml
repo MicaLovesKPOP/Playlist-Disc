@@ -21,3 +21,15 @@ jobs:
       - run: pdv1 validate-catalog catalog
       - run: pdv1 export-catalog catalog --output /tmp/catalog.json
       - run: pdv1 build 999901 --output /tmp/PD1-999901
+      - run: pdv1 verify-build /tmp/PD1-999901
+
+  exhaustive-encoding-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e .
+      - run: pdv1 audit-encoding

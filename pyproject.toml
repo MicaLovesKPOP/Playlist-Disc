@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "playlist-disc"
-version = "0.1.0a1"
+version = "0.2.0a1"
 description = "Reference implementation and catalog tooling for the Playlist Disc (PDv1) physical playlist format."
 readme = "README.md"
 requires-python = ">=3.11"
