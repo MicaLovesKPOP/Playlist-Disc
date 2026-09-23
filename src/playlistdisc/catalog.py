@@ -13,6 +13,10 @@ from jsonschema import Draft202012Validator
 from .identity import PDIdentity
 
 
+# Permanent public IDs must not become active before the physical format is frozen.
+PUBLIC_CATALOG_OPEN = False
+
+
 def load_yaml(path: str | Path) -> dict[str, Any]:
     with Path(path).open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle)
@@ -153,6 +157,16 @@ def _entry_semantic_errors(
     definition = data["definition"]
     definition_type = definition["type"]
     portability = data["portability"]
+    identity = PDIdentity.parse(id6)
+
+    if (
+        not PUBLIC_CATALOG_OPEN
+        and identity.namespace == "public"
+        and data["status"] in {"active", "retired"}
+    ):
+        messages.append(
+            "status: permanent public catalog activation is closed while PDv1 is draft"
+        )
 
     expected_path = _expected_entry_path(catalog_root, id6)
     if path.resolve() != expected_path.resolve():
@@ -191,6 +205,10 @@ def _entry_semantic_errors(
             messages.append(
                 f"providers.{provider}.strategy: provider-native binding must use 'direct'"
             )
+        elif not binding.get("resource"):
+            messages.append(
+                f"providers.{provider}.resource: provider-native binding requires a resource"
+            )
 
     if definition_type == "federated_collection":
         if len(providers) < 2:
@@ -202,6 +220,10 @@ def _entry_semantic_errors(
                 messages.append(
                     f"providers.{provider}.strategy: federated collection must use "
                     "'equivalent' or 'best_available'"
+                )
+            elif not binding.get("resource"):
+                messages.append(
+                    f"providers.{provider}.resource: federated binding requires a resource"
                 )
 
     if definition_type == "canonical_manifest":
@@ -230,6 +252,8 @@ def _entry_semantic_errors(
 
     successor = data.get("successor")
     if successor:
+        if data["status"] != "retired":
+            messages.append("successor: only retired entries may declare a successor")
         if successor == id6:
             messages.append("successor: entry cannot succeed itself")
         elif successor not in entries_by_id:

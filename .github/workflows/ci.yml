@@ -59,3 +59,28 @@ jobs:
       - run: python -m pip install -e .
       - run: pdv1 build-site catalog --output /tmp/pdv1-site
       - run: pdv1 verify-site /tmp/pdv1-site
+
+
+  catalog-evolution-guard:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e .
+      - name: Compare protected public identities with baseline
+        shell: bash
+        run: |
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            echo "No baseline commit available; skipping evolution comparison."
+            exit 0
+          fi
+          git worktree add --detach /tmp/pdv1-base "$BASE_SHA"
+          pdv1 check-catalog-evolution /tmp/pdv1-base/catalog catalog

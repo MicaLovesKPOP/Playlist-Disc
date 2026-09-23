@@ -4,7 +4,7 @@ Playlist Disc is currently a physical-format draft. Contributions that improve t
 
 ## Important draft rule
 
-Do not submit permanent music entries in `000001-899999` yet. Until PDv1.0 is frozen, physical test discs belong in `999900-999999`.
+Do not activate permanent music entries in `000001-899999` yet. Draft public proposals may be modeled in that range, but repository validation rejects `active`/`retired` permanent public records until PDv1.0 is frozen. Physical test discs belong in `999900-999999`.
 
 ## Catalog changes
 
@@ -38,6 +38,8 @@ Run:
 ```bash
 python -m pip install -e '.[dev]'
 pdv1 validate-catalog catalog
+# On an existing public registry, also compare against the target branch baseline:
+pdv1 check-catalog-evolution /path/to/baseline/catalog catalog
 pdv1 export-catalog catalog --output /tmp/catalog.json
 pdv1 export-library catalog --output /tmp/library.json
 pdv1 pack-list catalog
