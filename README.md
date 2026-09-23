@@ -40,6 +40,7 @@ pdv1 verify-site build/site
 pdv1 bridge-validate tests/vectors/bridge-session.jsonl
 pdv1 validate-compatibility compatibility
 pdv1 export-compatibility compatibility --output build/compatibility.json
+pdv1 validate-provider-index tests/vectors/provider-index-demo.json
 pytest
 ```
 
@@ -91,6 +92,10 @@ Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a ma
 ## Compatibility test preparation
 
 Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. See `docs/COMPATIBILITY-TESTING.md`.
+
+## Cross-service resolution core
+
+Draft 0.2 now includes deterministic canonical-recording resolution that can be tested without provider accounts or network access. Provider/local-library indexes map exact MusicBrainz Recording MBIDs and ISRCs to playable resources; explicit provider overrides win, contradictory or duplicate matches stay ambiguous, and missing recordings stay missing. Human title/artist text is never fuzzy identity. This gives future Spotify/Apple/local plugins a common semantic core instead of letting each service silently interpret a physical disc differently. See `docs/RESOLUTION.md`.
 
 ## Public-ID evolution guard
 

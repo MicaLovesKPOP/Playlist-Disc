@@ -33,8 +33,9 @@
 
 - transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and validator implemented in Draft 0.2;
 - BLE or equivalent transport profile;
-- provider plugins;
-- local-library resolver;
+- deterministic canonical-recording resolution core and provider/local index contract implemented in Draft 0.2;
+- live provider plugins (Spotify/Apple/etc. authentication/catalog lookup/materialization);
+- local-library index/scanner implementation;
 - cached/materialized cross-service collections.
 
 ## Milestone 5 — OEM vehicle integrations

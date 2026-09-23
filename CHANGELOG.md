@@ -59,6 +59,14 @@
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
 - Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.
 
+### Cross-service resolution groundwork
+
+- Added a packaged provider/local-library resolution-index schema using exact MusicBrainz Recording MBIDs and ISRCs.
+- Added deterministic canonical-manifest resolution with explicit provider overrides, MBID/ISRC intersection, preferred duplicate resources, honest missing coverage, and explicit ambiguity on conflicting identifiers.
+- Human title/artist hints are deliberately excluded from matching; no fuzzy substitution is performed.
+- Added provider-index validation plus `pdv1 resolve-canonical` with machine-readable resolution plans and optional complete-coverage enforcement.
+- Added offline fixtures/tests and ADR 0007 documenting the no-fuzzy-resolution rule.
+
 ### Playback bridge groundwork
 
 - Replaced the bridge sketch with a versioned transport-neutral logical protocol.

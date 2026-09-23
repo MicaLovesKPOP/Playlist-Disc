@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/provider-index.schema.json",
+  "title": "PD provider resolution index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider",
+    "tracks"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "provider": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "maxLength": 64
+    },
+    "market": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resource"
+        ],
+        "properties": {
+          "resource": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "musicbrainz_recording_id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "isrcs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$"
+            }
+          },
+          "preferred": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "title_hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "artist_hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "musicbrainz_recording_id"
+            ]
+          },
+          {
+            "required": [
+              "isrcs"
+            ]
+          }
+        ]
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  }
+}

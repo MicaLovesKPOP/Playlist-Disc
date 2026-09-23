@@ -29,6 +29,7 @@ jobs:
       - run: pdv1 bridge-validate tests/vectors/bridge-session.jsonl
       - run: pdv1 validate-compatibility compatibility
       - run: pdv1 export-compatibility compatibility --output /tmp/compatibility.json
+      - run: pdv1 validate-provider-index tests/vectors/provider-index-demo.json
       - run: >-
           pdv1 local-create /tmp/pdv1-local
           --title "CI private playlist"
