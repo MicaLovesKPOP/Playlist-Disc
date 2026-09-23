@@ -61,7 +61,7 @@ research_evidence:
     implication: RD4-family hardware has a documented OEM path for optical-disc metadata to reach the separate display, but the exact RD4 level and firmware of the target C3 must be identified before PDv1 assumes CD-TEXT capability.
     source:
       source_type: manufacturer_service_documentation_mirror
-      title: C6 - D4EABAP0 - Presentation : Audio system
+      title: "C6 - D4EABAP0 - Presentation : Audio system"
       publisher: Citroen service documentation (mirror by Scribd)
       url: https://www.scribd.com/document/821708464/C6-Audio-System-Presentation
       accessed: "2026-09-24"
@@ -71,7 +71,7 @@ research_evidence:
     implication: RD4-family integration plausibly separates CAN control/display state from analogue changer audio, making CAN observation plus an audio-side interface a credible architecture; the C6 document does not establish the exact target C3 message IDs.
     source:
       source_type: manufacturer_service_documentation_mirror
-      title: C6 - D4EABAP0 - Presentation : Audio system
+      title: "C6 - D4EABAP0 - Presentation : Audio system"
       publisher: Citroen service documentation (mirror by Scribd)
       url: https://www.scribd.com/document/821708464/C6-Audio-System-Presentation
       accessed: "2026-09-24"
