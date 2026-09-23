@@ -25,7 +25,7 @@
 - searchable static catalog — deterministic JSON snapshot, CLI search, and dependency-free static HTML browser implemented in Draft 0.2; hosted deployment remains optional future work;
 - pack/wallet support — Draft 0.2 source schema, validation, 12/24/48/96 capacity metadata, ordered slot resolution, and CLI inspection implemented; print/layout UX remains future work;
 - private/local disc creation — software allocation, validation, listing, and virtual-build lookup implemented in Draft 0.2;
-- contribution workflow and generated catalog snapshots;
+- contribution workflow and generated catalog snapshots — schema/cross-file validation, deterministic exports, and protected-ID evolution guard implemented in Draft 0.2; review/issue templates remain future work;
 - friendly desktop application.
 
 ## Milestone 4 — playback bridge

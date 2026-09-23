@@ -30,6 +30,7 @@ pdv1 audit-encoding
 pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
 pdv1 validate-catalog catalog
+pdv1 check-catalog-evolution /path/to/baseline/catalog catalog
 pdv1 search-catalog diagnostic --catalog catalog
 pdv1 pack-list catalog
 pdv1 pack-show draft-0-2-test-vectors --catalog catalog
@@ -84,6 +85,10 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 ## Vehicle/phone bridge
 
 Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+
+## Public-ID evolution guard
+
+Draft 0.2 includes a catalog-evolution guard for the future permanent public registry. Public proposals remain freely editable while `draft`; after activation, identity-defining fields cannot be deleted, renumbered, or silently repurposed. Snapshot canonical membership is locked, while provider resolution metadata and living-collection membership may evolve within the original semantic scope. CI compares pull requests (and main pushes) against their baseline commit. Permanent public activation itself remains disabled until PDv1.0. See `docs/CATALOG-EVOLUTION.md`.
 
 ## Design principles
 

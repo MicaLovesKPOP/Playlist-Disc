@@ -18,6 +18,7 @@ from .catalog import (
     load_yaml,
     validate_catalog,
 )
+from .evolution import check_catalog_evolution
 from .identity import PDIdentity, decode_track_durations
 from .library import (
     catalog_entries,
@@ -168,6 +169,15 @@ def cmd_validate_catalog(args: argparse.Namespace) -> int:
     entry_count = sum(1 for _ in iter_entries(args.catalog))
     pack_count = sum(1 for _ in iter_packs(args.catalog))
     print(f"validated {entry_count} catalog entries and {pack_count} packs")
+    return 0
+
+
+def cmd_check_catalog_evolution(args: argparse.Namespace) -> int:
+    errors = check_catalog_evolution(args.baseline, args.current)
+    if errors:
+        _print_errors(errors)
+        return 1
+    print("catalog evolution: PASS")
     return 0
 
 
@@ -424,6 +434,14 @@ def build_parser() -> argparse.ArgumentParser:
     val_p.add_argument("--manifest-schema")
     val_p.add_argument("--pack-schema")
     val_p.set_defaults(func=cmd_validate_catalog)
+
+    evolution_p = sub.add_parser(
+        "check-catalog-evolution",
+        help="compare a baseline catalog with the current catalog and protect activated public IDs",
+    )
+    evolution_p.add_argument("baseline")
+    evolution_p.add_argument("current", nargs="?", default="catalog")
+    evolution_p.set_defaults(func=cmd_check_catalog_evolution)
 
     export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")

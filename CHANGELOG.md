@@ -21,6 +21,16 @@
 - Catalog export now refuses invalid source data and includes canonical-manifest content hashes/counts.
 - Added architecture decisions documenting provider-neutral public IDs and canonical recording manifests.
 
+### Catalog evolution safety
+
+- Added a baseline/current catalog evolution guard for activated and retired permanent public IDs.
+- Locked canonical title, short title, definition, lifecycle, portability, and default playback semantics after activation.
+- Snapshot canonical manifests now protect service-neutral recording membership while still allowing hint/provider-override corrections; living manifests may evolve within their immutable membership policy.
+- Provider-native direct resource/market identity is protected after activation, while ordinary provider resolution bindings remain mutable.
+- Draft public proposals remain editable/deletable; active/retired public entries cannot yet be created while PDv1 remains a physical-format draft.
+- CI compares pull requests and main pushes with their baseline commit so protected physical meanings cannot drift silently.
+- Tightened successor, provider-native resource, and federated-resource validation; added ADR 0006 and catalog-evolution documentation.
+
 ### Local/private workflow
 
 - Added a user-owned private registry for IDs `900000-989999` with deterministic sharding and local-only provider/resource bindings.

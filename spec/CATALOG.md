@@ -104,11 +104,27 @@ A `living` entry can gain newly qualifying music without changing semantic meani
 
 Living does not mean "anything maintainers feel like adding." The semantic scope must remain stable enough that an old physical disc still means the same thing years later.
 
+## Evolution after activation
+
+A public proposal is freely editable while its status is `draft`. Once a permanent public ID becomes `active`, physical copies may exist and the semantic core becomes protected.
+
+The evolution guard locks the canonical title/short title, definition, lifecycle, portability class, and default playback behavior. Active entries may only remain active or become retired; retired entries cannot be reactivated or deleted.
+
+For `snapshot` canonical manifests, the service-neutral recording membership is protected. Human title/artist hints and provider-specific resolution overrides may still be corrected because they are not canonical identity. Shuffle manifests ignore row order for this comparison; ordered manifests treat sequence as semantic.
+
+For `living` canonical manifests, membership may evolve, but the definition and membership policy remain locked. Human review is still required to ensure additions remain within that declared scope.
+
+A provider-native entry additionally locks its native provider resource and market because those fields are part of what that physical disc means. Provider bindings for canonical/federated content remain realization details and may evolve.
+
+Packs, tags, maintainers, notes, non-native provider bindings, and successors are not physical identity. They can evolve subject to ordinary catalog validation.
+
+During PDv1 Draft 0.2, permanent public activation is deliberately closed; public IDs can only remain `draft`. The evolution machinery is tested now so it is already in place before PDv1.0 opens the permanent namespace.
+
 ## Successors and retirement
 
 Public IDs are never recycled.
 
-A retired entry may name a `successor`, but:
+Only a retired entry may name a `successor`, and:
 
 - it cannot point to itself;
 - the successor must exist in the catalog;
