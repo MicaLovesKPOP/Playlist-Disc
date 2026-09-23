@@ -32,6 +32,7 @@ def _report() -> dict:
         "report_id": "first-test",
         "date": "2026-09-23",
         "disc_machine_id": "PD1-999901-7",
+        "bundle_sha256": "0" * 64,
         "media": {"type": "cd_r", "finalized": True, "cd_text": True},
         "write": {"mode": "dao"},
         "attempts": {"total": 3, "successful_loads": 3},
@@ -79,6 +80,17 @@ def test_attempt_successes_cannot_exceed_attempts():
     errors = validate_compatibility_profile(profile, SCHEMA)
     assert any("successful_loads cannot exceed total" in error for error in errors)
 
+
+
+
+def test_physical_report_requires_valid_bundle_fingerprint():
+    profile = _base_profile()
+    profile["status"] = "partial"
+    report = _report()
+    report["bundle_sha256"] = "not-a-sha256"
+    profile["reports"] = [report]
+    errors = validate_compatibility_profile(profile, SCHEMA)
+    assert any("bundle_sha256" in error for error in errors)
 
 def test_snapshot_is_deterministic_and_counts_profiles():
     first = compatibility_snapshot(COMPAT)

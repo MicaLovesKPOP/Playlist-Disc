@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this only for observations you actually measured. During Draft 0.2, physical tests must use a development/test ID in 999900–999999. Do not include VINs, registration numbers, addresses, or other unnecessary personal data.
+        Use this only for observations you actually measured. During Draft 0.2, physical tests must use a development/test ID in 999900–999999 and include the exact mastering-bundle SHA-256 printed by `pdv1 verify-build`. Do not include VINs, registration numbers, addresses, or other unnecessary personal data.
   - type: input
     id: vehicle
     attributes:
@@ -32,6 +32,19 @@ body:
       placeholder: PD1-999901-7
     validations:
       required: true
+  - type: input
+    id: bundle_sha256
+    attributes:
+      label: Exact mastering-bundle SHA-256
+      description: Copy the 64-character value printed by pdv1 verify-build for the exact bundle that was burned.
+      placeholder: 0123456789abcdef...
+    validations:
+      required: true
+  - type: input
+    id: test_variant
+    attributes:
+      label: Test-kit variant (if applicable)
+      placeholder: toc-cdtext / toc-no-cdtext / beacon-no-cdtext / cdtext
   - type: dropdown
     id: media
     attributes:

@@ -34,6 +34,7 @@ The first populated research set is `docs/research/ALFA-937.md`, mirrored into t
 A physical report records:
 
 - exact PDv1 machine ID used;
+- exact mastering-bundle SHA-256 printed by `pdv1 verify-build` (and optional test-kit variant name);
 - CD-R vs CD-RW, finalization and CD-TEXT state;
 - optional media brand/product and writer/speed;
 - load/track-access behavior;
@@ -44,7 +45,7 @@ A physical report records:
 - audio-beacon outcome;
 - optional repeated-attempt counts.
 
-During Draft 0.2, physical reports must use IDs in the development/test namespace `999900-999999`.
+During Draft 0.2, physical reports must use IDs in the development/test namespace `999900-999999`. A report also requires the 64-character `bundle_sha256` of the exact three-file mastering bundle. This distinguishes experiments even when the logical PD ID is intentionally the same (for example the `999901` CD-TEXT on/off A/B pair) and pins evidence if a draft generator later changes.
 
 ## Unknown and negative results
 

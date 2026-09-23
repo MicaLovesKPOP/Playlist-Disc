@@ -151,6 +151,7 @@ def cmd_verify_build(args: argparse.Namespace) -> int:
     print("CD-TEXT: PASS" if report.cd_text_present else "CD-TEXT: OMITTED (intentional)")
     print(f"audio beacon: PASS ({report.beacon_frames} matching frames)")
     print("cross-channel identity: PASS")
+    print(f"bundle SHA-256: {report.bundle_sha256}")
     return 0
 
 

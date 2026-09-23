@@ -11,7 +11,7 @@ from typing import Any
 
 from .identity import DRAFT_VERSION, FORMAT_NAME, PDIdentity
 from .mastering import build_bundle
-from .verify import verify_build
+from .verify import bundle_fingerprint, verify_build
 
 TEST_KIT_FORMAT = "PDv1-test-kit"
 
@@ -96,6 +96,7 @@ def build_test_kit(output_dir: str | Path) -> Path:
                     "id": identity.canonical,
                     "machine_id": identity.machine_id,
                     "bundle": bundle_rel.as_posix(),
+                    "bundle_sha256": report.bundle_sha256,
                 }
             )
 
@@ -186,5 +187,11 @@ def verify_test_kit(root: str | Path) -> list[str]:
             errors.append(f"{name}: bundle identity disagrees with test-kit manifest")
         if report.cd_text_present is not item.get("cd_text"):
             errors.append(f"{name}: CD-TEXT mode disagrees with test-kit manifest")
+
+        expected_fingerprint = item.get("bundle_sha256")
+        if not isinstance(expected_fingerprint, str):
+            errors.append(f"{name}: bundle_sha256 missing")
+        elif expected_fingerprint != bundle_fingerprint(bundle):
+            errors.append(f"{name}: bundle SHA-256 disagrees with test-kit manifest")
 
     return errors

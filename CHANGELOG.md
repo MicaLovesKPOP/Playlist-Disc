@@ -42,6 +42,13 @@
 - Catalog export now refuses invalid source data and includes canonical-manifest content hashes/counts.
 - Added architecture decisions documenting provider-neutral public IDs and canonical recording manifests.
 
+### Physical evidence provenance
+
+- Added a deterministic SHA-256 fingerprint over each exact three-file mastering bundle (`manifest.json`, `disc.toc`, `beacon.wav`) with unambiguous filename/length framing.
+- `pdv1 verify-build` now prints the exact bundle fingerprint; generated test-kit manifests pin a fingerprint for every variant and verification detects artifact drift.
+- Structured physical compatibility reports now require `bundle_sha256` and may record a test-kit variant name, preventing results from becoming detached from the exact draft artifact that was burned.
+- Added regression tests proving identical bundles fingerprint identically and even harmless byte-level mastering drift changes the fingerprint.
+
 ### Compatibility-test preparation
 
 - Replaced loose vehicle notes with schema-validated head-unit compatibility profiles.
