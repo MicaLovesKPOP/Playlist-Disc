@@ -9,7 +9,8 @@ import re
 import wave
 
 from .beacon import decode_beacon_wav
-from .identity import PDIdentity, decode_track_durations
+from .identity import DRAFT_VERSION, FORMAT_NAME, PDIdentity, TRACK_COUNT, decode_track_durations
+from .mastering import BEACON_PROFILE
 
 _MESSAGE_RE = re.compile(r'^\s*MESSAGE\s+"(PD1-\d{6}-\d)"\s*$', re.MULTILINE)
 _SILENCE_RE = re.compile(r"^\s*SILENCE\s+(\d+):(\d+):(\d+)\s*$")
@@ -52,8 +53,8 @@ def _wav_seconds(path: Path) -> float:
 def _toc_track_durations(toc_path: Path) -> tuple[float, ...]:
     text = toc_path.read_text(encoding="utf-8")
     blocks = text.split("TRACK AUDIO")[1:]
-    if len(blocks) != 8:
-        raise ValueError(f"generated TOC has {len(blocks)} tracks, expected 8")
+    if len(blocks) != TRACK_COUNT:
+        raise ValueError(f"generated TOC has {len(blocks)} tracks, expected {TRACK_COUNT}")
 
     durations: list[float] = []
     for block in blocks:
@@ -76,6 +77,16 @@ def _toc_track_durations(toc_path: Path) -> tuple[float, ...]:
     return tuple(durations)
 
 
+def _load_manifest(path: Path) -> dict[str, object]:
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid build manifest: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise ValueError("build manifest must be a JSON object")
+    return manifest
+
+
 def verify_build(bundle: str | Path) -> BuildVerificationReport:
     root = Path(bundle)
     manifest_path = root / "manifest.json"
@@ -85,15 +96,44 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
         if not required.is_file():
             raise ValueError(f"missing build artifact: {required.name}")
 
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest_identity = PDIdentity.parse(str(manifest["machine_id"]))
-    identity = PDIdentity.parse(str(manifest["id"]))
+    manifest = _load_manifest(manifest_path)
+    if manifest.get("format") != FORMAT_NAME:
+        raise ValueError(f"manifest format must be {FORMAT_NAME!r}")
+    if manifest.get("draft") != DRAFT_VERSION:
+        raise ValueError(f"manifest draft must be {DRAFT_VERSION!r}")
+    if manifest.get("beacon_profile") != BEACON_PROFILE:
+        raise ValueError(f"manifest beacon profile must be {BEACON_PROFILE!r}")
+
+    try:
+        manifest_identity = PDIdentity.parse(str(manifest["machine_id"]))
+        identity = PDIdentity.parse(str(manifest["id"]))
+    except KeyError as exc:
+        raise ValueError(f"build manifest is missing required field {exc.args[0]!r}") from exc
     if manifest_identity != identity:
         raise ValueError("manifest canonical ID and machine ID disagree")
+    if manifest.get("namespace") != identity.namespace:
+        raise ValueError("manifest namespace disagrees with identity")
     if manifest.get("check_digit") != identity.check_digit:
         raise ValueError("manifest check digit disagrees with identity")
+    if manifest.get("total_seconds") != identity.total_seconds:
+        raise ValueError("manifest total duration disagrees with identity")
     if manifest.get("toc_sha256") != identity.toc_signature:
         raise ValueError("manifest TOC signature disagrees with identity")
+
+    raw_manifest_durations = manifest.get("track_durations_seconds")
+    if not isinstance(raw_manifest_durations, list) or len(raw_manifest_durations) != TRACK_COUNT:
+        raise ValueError(
+            f"manifest track durations must contain exactly {TRACK_COUNT} values"
+        )
+    try:
+        manifest_durations = tuple(float(value) for value in raw_manifest_durations)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("manifest track durations must be numeric") from exc
+    if any(
+        abs(actual - expected) > 0.01
+        for actual, expected in zip(manifest_durations, identity.track_durations, strict=True)
+    ):
+        raise ValueError("manifest track durations disagree with identity")
 
     toc_text = toc_path.read_text(encoding="utf-8")
     messages = _MESSAGE_RE.findall(toc_text)
@@ -122,7 +162,6 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
             f"beacon={beacon_identity.machine_id}"
         )
 
-    manifest_durations = tuple(float(x) for x in manifest["track_durations_seconds"])
     if any(abs(a - b) > 0.01 for a, b in zip(manifest_durations, durations, strict=True)):
         raise ValueError("manifest track durations disagree with mastering TOC")
 

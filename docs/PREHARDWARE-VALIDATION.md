@@ -44,7 +44,9 @@ These are synthetic tests, not evidence that a particular car's analogue path wi
 - CD-TEXT MESSAGE;
 - decoded audio beacon.
 
-All channels must agree and the beacon must contain at least two matching checksum-valid frames.
+It also verifies that the generated manifest declares the current PDv1 format/draft, the correct namespace, checksum, total duration, exact duration vector, TOC signature, and beacon profile. This prevents a stale generator or hand-edited manifest from passing merely because the redundant identity channels still agree.
+
+All identity channels must agree and the beacon must contain at least two matching checksum-valid frames.
 
 This catches generator regressions before a blank disc is consumed.
 

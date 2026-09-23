@@ -9,6 +9,8 @@ from typing import Iterable
 from .checksum import damm_digit, damm_validate
 
 FORMAT_VERSION = 1
+FORMAT_NAME = "PDv1"
+DRAFT_VERSION = "0.2"
 TRACK_COUNT = 8
 IDENT_TRACK_SECONDS = 9
 DIGIT_BASE_SECONDS = 12
