@@ -57,7 +57,7 @@ research_evidence:
       locator: BMW Professional / MINI Boost CD radio; CD-drive capability paragraph
   - topic: cd_changer
     claim: R55 service instructions for removing the CD changer explicitly require the optical-fibre handling procedure before disconnecting the changer.
-    implication: The optional R55 changer is an optical/MOST component, so a changer-emulating playback path is fundamentally different from Shadow's analogue Mini-ISO changer path and should not be designed as a simple electrical CDC clone.
+    implication: The optional R55 changer is an optical/MOST component, so a changer-emulating playback path is fundamentally different from the Alfa 147's analogue Mini-ISO changer path and should not be designed as a simple electrical CDC clone.
     source:
       source_type: manufacturer_service_documentation_mirror
       title: 65 11 072 Removing and installing/replacing CD changer - Clubman R55
@@ -99,7 +99,7 @@ research_evidence:
     claim: BMW/MINI ISTA/P user documentation says R55/R56 programming can use OBD-connected ICOM A, while MOST multichannel programming uses ICOM A plus ICOM B when a MOST direct-access port exists; it also notes that RAD2 vehicles do not always have that direct-access port.
     implication: Existing OBD diagnostics are useful for module identification/coding research, but OBD access should not be treated as equivalent to unrestricted direct MOST capture. The exact diagnostic interface present in the target car remains to be checked.
     source:
-      source_type: manufacturer_documentation
+      source_type: manufacturer_service_documentation_mirror
       title: ISTA/P User Documentation - MINI vehicle interfaces and MOST
       publisher: BMW AG (manual mirror by ManualShelf)
       url: https://www.manualshelf.com/manual/bmw/ag-icom/user-guide-english.html

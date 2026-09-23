@@ -2,7 +2,7 @@
 
 This note records source-backed facts that can shape a future PD Bridge adapter for the pre-LCI MINI Clubman R55 with **Radio MINI Boost CD / RAD2**. It deliberately separates documented architecture from anything that still requires a real vehicle, optical media, or bus capture.
 
-The target car already has steering-wheel media controls and an existing diagnostic setup through the OBD port. Those facts make the platform unusually attractive for an OEM+ implementation, but they do not turn OBD diagnostics into arbitrary MOST/K-CAN monitoring.
+The target car already has steering-wheel media controls and an existing diagnostic setup through the OBD port. Those facts make the platform unusually attractive for an OEM-style implementation, but they do not turn OBD diagnostics into arbitrary MOST/K-CAN monitoring.
 
 ## Evidence established by documentation
 
@@ -16,7 +16,7 @@ MINI service-technique documentation describes the BMW Professional / MINI Boost
 
 A separate MOST service description likewise says the RAD2 head-unit gateway is connected to both MOST and K-CAN and that the head unit forms the interface between the two buses.
 
-For PDv1 this is the most important architectural fact: **Choco does not have one simple radio bus**. A future adapter can plausibly have different responsibilities on different networks:
+For PDv1 this is the most important architectural fact: **the R55/RAD2 stack does not have one simple radio bus**. A future adapter can plausibly have different responsibilities on different networks:
 
 - K-CAN may expose useful vehicle/control state;
 - MOST is the documented infotainment ring and likely digital-audio/control path for optional multimedia modules;
@@ -28,13 +28,13 @@ Nothing in those documents proves that the in-dash CD player's TOC, CD-TEXT, tra
 
 The service-technique document states that the Boost CD drive plays ordinary audio CDs as well as compressed MP3/WMA media.
 
-That is encouraging for optical-disc experimentation, but PDv1 should **not** change its compatibility baseline because of it. Ordinary CD-DA remains the conservative universal format across Shadow, Choco, Misty, and future cars. MP3 capability only tells us that RAD2 has a richer optical parser internally; it does not establish what information leaves the head unit.
+That is encouraging for optical-disc experimentation, but PDv1 should **not** change its compatibility baseline because of it. Ordinary CD-DA remains the conservative universal format across the reference vehicles and future cars. MP3 capability only tells us that RAD2 has a richer optical parser internally; it does not establish what information leaves the head unit.
 
 ### The optional R55 CD changer is on the optical infotainment side
 
 MINI's R55 CD-changer removal instructions explicitly tell the technician to follow optical-fibre handling procedures before disconnecting the changer.
 
-That matters because it kills a tempting oversimplification: the MINI changer path is not analogous to the Alfa's analogue Mini-ISO changer connector. A future Choco playback integration that behaves like a factory changer has to respect the **MOST architecture** or use an existing MOST interface rather than pretending the changer is a few analogue pins.
+That matters because it rules out a tempting oversimplification: the MINI changer path is not analogous to the Alfa 147's analogue Mini-ISO changer connector. A future R55 playback integration that behaves like a factory changer has to respect the **MOST architecture** or use an existing MOST interface rather than treating the changer as a few analogue pins.
 
 ### Steering-wheel track controls are documented on the 2008 Clubman
 
@@ -46,7 +46,7 @@ That makes steering input and the OEM display valid PD Bridge targets. Documenta
 
 BMW/MINI ISTA/P documentation for R55/R56 distinguishes normal vehicle-interface access over the OBD socket from MOST multichannel programming via ICOM B / a MOST direct-access port. It also notes that RAD2-equipped cars do not always have that direct-access port.
 
-So Choco's existing OBD diagnostic setup is useful for:
+The target car's existing OBD diagnostic setup is therefore useful for:
 
 - identifying the exact RAD2 module/software;
 - reading fault memory and module topology;
@@ -64,7 +64,7 @@ The current evidence supports a split design:
 3. **Streaming audio / rich OEM integration** belongs on the MOST side or in a proven MOST-compatible aftermarket interface rather than a homemade analogue changer hack.
 4. **Diagnostics/coding** remain a setup/research tool, not the runtime bridge transport by default.
 
-This division fits PD Bridge Draft 0.1: a Choco-specific adapter can hide MOST/K-CAN complexity and publish only normalized events such as `DISC_SELECTED`, `NEXT`, `PREVIOUS`, `SOURCE_STATE`, and display capability.
+This division fits PD Bridge Draft 0.1: an R55-specific adapter can hide MOST/K-CAN complexity and publish only normalized events such as `DISC_SELECTED`, `NEXT`, `PREVIOUS`, `SOURCE_STATE`, and display capability.
 
 ## Questions deliberately left for hardware
 
