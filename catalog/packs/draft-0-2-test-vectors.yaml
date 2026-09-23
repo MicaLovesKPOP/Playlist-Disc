@@ -1,0 +1,17 @@
+schema_version: 1
+slug: draft-0-2-test-vectors
+title: PDv1 Draft 0.2 test vectors
+description: Ordered development wallet containing the repository's three software test identities.
+status: draft
+capacity: 12
+discs:
+  - "999901"
+  - "999902"
+  - "999903"
+provenance:
+  authority: project
+  maintainers: []
+tags:
+  - development
+  - diagnostic
+notes: Development/test namespace only; not a permanent public music pack.

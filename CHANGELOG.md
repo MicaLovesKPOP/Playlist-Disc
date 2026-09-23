@@ -30,6 +30,16 @@
 - Added validation/tests for namespace isolation, deterministic paths, allocation collisions, binding syntax, CLI round-trips, and private virtual builds.
 - Added ADR 0003 documenting the privacy boundary, lack of central private allocation, multi-device collision behavior, and non-recycling guidance.
 
+### Library, packs, and search
+
+- Added a Draft 0.2 pack schema for ordered 12/24/48/96-capacity wallet views over existing catalog IDs.
+- Whole-catalog validation now checks pack paths, duplicate slots, capacity limits, and missing catalog references.
+- Added a development test-vector pack to exercise pack validation and slot resolution without opening permanent public IDs.
+- Added deterministic catalog search with status/tag filters plus `pdv1 search-catalog`.
+- Added `pdv1 pack-list` and `pdv1 pack-show` with resolved 1-based wallet slots.
+- Added `pdv1 export-library`, a validated static JSON snapshot containing entries, resolved packs, and browsing facets.
+- Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
+
 ## 0.1.0a1 — initial draft
 
 - PDv1 Draft 0.1 physical-format proposal.

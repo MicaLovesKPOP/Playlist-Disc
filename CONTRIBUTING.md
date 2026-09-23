@@ -27,16 +27,24 @@ For canonical recording rows, use a MusicBrainz Recording MBID and/or ISRC rathe
 
 Provider-native entries must say so. Federated entries must provide multiple declared equivalent/best-available bindings. Numeric ID ranges do not encode providers or categories.
 
+## Pack changes
+
+Packs live at `catalog/packs/<slug>.yaml` and validate against `catalog/schema/pack.schema.json`.
+
+A pack is curation only: it must reference existing catalog IDs rather than copying or redefining disc semantics. Keep its ID list ordered, duplicate-free, and within the declared 12/24/48/96 wallet capacity. During Draft 0.2, do not create permanent public music packs that imply the still-unopened public ID registry is frozen.
+
 Run:
 
 ```bash
 python -m pip install -e '.[dev]'
 pdv1 validate-catalog catalog
 pdv1 export-catalog catalog --output /tmp/catalog.json
+pdv1 export-library catalog --output /tmp/library.json
+pdv1 pack-list catalog
 pytest
 ```
 
-Export intentionally refuses an invalid registry.
+Exports intentionally refuse an invalid registry.
 
 ## Compatibility reports
 

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/pack.schema.json",
+  "title": "PDv1 catalog pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "slug",
+    "title",
+    "status",
+    "capacity",
+    "discs",
+    "provenance",
+    "tags"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "slug": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "title": {"type": "string", "minLength": 1, "maxLength": 160},
+    "description": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "status": {"enum": ["draft", "active", "retired"]},
+    "capacity": {"enum": [12, 24, 48, 96]},
+    "discs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 96,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[0-9]{6}$"}
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority"],
+      "properties": {
+        "authority": {"enum": ["project", "community", "artist", "label", "provider"]},
+        "maintainers": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+      "uniqueItems": true
+    },
+    "notes": {"type": "string"}
+  }
+}

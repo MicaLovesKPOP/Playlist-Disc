@@ -13,11 +13,18 @@ from .audit import assert_reference_audit, audit_encoding
 from .catalog import (
     find_entry,
     iter_entries,
+    iter_packs,
     load_yaml,
-    manifest_metadata,
     validate_catalog,
 )
 from .identity import PDIdentity, decode_track_durations
+from .library import (
+    catalog_entries,
+    catalog_packs,
+    library_snapshot,
+    pack_by_slug,
+    search_catalog,
+)
 from .local import (
     create_local_entry,
     find_local_entry,
@@ -58,6 +65,14 @@ def _parse_bindings(values: list[str]) -> dict[str, str]:
     if not bindings:
         raise ValueError("at least one --binding PROVIDER=RESOURCE is required")
     return bindings
+
+
+def _validated_catalog(catalog: str | Path) -> bool:
+    errors = validate_catalog(catalog)
+    if not errors:
+        return True
+    _print_errors(errors)
+    return False
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
@@ -143,42 +158,114 @@ def cmd_validate_catalog(args: argparse.Namespace) -> int:
         args.catalog,
         entry_schema_path=args.schema,
         manifest_schema_path=args.manifest_schema,
+        pack_schema_path=args.pack_schema,
     )
     if errors:
         _print_errors(errors)
         return 1
-    count = sum(1 for _ in iter_entries(args.catalog))
-    print(f"validated {count} catalog entries")
+    entry_count = sum(1 for _ in iter_entries(args.catalog))
+    pack_count = sum(1 for _ in iter_packs(args.catalog))
+    print(f"validated {entry_count} catalog entries and {pack_count} packs")
     return 0
 
 
 def cmd_export_catalog(args: argparse.Namespace) -> int:
-    errors = validate_catalog(args.catalog)
-    if errors:
-        _print_errors(errors)
+    if not _validated_catalog(args.catalog):
         print("error: refusing to export invalid catalog", file=sys.stderr)
         return 1
 
-    entries = []
-    for path in iter_entries(args.catalog):
-        data = load_yaml(path)
-        ident = PDIdentity.parse(str(data["id"]))
-        item = dict(data)
-        item["machine_id"] = ident.machine_id
-        item["namespace"] = ident.namespace
-        item["track_durations_seconds"] = list(ident.track_durations)
-        item["toc_sha256"] = ident.toc_signature
-        manifest = manifest_metadata(args.catalog, data)
-        if manifest is not None:
-            item["canonical_manifest"] = manifest
-        entries.append(item)
-
-    entries.sort(key=lambda item: item["id"])
-    payload = {"schema_version": 1, "format": "PDv1", "entries": entries}
+    payload = {
+        "schema_version": 1,
+        "format": "PDv1",
+        "entries": catalog_entries(args.catalog),
+    }
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(f"exported {len(entries)} entries to {output}")
+    print(f"exported {len(payload['entries'])} entries to {output}")
+    return 0
+
+
+def cmd_export_library(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to export invalid library", file=sys.stderr)
+        return 1
+
+    payload = library_snapshot(args.catalog)
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"exported {len(payload['entries'])} entries and "
+        f"{len(payload['packs'])} packs to {output}"
+    )
+    return 0
+
+
+def cmd_search_catalog(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to search invalid catalog", file=sys.stderr)
+        return 1
+
+    try:
+        results = search_catalog(
+            args.catalog,
+            args.query,
+            statuses=set(args.status) if args.status else None,
+            tags=set(args.tag) if args.tag else None,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return 0
+
+    for entry in results:
+        tags = ",".join(entry.get("tags", []))
+        print(f"{entry['id']}\t{entry['title']}\t{entry['status']}\t{tags}")
+    return 0
+
+
+def cmd_pack_list(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to list packs from invalid catalog", file=sys.stderr)
+        return 1
+
+    packs = catalog_packs(args.catalog)
+    if args.json:
+        print(json.dumps(packs, indent=2))
+        return 0
+
+    for pack in packs:
+        print(
+            f"{pack['slug']}\t{pack['disc_count']}/{pack['capacity']}\t"
+            f"{pack['status']}\t{pack['title']}"
+        )
+    return 0
+
+
+def cmd_pack_show(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to show pack from invalid catalog", file=sys.stderr)
+        return 1
+
+    pack = pack_by_slug(args.catalog, args.slug)
+    if pack is None:
+        print(f"error: pack {args.slug!r} does not exist", file=sys.stderr)
+        return 2
+
+    if args.json:
+        print(json.dumps(pack, indent=2))
+        return 0
+
+    print(f"{pack['title']} ({pack['disc_count']}/{pack['capacity']})")
+    for slot in pack["slots"]:
+        print(
+            f"{slot['slot']:02d}\t{slot['id']}\t"
+            f"{slot['short_title']}\t{slot['title']}"
+        )
     return 0
 
 
@@ -293,16 +380,50 @@ def build_parser() -> argparse.ArgumentParser:
     )
     audit_p.set_defaults(func=cmd_audit_encoding)
 
-    val_p = sub.add_parser("validate-catalog", help="validate registry schemas and cross-file invariants")
+    val_p = sub.add_parser(
+        "validate-catalog",
+        help="validate registry schemas, packs, and cross-file invariants",
+    )
     val_p.add_argument("catalog", nargs="?", default="catalog")
     val_p.add_argument("--schema")
     val_p.add_argument("--manifest-schema")
+    val_p.add_argument("--pack-schema")
     val_p.set_defaults(func=cmd_validate_catalog)
 
     export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")
     export_p.add_argument("--output", default="build/catalog.json")
     export_p.set_defaults(func=cmd_export_catalog)
+
+    library_p = sub.add_parser(
+        "export-library",
+        help="build a static-library JSON snapshot containing entries, packs, and facets",
+    )
+    library_p.add_argument("catalog", nargs="?", default="catalog")
+    library_p.add_argument("--output", default="build/library.json")
+    library_p.set_defaults(func=cmd_export_library)
+
+    search_p = sub.add_parser(
+        "search-catalog",
+        help="search validated catalog metadata using AND-token matching",
+    )
+    search_p.add_argument("query")
+    search_p.add_argument("--catalog", default="catalog")
+    search_p.add_argument("--status", action="append", choices=["draft", "active", "retired"])
+    search_p.add_argument("--tag", action="append", default=[])
+    search_p.add_argument("--json", action="store_true")
+    search_p.set_defaults(func=cmd_search_catalog)
+
+    pack_list_p = sub.add_parser("pack-list", help="list validated catalog packs")
+    pack_list_p.add_argument("catalog", nargs="?", default="catalog")
+    pack_list_p.add_argument("--json", action="store_true")
+    pack_list_p.set_defaults(func=cmd_pack_list)
+
+    pack_show_p = sub.add_parser("pack-show", help="show ordered wallet slots for one pack")
+    pack_show_p.add_argument("slug")
+    pack_show_p.add_argument("--catalog", default="catalog")
+    pack_show_p.add_argument("--json", action="store_true")
+    pack_show_p.set_defaults(func=cmd_pack_show)
 
     local_create_p = sub.add_parser(
         "local-create",

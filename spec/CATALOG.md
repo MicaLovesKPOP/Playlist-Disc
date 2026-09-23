@@ -2,13 +2,13 @@
 
 The public catalog is a registry of **meanings**, not a pile of streaming URLs.
 
-A physical Playlist Disc identifies a stable semantic record. Providers, URLs, market availability, and cached playlists are realization details layered on top.
+A physical Playlist Disc identifies a stable semantic record. Providers, URLs, market availability, cached playlists, and pack membership are realization or curation details layered on top.
 
 ## Categories are facets, not ID ranges
 
 The same entry can be community-maintained, living, canonical, K-pop, shuffled, and available on several providers at once. These properties are stored independently.
 
-Numeric IDs do **not** encode category, provider, genre, ownership, curation authority, or lifecycle.
+Numeric IDs do **not** encode category, provider, genre, ownership, curation authority, lifecycle, or pack membership.
 
 ## Definition types
 
@@ -66,6 +66,20 @@ Provider-specific exact-track overrides may be stored when automated resolution 
 
 Within one manifest, the same MBID or ISRC cannot identify two different recording rows. Ambiguous manifests are rejected by validation.
 
+## Packs and wallet order
+
+Packs are curated ordered views over existing catalog IDs. They do not allocate IDs and do not alter disc meaning.
+
+Source packs live at:
+
+```text
+catalog/packs/<slug>.yaml
+```
+
+Draft 0.2 supports declared wallet capacities of 12, 24, 48, and 96. A pack may be partially filled. Its ordered ID list maps directly to 1-based wallet slots in generated library data.
+
+Validation rejects missing references, duplicate IDs, wrong paths, and membership larger than capacity. Updating a pack is a curation change, not a change to any referenced physical identity.
+
 ## Catalog file layout is normative
 
 A catalog entry must live at:
@@ -109,7 +123,9 @@ For canonical-manifest entries, generated export metadata includes:
 - SHA-256 of the manifest bytes;
 - recording count.
 
-This allows clients and mirrors to detect changed living manifests without treating provider URLs as physical-disc identity.
+`pdv1 export-library` adds validated packs, resolved wallet slots, and browsing facets on top of the catalog-entry snapshot. Generated export data is a client artifact rather than a second source of truth.
+
+This allows clients and mirrors to detect changed living manifests and consume pack curation without treating provider URLs or wallet membership as physical-disc identity.
 
 ## Examples
 
