@@ -1,0 +1,73 @@
+name: Compatibility test report
+description: Submit structured observations from a PDv1 development disc on a specific head unit.
+title: "[compat] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this only for observations you actually measured. During Draft 0.2, physical tests must use a development/test ID in 999900–999999. Do not include VINs, registration numbers, addresses, or other unnecessary personal data.
+  - type: input
+    id: vehicle
+    attributes:
+      label: Vehicle / generation
+      placeholder: Alfa Romeo 147 (937)
+    validations:
+      required: true
+  - type: input
+    id: head_unit
+    attributes:
+      label: Head unit
+      placeholder: Blaupunkt ALFA-937
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware / software version
+      placeholder: "3.17 (leave blank if genuinely unknown)"
+  - type: input
+    id: pd_id
+    attributes:
+      label: PDv1 development machine ID
+      placeholder: PD1-999901-7
+    validations:
+      required: true
+  - type: dropdown
+    id: media
+    attributes:
+      label: Media
+      options:
+        - CD-R
+        - CD-RW
+    validations:
+      required: true
+  - type: dropdown
+    id: cd_text
+    attributes:
+      label: CD-TEXT written?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: writer
+    attributes:
+      label: Writer / blank / write speed (if known)
+      description: Optional, but useful when diagnosing media-specific behavior.
+  - type: textarea
+    id: results
+    attributes:
+      label: Observations
+      description: Include loading, track access, timing display/rounding, CD-TEXT, cold start, eject/reinsert, bus visibility, and beacon behavior that you actually tested.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy / evidence
+      options:
+        - label: These are measured observations, not guesses or copied claims.
+          required: true
+        - label: I removed VINs, registration numbers, addresses, account credentials, and other unnecessary personal identifiers.
+          required: true

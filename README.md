@@ -9,6 +9,17 @@ The same disc is intended to work across different cars and playback services. T
 > [!WARNING]
 > PDv1 is currently **Draft 0.2**. Only IDs `999900-999999` are for physical experiments. Do not mint permanent public music discs until PDv1.0 is frozen after real-world compatibility testing.
 
+## Installation
+
+The project is not published to PyPI yet. Install from a checkout or directly from GitHub; Python 3.11–3.13 is supported. `cdrdao` is only required for actual physical writing, not for generating or validating discs/catalogs.
+
+```bash
+pipx install "git+https://github.com/MicaLovesKPOP/Playlist-Disc.git"
+pdv1 --help
+```
+
+CI builds and installs the wheel on Ubuntu, Windows, and macOS. See `docs/INSTALLATION.md` for development and packaging details.
+
 ## Redundant physical identity
 
 A Playlist Disc carries the same logical identity through:
