@@ -42,6 +42,7 @@ from .local import (
 from .mastering import build_bundle
 from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
+from .testkit import build_test_kit, verify_test_kit
 from .verify import verify_build
 
 
@@ -129,7 +130,13 @@ def cmd_build(args: argparse.Namespace) -> int:
     if not title:
         title = ident.canonical
     output = Path(args.output or f"build/{ident.canonical}")
-    build_bundle(ident, output, title=title, short_title=short_title)
+    build_bundle(
+        ident,
+        output,
+        title=title,
+        short_title=short_title,
+        cd_text=not args.no_cdtext,
+    )
     print(output)
     return 0
 
@@ -139,7 +146,7 @@ def cmd_verify_build(args: argparse.Namespace) -> int:
     print(report.identity.machine_id)
     print("manifest: PASS")
     print("TOC: PASS")
-    print("CD-TEXT: PASS")
+    print("CD-TEXT: PASS" if report.cd_text_present else "CD-TEXT: OMITTED (intentional)")
     print(f"audio beacon: PASS ({report.beacon_frames} matching frames)")
     print("cross-channel identity: PASS")
     return 0
@@ -437,10 +444,44 @@ def cmd_bridge_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_build_test_kit(args: argparse.Namespace) -> int:
+    try:
+        output = build_test_kit(args.output)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(output)
+    return 0
+
+
+def cmd_verify_test_kit(args: argparse.Namespace) -> int:
+    errors = verify_test_kit(args.kit)
+    if errors:
+        _print_errors(errors)
+        return 1
+    print("test kit: PASS")
+    return 0
+
+
 def cmd_burn(args: argparse.Namespace) -> int:
     toc = Path(args.toc)
     if not toc.exists():
         print(f"error: {toc} does not exist", file=sys.stderr)
+        return 2
+    try:
+        report = verify_build(toc.parent)
+    except (OSError, ValueError) as exc:
+        print(
+            f"error: refusing to burn an unverified mastering bundle: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    if report.identity.namespace != "test":
+        print(
+            "error: Draft 0.2 burning is restricted to development/test IDs "
+            "999900-999999; public/private builds remain virtual until PDv1.0",
+            file=sys.stderr,
+        )
         return 2
     cdrdao = shutil.which("cdrdao")
     if not cdrdao:
@@ -481,6 +522,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional local/private registry used to resolve title metadata",
     )
     build_p.add_argument("--output")
+    build_p.add_argument(
+        "--no-cdtext",
+        action="store_true",
+        help="omit optional CD-TEXT while preserving the same physical PD identity",
+    )
     build_p.set_defaults(func=cmd_build)
 
     verify_p = sub.add_parser(
@@ -637,7 +683,21 @@ def build_parser() -> argparse.ArgumentParser:
     bridge_validate_p.add_argument("transcript")
     bridge_validate_p.set_defaults(func=cmd_bridge_validate)
 
-    burn_p = sub.add_parser("burn", help="write a generated disc.toc using cdrdao")
+    kit_build_p = sub.add_parser(
+        "build-test-kit",
+        help="generate the Draft 0.2 physical compatibility test bundles",
+    )
+    kit_build_p.add_argument("--output", default="build/test-kit")
+    kit_build_p.set_defaults(func=cmd_build_test_kit)
+
+    kit_verify_p = sub.add_parser(
+        "verify-test-kit",
+        help="verify every generated Draft 0.2 compatibility-test bundle",
+    )
+    kit_verify_p.add_argument("kit", nargs="?", default="build/test-kit")
+    kit_verify_p.set_defaults(func=cmd_verify_test_kit)
+
+    burn_p = sub.add_parser("burn", help="write a verified Draft test disc using cdrdao")
     burn_p.add_argument("toc")
     burn_p.add_argument("--device")
     burn_p.add_argument("--speed", type=int)

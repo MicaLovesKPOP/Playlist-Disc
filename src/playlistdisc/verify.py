@@ -9,7 +9,13 @@ import re
 import wave
 
 from .beacon import decode_beacon_wav
-from .identity import DRAFT_VERSION, FORMAT_NAME, PDIdentity, TRACK_COUNT, decode_track_durations
+from .identity import (
+    DRAFT_VERSION,
+    FORMAT_NAME,
+    PDIdentity,
+    TRACK_COUNT,
+    decode_track_durations,
+)
 from .mastering import BEACON_PROFILE
 
 _MESSAGE_RE = re.compile(r'^\s*MESSAGE\s+"(PD1-\d{6}-\d)"\s*$', re.MULTILINE)
@@ -24,7 +30,8 @@ class BuildVerificationReport:
     identity: PDIdentity
     manifest_identity: PDIdentity
     toc_identity: PDIdentity
-    cdtext_identity: PDIdentity
+    cdtext_identity: PDIdentity | None
+    cd_text_present: bool
     beacon_identity: PDIdentity
     beacon_frames: int
     track_durations_seconds: tuple[float, ...]
@@ -35,9 +42,10 @@ class BuildVerificationReport:
             self.identity.number,
             self.manifest_identity.number,
             self.toc_identity.number,
-            self.cdtext_identity.number,
             self.beacon_identity.number,
         }
+        if self.cdtext_identity is not None:
+            identities.add(self.cdtext_identity.number)
         return len(identities) == 1 and self.beacon_frames >= 2
 
 
@@ -103,6 +111,8 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
         raise ValueError(f"manifest draft must be {DRAFT_VERSION!r}")
     if manifest.get("beacon_profile") != BEACON_PROFILE:
         raise ValueError(f"manifest beacon profile must be {BEACON_PROFILE!r}")
+    if not isinstance(manifest.get("cd_text"), bool):
+        raise ValueError("manifest cd_text must be a boolean")
 
     try:
         manifest_identity = PDIdentity.parse(str(manifest["machine_id"]))
@@ -131,15 +141,32 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
         raise ValueError("manifest track durations must be numeric") from exc
     if any(
         abs(actual - expected) > 0.01
-        for actual, expected in zip(manifest_durations, identity.track_durations, strict=True)
+        for actual, expected in zip(
+            manifest_durations, identity.track_durations, strict=True
+        )
     ):
         raise ValueError("manifest track durations disagree with identity")
 
     toc_text = toc_path.read_text(encoding="utf-8")
     messages = _MESSAGE_RE.findall(toc_text)
-    if len(set(messages)) != 1:
-        raise ValueError("generated TOC must contain exactly one unique PDv1 MESSAGE")
-    cdtext_identity = PDIdentity.parse(messages[0])
+    has_cdtext = "CD_TEXT {" in toc_text
+    expects_cdtext = bool(manifest["cd_text"])
+    cdtext_identity: PDIdentity | None
+
+    if expects_cdtext:
+        if not has_cdtext:
+            raise ValueError("manifest declares CD-TEXT but mastering TOC omits it")
+        if len(set(messages)) != 1:
+            raise ValueError(
+                "CD-TEXT build must contain exactly one unique PDv1 MESSAGE"
+            )
+        cdtext_identity = PDIdentity.parse(messages[0])
+    else:
+        if has_cdtext or messages:
+            raise ValueError(
+                "mastering TOC contains CD-TEXT but manifest declares it omitted"
+            )
+        cdtext_identity = None
 
     durations = _toc_track_durations(toc_path)
     toc_identity = decode_track_durations(durations, tolerance=0.01)
@@ -147,22 +174,23 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
     beacon = decode_beacon_wav(beacon_path, required_matching_frames=2)
     beacon_identity = beacon.identity
 
-    if not (
-        identity
-        == manifest_identity
-        == toc_identity
-        == cdtext_identity
-        == beacon_identity
-    ):
-        raise ValueError(
-            "build channels disagree: "
-            f"manifest={manifest_identity.machine_id}, "
-            f"toc={toc_identity.machine_id}, "
-            f"cdtext={cdtext_identity.machine_id}, "
-            f"beacon={beacon_identity.machine_id}"
-        )
+    identities = [identity, manifest_identity, toc_identity, beacon_identity]
+    if cdtext_identity is not None:
+        identities.append(cdtext_identity)
+    if any(candidate != identity for candidate in identities):
+        details = [
+            f"manifest={manifest_identity.machine_id}",
+            f"toc={toc_identity.machine_id}",
+            f"beacon={beacon_identity.machine_id}",
+        ]
+        if cdtext_identity is not None:
+            details.append(f"cdtext={cdtext_identity.machine_id}")
+        raise ValueError("build channels disagree: " + ", ".join(details))
 
-    if any(abs(a - b) > 0.01 for a, b in zip(manifest_durations, durations, strict=True)):
+    if any(
+        abs(a - b) > 0.01
+        for a, b in zip(manifest_durations, durations, strict=True)
+    ):
         raise ValueError("manifest track durations disagree with mastering TOC")
 
     return BuildVerificationReport(
@@ -170,6 +198,7 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
         manifest_identity=manifest_identity,
         toc_identity=toc_identity,
         cdtext_identity=cdtext_identity,
+        cd_text_present=expects_cdtext,
         beacon_identity=beacon_identity,
         beacon_frames=beacon.valid_frames,
         track_durations_seconds=durations,

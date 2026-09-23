@@ -40,6 +40,8 @@ pdv1 inspect 999901
 pdv1 audit-encoding
 pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
+pdv1 build-test-kit --output build/test-kit
+pdv1 verify-test-kit build/test-kit
 pdv1 validate-catalog catalog
 pdv1 check-catalog-evolution /path/to/baseline/catalog catalog
 pdv1 search-catalog diagnostic --catalog catalog
@@ -99,6 +101,10 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 ## Vehicle/phone bridge
 
 Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+
+## Draft physical test kit
+
+The software can prepare and verify the future hardware-validation media before a burner or car is involved. `pdv1 build-test-kit` generates four verified bundles: a TOC baseline with CD-TEXT, the same ID without CD-TEXT, a beacon-focused no-CD-TEXT variant, and a dedicated CD-TEXT vector. CD-TEXT is explicitly optional and does not change the canonical TOC identity. During Draft 0.2, `pdv1 burn` refuses public/private IDs and only accepts verified test-namespace bundles. See `docs/BURNING.md`.
 
 ## Compatibility test preparation
 

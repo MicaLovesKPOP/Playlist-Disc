@@ -9,6 +9,14 @@
 - Added package project URLs, keywords, and a `release` dependency extra for reproducible artifact checks.
 - Added structured GitHub issue forms for compatibility evidence, catalog proposals, and bugs plus a pull-request safety/review checklist.
 
+### Physical-test-kit preparation
+
+- Made CD-TEXT an explicitly optional mastering channel while preserving identical PDv1 TOC identity/timing.
+- Hardened virtual verification so declared CD-TEXT presence/absence must match the mastering file and remaining identity channels still agree.
+- Added a deterministic four-variant Draft 0.2 physical compatibility kit, including a same-ID CD-TEXT on/off A/B pair and a beacon-focused no-CD-TEXT variant.
+- Added `pdv1 build-test-kit` / `verify-test-kit` and `pdv1 build --no-cdtext`.
+- Restricted the official Draft 0.2 `pdv1 burn` path to verified test-namespace bundles so unfinished public/private physical identities cannot be minted accidentally.
+
 ### Physical-format software validation
 
 - Added an exhaustive 1,000,000-ID encode/decode audit with a golden physical-mapping digest.

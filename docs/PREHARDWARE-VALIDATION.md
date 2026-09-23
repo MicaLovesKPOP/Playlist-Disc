@@ -46,9 +46,15 @@ These are synthetic tests, not evidence that a particular car's analogue path wi
 
 It also verifies that the generated manifest declares the current PDv1 format/draft, the correct namespace, checksum, total duration, exact duration vector, TOC signature, and beacon profile. This prevents a stale generator or hand-edited manifest from passing merely because the redundant identity channels still agree.
 
-All identity channels must agree and the beacon must contain at least two matching checksum-valid frames.
+All identity channels that the bundle declares present must agree and the beacon must contain at least two matching checksum-valid frames. CD-TEXT is optional: a bundle that deliberately declares `cd_text: false` must contain no CD-TEXT blocks and is verified through manifest + TOC + beacon instead.
 
 This catches generator regressions before a blank disc is consumed.
+
+## Physical-test-kit generation
+
+`pdv1 build-test-kit` deterministically creates and verifies the Draft 0.2 compatibility bundles required for the first hardware phase, including a controlled same-ID CD-TEXT on/off pair. This closes a software gap in the planned compatibility matrix: CD-TEXT absence can now be intentional rather than simulated by hand-editing a mastering file.
+
+The official `pdv1 burn` path also verifies the bundle and refuses any non-test namespace while the format remains a draft.
 
 ## What software cannot prove
 

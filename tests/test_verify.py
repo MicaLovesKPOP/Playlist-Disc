@@ -29,18 +29,43 @@ def test_generated_bundle_verifies_all_identity_channels(tmp_path: Path):
     assert report.manifest_identity == identity
     assert report.toc_identity == identity
     assert report.cdtext_identity == identity
+    assert report.cd_text_present is True
     assert report.beacon_identity == identity
     assert report.beacon_frames == 2
 
 
+def test_intentional_no_cdtext_bundle_verifies_remaining_channels(tmp_path: Path):
+    identity = PDIdentity(999901)
+    bundle = build_bundle(
+        identity,
+        tmp_path / "disc",
+        title="No CD-TEXT",
+        cd_text=False,
+    )
+    report = verify_build(bundle)
+    assert report.ok
+    assert report.cdtext_identity is None
+    assert report.cd_text_present is False
+    assert report.toc_identity == identity
+    assert report.beacon_identity == identity
+
+
 def test_cross_channel_mismatch_is_rejected(tmp_path: Path):
     identity = PDIdentity(999901)
-    bundle = build_bundle(identity, tmp_path / "disc", title="Test", short_title="TEST")
+    bundle = build_bundle(identity, tmp_path / "disc", title="Test")
     toc = bundle / "disc.toc"
     text = toc.read_text(encoding="utf-8")
     text = text.replace(identity.machine_id, PDIdentity(123456).machine_id)
     toc.write_text(text, encoding="utf-8")
     with pytest.raises(ValueError, match="channels disagree"):
+        verify_build(bundle)
+
+
+def test_cdtext_manifest_must_match_mastering_mode(tmp_path: Path):
+    identity = PDIdentity(999901)
+    bundle = build_bundle(identity, tmp_path / "disc", title="Test", cd_text=False)
+    _rewrite_manifest(bundle, cd_text=True)
+    with pytest.raises(ValueError, match="declares CD-TEXT but mastering TOC omits"):
         verify_build(bundle)
 
 
