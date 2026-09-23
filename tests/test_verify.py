@@ -32,6 +32,7 @@ def test_generated_bundle_verifies_all_identity_channels(tmp_path: Path):
     assert report.cd_text_present is True
     assert report.beacon_identity == identity
     assert report.beacon_frames == 2
+    assert len(report.bundle_sha256) == 64
 
 
 def test_intentional_no_cdtext_bundle_verifies_remaining_channels(tmp_path: Path):
@@ -101,3 +102,14 @@ def test_manifest_duration_vector_mismatch_is_rejected(tmp_path: Path):
     _rewrite_manifest(bundle, track_durations_seconds=durations)
     with pytest.raises(ValueError, match="track durations disagree with identity"):
         verify_build(bundle)
+
+
+def test_bundle_fingerprint_changes_when_exact_artifact_changes(tmp_path: Path):
+    identity = PDIdentity(999901)
+    first = build_bundle(identity, tmp_path / "one", title="Test")
+    second = build_bundle(identity, tmp_path / "two", title="Test")
+    assert verify_build(first).bundle_sha256 == verify_build(second).bundle_sha256
+
+    toc = second / "disc.toc"
+    toc.write_text(toc.read_text(encoding="utf-8") + "// harmless textual drift\n", encoding="utf-8")
+    assert verify_build(first).bundle_sha256 != verify_build(second).bundle_sha256

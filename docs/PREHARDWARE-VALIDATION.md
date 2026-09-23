@@ -50,6 +50,8 @@ All identity channels that the bundle declares present must agree and the beacon
 
 This catches generator regressions before a blank disc is consumed.
 
+Every verified bundle also receives a SHA-256 fingerprint over the exact `manifest.json`, `disc.toc`, and `beacon.wav` bytes using filename/length framing. Test-kit manifests pin that value. Future physical compatibility reports require it so measured evidence cannot become detached from the exact draft mastering artifact that was burned.
+
 ## Physical-test-kit generation
 
 `pdv1 build-test-kit` deterministically creates and verifies the Draft 0.2 compatibility bundles required for the first hardware phase, including a controlled same-ID CD-TEXT on/off pair. This closes a software gap in the planned compatibility matrix: CD-TEXT absence can now be intentional rather than simulated by hand-editing a mastering file.

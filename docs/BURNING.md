@@ -38,7 +38,7 @@ pdv1 build 999901 --no-cdtext --output build/PD1-999901-no-cdtext
 pdv1 verify-build build/PD1-999901-no-cdtext
 ```
 
-Verification reports `CD-TEXT: OMITTED (intentional)` and still independently checks the manifest, canonical TOC timing and repeated audio beacon.
+Verification reports `CD-TEXT: OMITTED (intentional)` and still independently checks the manifest, canonical TOC timing and repeated audio beacon. It also prints a `bundle SHA-256` for the exact `manifest.json` + `disc.toc` + `beacon.wav` bytes.
 
 ## Reference physical-test kit
 
@@ -58,7 +58,7 @@ The generated kit contains:
 | `beacon-no-cdtext` | `999902` | no | fallback beacon path without CD-TEXT |
 | `cdtext` | `999903` | yes | dedicated CD-TEXT/display observation |
 
-The two `999901` variants deliberately have the same machine identity. Their only intended difference is the optional CD-TEXT mastering layer, allowing an A/B test without changing the PDv1 TOC fingerprint.
+The two `999901` variants deliberately have the same machine identity. Their only intended difference is the optional CD-TEXT mastering layer, allowing an A/B test without changing the PDv1 TOC fingerprint. Each generated variant therefore also carries its own `bundle_sha256` in `test-kit.json`; record that fingerprint with every physical compatibility result.
 
 When physical work begins, burn only the variants actually needed for the next experiment rather than consuming the entire kit automatically.
 

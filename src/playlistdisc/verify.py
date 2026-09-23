@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -23,6 +24,7 @@ _SILENCE_RE = re.compile(r"^\s*SILENCE\s+(\d+):(\d+):(\d+)\s*$")
 _AUDIOFILE_RE = re.compile(
     r'^\s*AUDIOFILE\s+"([^"]+)"\s+\S+(?:\s+(\d+):(\d+):(\d+))?\s*$'
 )
+_BUNDLE_FILES = ("manifest.json", "disc.toc", "beacon.wav")
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +37,7 @@ class BuildVerificationReport:
     beacon_identity: PDIdentity
     beacon_frames: int
     track_durations_seconds: tuple[float, ...]
+    bundle_sha256: str
 
     @property
     def ok(self) -> bool:
@@ -47,6 +50,23 @@ class BuildVerificationReport:
         if self.cdtext_identity is not None:
             identities.add(self.cdtext_identity.number)
         return len(identities) == 1 and self.beacon_frames >= 2
+
+
+def bundle_fingerprint(bundle: str | Path) -> str:
+    """Hash the exact three-file mastering bundle with unambiguous framing."""
+    root = Path(bundle)
+    digest = hashlib.sha256()
+    for name in _BUNDLE_FILES:
+        path = root / name
+        if not path.is_file():
+            raise ValueError(f"missing build artifact: {name}")
+        data = path.read_bytes()
+        encoded_name = name.encode("utf-8")
+        digest.update(len(encoded_name).to_bytes(2, "big"))
+        digest.update(encoded_name)
+        digest.update(len(data).to_bytes(8, "big"))
+        digest.update(data)
+    return digest.hexdigest()
 
 
 def _msf_seconds(minutes: str, seconds: str, frames: str) -> float:
@@ -202,4 +222,5 @@ def verify_build(bundle: str | Path) -> BuildVerificationReport:
         beacon_identity=beacon_identity,
         beacon_frames=beacon.valid_frames,
         track_durations_seconds=durations,
+        bundle_sha256=bundle_fingerprint(root),
     )

@@ -123,6 +123,7 @@
           "report_id",
           "date",
           "disc_machine_id",
+          "bundle_sha256",
           "media",
           "results"
         ],
@@ -301,6 +302,15 @@
           "notes": {
             "type": "string",
             "maxLength": 2000
+          },
+          "bundle_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "test_variant": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "maxLength": 100
           }
         }
       }
