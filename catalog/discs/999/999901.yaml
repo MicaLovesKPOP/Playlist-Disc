@@ -1,0 +1,21 @@
+schema_version: 1
+id: "999901"
+title: "PDv1 TOC lattice smoke test"
+short_title: "PDV1 TOC TEST"
+status: draft
+definition:
+  type: diagnostic
+  purpose: "Exercise high digits, low digits, and the Damm check track."
+provenance:
+  authority: project
+  maintainers: []
+lifecycle: snapshot
+portability: canonical
+playback:
+  order: ordered
+  start: first
+  repeat: "off"
+tags:
+  - diagnostic
+  - toc
+notes: "Development namespace only. Never assign as public music content."

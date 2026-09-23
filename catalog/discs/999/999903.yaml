@@ -1,0 +1,21 @@
+schema_version: 1
+id: "999903"
+title: "PDv1 CD-TEXT smoke test"
+short_title: "PDV1 CDTEXT"
+status: draft
+definition:
+  type: diagnostic
+  purpose: "Observe CD-TEXT behavior on legacy head units without relying on it for conformance."
+provenance:
+  authority: project
+  maintainers: []
+lifecycle: snapshot
+portability: canonical
+playback:
+  order: ordered
+  start: first
+  repeat: "off"
+tags:
+  - diagnostic
+  - cd-text
+notes: "Development namespace only."

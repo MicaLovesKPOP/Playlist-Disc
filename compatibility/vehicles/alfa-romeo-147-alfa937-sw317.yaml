@@ -1,0 +1,13 @@
+schema_version: 1
+vehicle: "Alfa Romeo 147"
+head_unit: "Blaupunkt ALFA-937"
+firmware: "3.17"
+status: planned
+media:
+  cd_r: unknown
+  cd_rw: unknown
+features:
+  cd_text_display: false
+  toc_visibility: unknown
+  audio_beacon_path: unknown
+notes: "Reference candidate for conservative legacy-CD compatibility testing."

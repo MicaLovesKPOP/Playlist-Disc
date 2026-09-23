@@ -1,0 +1,21 @@
+schema_version: 1
+id: "999902"
+title: "PDv1 audio beacon smoke test"
+short_title: "PDV1 BEACON"
+status: draft
+definition:
+  type: diagnostic
+  purpose: "Reference disc for analogue-path DTMF beacon experiments."
+provenance:
+  authority: project
+  maintainers: []
+lifecycle: snapshot
+portability: canonical
+playback:
+  order: ordered
+  start: first
+  repeat: "off"
+tags:
+  - diagnostic
+  - beacon
+notes: "Development namespace only. Beacon waveform is experimental until PDv1.0."

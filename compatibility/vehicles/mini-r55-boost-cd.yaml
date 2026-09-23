@@ -1,0 +1,13 @@
+schema_version: 1
+vehicle: "MINI Clubman R55 (pre-LCI)"
+head_unit: "Boost CD / RAD2"
+firmware: unknown
+status: planned
+media:
+  cd_r: unknown
+  cd_rw: unknown
+features:
+  cd_text_display: unknown
+  toc_visibility: unknown
+  audio_beacon_path: unknown
+notes: "Reference candidate. Vehicle diagnostics are available separately via OBD."

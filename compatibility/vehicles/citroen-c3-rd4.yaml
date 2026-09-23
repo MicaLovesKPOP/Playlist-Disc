@@ -1,0 +1,13 @@
+schema_version: 1
+vehicle: "Citroen C3 II"
+head_unit: "RD4-family CD/MP3"
+firmware: unknown
+status: planned
+media:
+  cd_r: unknown
+  cd_rw: unknown
+features:
+  cd_text_display: true
+  toc_visibility: unknown
+  audio_beacon_path: unknown
+notes: "Reference candidate with separate multifunction display and steering-stalk media controls."
