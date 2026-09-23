@@ -18,6 +18,12 @@ from .catalog import (
     validate_catalog,
 )
 from .identity import PDIdentity, decode_track_durations
+from .local import (
+    create_local_entry,
+    find_local_entry,
+    iter_local_entries,
+    validate_local_library,
+)
 from .mastering import build_bundle
 from .verify import verify_build
 
@@ -29,6 +35,29 @@ def _format_duration(seconds: float) -> str:
         return f"{minutes}:{sec:02d}"
     minutes = int(seconds // 60)
     return f"{minutes}:{seconds - minutes * 60:05.2f}"
+
+
+def _print_errors(errors: list[str]) -> None:
+    for message in errors:
+        print(message, file=sys.stderr)
+
+
+def _parse_bindings(values: list[str]) -> dict[str, str]:
+    bindings: dict[str, str] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError("bindings must use PROVIDER=RESOURCE syntax")
+        provider, resource = value.split("=", 1)
+        provider = provider.strip()
+        resource = resource.strip()
+        if not provider or not resource:
+            raise ValueError("bindings require a non-empty provider and resource")
+        if provider in bindings:
+            raise ValueError(f"duplicate binding for provider {provider!r}")
+        bindings[provider] = resource
+    if not bindings:
+        raise ValueError("at least one --binding PROVIDER=RESOURCE is required")
+    return bindings
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
@@ -53,6 +82,19 @@ def cmd_build(args: argparse.Namespace) -> int:
     ident = PDIdentity.parse(args.id)
     title = args.title
     short_title = args.short_title
+
+    if args.local_library:
+        errors = validate_local_library(args.local_library)
+        if errors:
+            _print_errors(errors)
+            print("error: refusing to build from invalid local library", file=sys.stderr)
+            return 1
+        found_local = find_local_entry(args.local_library, ident)
+        if found_local:
+            _, entry = found_local
+            title = title or entry.get("title")
+            short_title = short_title or entry.get("short_title")
+
     if args.catalog:
         found = find_entry(args.catalog, ident)
         if found:
@@ -103,8 +145,7 @@ def cmd_validate_catalog(args: argparse.Namespace) -> int:
         manifest_schema_path=args.manifest_schema,
     )
     if errors:
-        for message in errors:
-            print(message, file=sys.stderr)
+        _print_errors(errors)
         return 1
     count = sum(1 for _ in iter_entries(args.catalog))
     print(f"validated {count} catalog entries")
@@ -114,8 +155,7 @@ def cmd_validate_catalog(args: argparse.Namespace) -> int:
 def cmd_export_catalog(args: argparse.Namespace) -> int:
     errors = validate_catalog(args.catalog)
     if errors:
-        for message in errors:
-            print(message, file=sys.stderr)
+        _print_errors(errors)
         print("error: refusing to export invalid catalog", file=sys.stderr)
         return 1
 
@@ -139,6 +179,58 @@ def cmd_export_catalog(args: argparse.Namespace) -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(f"exported {len(entries)} entries to {output}")
+    return 0
+
+
+def cmd_local_create(args: argparse.Namespace) -> int:
+    try:
+        bindings = _parse_bindings(args.binding)
+        ident, path, _ = create_local_entry(
+            args.library,
+            title=args.title,
+            short_title=args.short_title,
+            bindings=bindings,
+            preferred_id=args.id,
+            order=args.order,
+            start=args.start,
+            repeat=args.repeat,
+            tags=args.tag,
+            notes=args.notes,
+        )
+    except (ValueError, FileExistsError, RuntimeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(ident.machine_id)
+    print(path)
+    return 0
+
+
+def cmd_local_validate(args: argparse.Namespace) -> int:
+    errors = validate_local_library(args.library)
+    if errors:
+        _print_errors(errors)
+        return 1
+    count = sum(1 for _ in iter_local_entries(args.library))
+    print(f"validated {count} local/private entries")
+    return 0
+
+
+def cmd_local_list(args: argparse.Namespace) -> int:
+    errors = validate_local_library(args.library)
+    if errors:
+        _print_errors(errors)
+        print("error: refusing to list invalid local library", file=sys.stderr)
+        return 1
+
+    entries = [load_yaml(path) for path in iter_local_entries(args.library)]
+    entries.sort(key=lambda item: item["id"])
+    if args.json:
+        print(json.dumps(entries, indent=2))
+        return 0
+
+    for entry in entries:
+        providers = ",".join(sorted(entry["bindings"]))
+        print(f"{entry['id']}\t{entry['title']}\t{providers}")
     return 0
 
 
@@ -181,6 +273,10 @@ def build_parser() -> argparse.ArgumentParser:
     build_p.add_argument("--title")
     build_p.add_argument("--short-title")
     build_p.add_argument("--catalog", default="catalog")
+    build_p.add_argument(
+        "--local-library",
+        help="optional local/private registry used to resolve title metadata",
+    )
     build_p.add_argument("--output")
     build_p.set_defaults(func=cmd_build)
 
@@ -207,6 +303,39 @@ def build_parser() -> argparse.ArgumentParser:
     export_p.add_argument("catalog", nargs="?", default="catalog")
     export_p.add_argument("--output", default="build/catalog.json")
     export_p.set_defaults(func=cmd_export_catalog)
+
+    local_create_p = sub.add_parser(
+        "local-create",
+        help="allocate a private ID and create a local-only playback mapping",
+    )
+    local_create_p.add_argument("library")
+    local_create_p.add_argument("--id", help="specific private ID; default is lowest free ID")
+    local_create_p.add_argument("--title", required=True)
+    local_create_p.add_argument("--short-title", required=True)
+    local_create_p.add_argument(
+        "--binding",
+        action="append",
+        default=[],
+        metavar="PROVIDER=RESOURCE",
+        help="repeat for each local provider/resource mapping",
+    )
+    local_create_p.add_argument("--order", choices=["ordered", "shuffle"], default="ordered")
+    local_create_p.add_argument("--start", choices=["first", "random", "resume"], default="first")
+    local_create_p.add_argument("--repeat", choices=["off", "context", "one"], default="context")
+    local_create_p.add_argument("--tag", action="append", default=[])
+    local_create_p.add_argument("--notes")
+    local_create_p.set_defaults(func=cmd_local_create)
+
+    local_validate_p = sub.add_parser(
+        "local-validate", help="validate a local/private registry"
+    )
+    local_validate_p.add_argument("library")
+    local_validate_p.set_defaults(func=cmd_local_validate)
+
+    local_list_p = sub.add_parser("local-list", help="list local/private disc mappings")
+    local_list_p.add_argument("library")
+    local_list_p.add_argument("--json", action="store_true")
+    local_list_p.set_defaults(func=cmd_local_list)
 
     burn_p = sub.add_parser("burn", help="write a generated disc.toc using cdrdao")
     burn_p.add_argument("toc")
