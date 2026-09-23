@@ -38,7 +38,7 @@
 - normalized provider-neutral playback-plan compiler implemented in Draft 0.2 across canonical manifests, artist/album entities, federated/provider-native resources, diagnostics, and private mappings;
 - live provider plugins (Spotify/Apple/etc. authentication/catalog lookup/materialization);
 - optional tagged local-library scanner/index implementation using the same exact MBID/ISRC resolution contract implemented in Draft 0.2;
-- cached/materialized cross-service collections.
+- deterministic local materialization-cache contract for exact `track_list` plans implemented in Draft 0.2; live provider-created playlist refresh/materialization remains plugin work.
 
 ## Milestone 5 — OEM vehicle integrations
 

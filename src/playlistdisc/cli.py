@@ -43,6 +43,7 @@ from .local import (
 )
 from .local_scan import scan_local_library, write_local_provider_index
 from .mastering import build_bundle
+from .materialization import read_materialization, write_materialization
 from .playback import (
     compile_catalog_playback,
     compile_local_playback,
@@ -572,6 +573,52 @@ def cmd_host_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_materialization_put(args: argparse.Namespace) -> int:
+    try:
+        plan = load_json(args.plan)
+        path = write_materialization(
+            args.cache,
+            plan,
+            scope=args.scope,
+            materialized_resource=args.resource,
+            provider_revision=args.provider_revision,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(path)
+    return 0
+
+
+def cmd_materialization_check(args: argparse.Namespace) -> int:
+    try:
+        plan = load_json(args.plan)
+        record, reasons = read_materialization(
+            args.cache,
+            plan,
+            scope=args.scope,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if record is None:
+        if args.json:
+            print(json.dumps({"status": "miss", "reasons": reasons}, indent=2))
+        else:
+            print("materialization: MISS")
+            for reason in reasons:
+                print(f"- {reason}")
+        return 3
+
+    if args.json:
+        print(json.dumps({"status": "hit", "record": record}, indent=2))
+    else:
+        print("materialization: HIT")
+        print(record["materialized_resource"])
+    return 0
+
+
 def cmd_build_site(args: argparse.Namespace) -> int:
     try:
         output = build_static_site(args.catalog, args.output)
@@ -871,6 +918,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="return exit code 3 when any candidate file is unidentified or unreadable",
     )
     local_scan_p.set_defaults(func=cmd_scan_local_library)
+
+    materialization_put_p = sub.add_parser(
+        "materialization-put",
+        help="cache a provider resource produced from a deterministic track-list plan",
+    )
+    materialization_put_p.add_argument("plan")
+    materialization_put_p.add_argument("--cache", required=True)
+    materialization_put_p.add_argument("--scope", required=True)
+    materialization_put_p.add_argument("--resource", required=True)
+    materialization_put_p.add_argument("--provider-revision")
+    materialization_put_p.set_defaults(func=cmd_materialization_put)
+
+    materialization_check_p = sub.add_parser(
+        "materialization-check",
+        help="check whether a cached materialization still matches a playback plan",
+    )
+    materialization_check_p.add_argument("plan")
+    materialization_check_p.add_argument("--cache", required=True)
+    materialization_check_p.add_argument("--scope", required=True)
+    materialization_check_p.add_argument("--json", action="store_true")
+    materialization_check_p.set_defaults(func=cmd_materialization_check)
 
     host_replay_p = sub.add_parser(
         "host-replay",

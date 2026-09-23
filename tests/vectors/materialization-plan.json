@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "format": "PDv1-playback-plan",
+  "disc_id": "042381",
+  "machine_id": "PD1-042381-8",
+  "title": "Materialization fixture",
+  "provider": "demo",
+  "status": "ready",
+  "mode": "track_list",
+  "resources": [
+    "demo:track:a",
+    "demo:track:b"
+  ],
+  "playback": {
+    "order": "shuffle",
+    "start": "random",
+    "repeat": "context"
+  }
+}
