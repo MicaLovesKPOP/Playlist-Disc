@@ -42,6 +42,7 @@ from .local import (
 )
 from .local_scan import scan_local_library, write_local_provider_index
 from .mastering import build_bundle
+from .playback import compile_catalog_playback, compile_local_playback
 from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
 from .testkit import build_test_kit, verify_test_kit
@@ -258,6 +259,75 @@ def cmd_resolve_canonical(args: argparse.Namespace) -> int:
     else:
         print(encoded, end="")
     if args.require_complete and (plan.missing_count or plan.ambiguous_count):
+        return 3
+    return 0
+
+
+def cmd_plan_playback(args: argparse.Namespace) -> int:
+    try:
+        identity = PDIdentity.parse(args.id)
+        provider_index = (
+            load_provider_index(args.provider_index)
+            if args.provider_index
+            else None
+        )
+
+        if identity.namespace == "private":
+            if not args.local_library:
+                raise ValueError(
+                    "private IDs require --local-library to resolve their mapping"
+                )
+            local_errors = validate_local_library(args.local_library)
+            if local_errors:
+                raise ValueError(
+                    "invalid local library: " + "; ".join(local_errors)
+                )
+            found_local = find_local_entry(args.local_library, identity)
+            if found_local is None:
+                raise ValueError(
+                    f"local/private entry {identity.canonical} does not exist"
+                )
+            _, entry = found_local
+            plan = compile_local_playback(entry, args.provider)
+        else:
+            if not _validated_catalog(args.catalog):
+                print(
+                    "error: refusing to plan playback from invalid catalog",
+                    file=sys.stderr,
+                )
+                return 1
+            found = find_entry(args.catalog, identity)
+            if found is None:
+                raise ValueError(
+                    f"catalog entry {identity.canonical} does not exist"
+                )
+            _, entry = found
+            manifest = None
+            if entry.get("definition", {}).get("type") == "canonical_manifest":
+                manifest = load_json(
+                    Path(args.catalog) / entry["definition"]["manifest"]
+                )
+            plan = compile_catalog_playback(
+                entry,
+                args.provider,
+                manifest=manifest,
+                provider_index=provider_index,
+            )
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    payload = plan.to_dict()
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(encoded, encoding="utf-8")
+        print(output)
+    else:
+        print(encoded, end="")
+
+    if args.require_ready and plan.status != "ready":
         return 3
     return 0
 
@@ -630,6 +700,26 @@ def build_parser() -> argparse.ArgumentParser:
     resolve_p.add_argument("--output")
     resolve_p.add_argument("--require-complete", action="store_true")
     resolve_p.set_defaults(func=cmd_resolve_canonical)
+
+    plan_p = sub.add_parser(
+        "plan-playback",
+        help="compile a catalog/private ID into a provider-specific offline playback plan",
+    )
+    plan_p.add_argument("id")
+    plan_p.add_argument("--provider", required=True)
+    plan_p.add_argument("--catalog", default="catalog")
+    plan_p.add_argument("--local-library")
+    plan_p.add_argument(
+        "--provider-index",
+        help="optional exact-ID provider/local index used for canonical manifests",
+    )
+    plan_p.add_argument("--output")
+    plan_p.add_argument(
+        "--require-ready",
+        action="store_true",
+        help="return exit code 3 unless the plan is immediately ready to play",
+    )
+    plan_p.set_defaults(func=cmd_plan_playback)
 
     export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")

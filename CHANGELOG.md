@@ -98,6 +98,13 @@
 - Duplicate local representations deliberately remain resolver candidates rather than being arbitrarily ranked by format/path.
 - Added `pdv1 scan-local-library`, strict/error-reporting modes, real tagged-WAV integration coverage, documentation, optional dependency packaging, and ADR 0008.
 
+### Playback-plan compiler
+
+- Added a packaged `PDv1-playback-plan` schema and deterministic compiler that turns catalog/private meanings into one provider-facing contract before any live API is involved.
+- Canonical manifests compile to ready/partial/ambiguous/unavailable track-list plans using the existing exact MBID/ISRC resolver, or to `requires_lookup` when no provider index is supplied.
+- Provider-native and federated records compile to their selected provider resource; artist/album records fall back to service-neutral MusicBrainz entity lookup; diagnostic IDs are explicitly unplayable; private/local bindings use the same plan format.
+- Added `pdv1 plan-playback` with JSON output and `--require-ready`, package-schema smoke coverage, tests, documentation, and ADR 0011.
+
 ### Cross-service resolution groundwork
 
 - Added a packaged provider/local-library resolution-index schema using exact MusicBrainz Recording MBIDs and ISRCs.

@@ -56,6 +56,7 @@ pdv1 bridge-validate tests/vectors/bridge-session.jsonl
 pdv1 validate-compatibility compatibility
 pdv1 export-compatibility compatibility --output build/compatibility.json
 pdv1 validate-provider-index tests/vectors/provider-index-demo.json
+pdv1 plan-playback 999901 --provider demo
 pdv1 scan-local-library ~/Music --output build/local-provider-index.json
 pytest
 ```
@@ -116,6 +117,10 @@ Draft 0.2 includes a structured compatibility schema and deterministic export so
 ## Cross-service resolution core
 
 Draft 0.2 now includes deterministic canonical-recording resolution that can be tested without provider accounts or network access. Provider/local-library indexes map exact MusicBrainz Recording MBIDs and ISRCs to playable resources; explicit provider overrides win, contradictory or duplicate matches stay ambiguous, and missing recordings stay missing. Human title/artist text is never fuzzy identity. This gives future Spotify/Apple/local plugins a common semantic core instead of letting each service silently interpret a physical disc differently. See `docs/RESOLUTION.md`.
+
+## Provider-neutral playback plans
+
+Draft 0.2 can compile any catalog/private disc into one normalized offline playback-plan contract before a streaming SDK, phone UI, BLE transport, or vehicle adapter is involved. Canonical manifests become exact resolved track lists (or honest partial/ambiguous/missing plans), provider-native/federated records become direct resources, artist/album records can fall back to service-neutral MusicBrainz entity lookups, private bindings use the same contract, and diagnostics are explicitly unplayable. Future provider plugins can therefore focus on authentication, lookup/materialization, and actual playback instead of redefining what each physical disc means. See `docs/PLAYBACK-PLANS.md`.
 
 ## Local music libraries
 
