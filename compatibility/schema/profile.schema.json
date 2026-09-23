@@ -316,6 +316,92 @@
     "notes": {
       "type": "string",
       "maxLength": 2000
+    },
+    "research_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "topic",
+          "claim",
+          "implication",
+          "source"
+        ],
+        "properties": {
+          "topic": {
+            "enum": [
+              "vehicle_bus",
+              "head_unit",
+              "cd_changer",
+              "controls",
+              "display",
+              "software_behavior",
+              "audio_path",
+              "other"
+            ]
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1200
+          },
+          "implication": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1200
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_type",
+              "title",
+              "publisher",
+              "url",
+              "accessed"
+            ],
+            "properties": {
+              "source_type": {
+                "enum": [
+                  "manufacturer_documentation",
+                  "manufacturer_service_documentation_mirror",
+                  "component_vendor",
+                  "component_vendor_manual_mirror",
+                  "standards_body",
+                  "technical_reference",
+                  "community"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://[^\\s]+$",
+                "maxLength": 1000
+              },
+              "accessed": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "locator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

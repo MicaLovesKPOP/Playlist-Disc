@@ -24,4 +24,85 @@ test_plan:
 reports: []
 preexisting_observations:
   - The current car has no steering-area media controls; media interaction is through the head unit.
-notes: Reference profile for conservative legacy-CD compatibility testing.
+research_evidence:
+  - topic: vehicle_bus
+    claim: Alfa Romeo eLearn describes the 147 radio as a CAN-network node that exchanges information with the Body Computer; ignition state and vehicle speed reach the radio over CAN.
+    implication: A future adapter may be able to observe useful radio/vehicle state on the vehicle CAN network, but PDv1 must not assume TOC or track information is present until captures prove it.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: E3510 RADIO - DESCRIPTION (5 PORTE)
+      publisher: Alfa Romeo eLearn (mirror by 4CarData)
+      url: https://4cardata.info/elearn/190/2/2002030/2000206/2001822/3023379
+      accessed: "2026-09-23"
+      locator: Description; radio CAN-node and ignition/speed paragraphs
+  - topic: vehicle_bus
+    claim: Alfa Romeo eLearn's CAN-network description places the radio among the nodes connected to the Body Computer through B-CAN, distinct from the drivetrain-oriented C-CAN nodes.
+    implication: B-CAN is the documented network family to investigate for radio-adjacent vehicle state; no PDv1 implementation should assume any specific messages or bitrate without captures.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: E1050 CAN CONNECTION LINES - DESCRIPTION
+      publisher: Alfa Romeo eLearn (mirror by 4CarData)
+      url: https://4cardata.info/elearn/190/2/2002018/2000209/2001823/3023171
+      accessed: "2026-09-23"
+      locator: Description; B-CAN node list
+  - topic: head_unit
+    claim: The eLearn functional description assigns connector A pins 1 and 3 to the radio CAN line, pin 7 to direct battery supply, and connector C pins 10 and 11 to steering-wheel controls when fitted.
+    implication: These documented roles are useful for future adapter planning, but variant-specific wiring still requires physical confirmation before anything is connected.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: E3510 RADIO - FUNCTIONAL DESCRIPTION (5 PORTE)
+      publisher: Alfa Romeo eLearn (mirror by 4CarData)
+      url: https://4cardata.info/elearn/190/2/2002032/2000206/2001823/3026183
+      accessed: "2026-09-23"
+      locator: Functional description; connector A and connector C paragraphs
+  - topic: cd_changer
+    claim: Alfa Romeo eLearn states that the 147 radio is prepared to control an optional 10-disc CD changer.
+    implication: CD-changer emulation is architecturally plausible as a playback/control side channel separate from PDv1 optical-disc recognition.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: E3510 RADIO - DESCRIPTION (5 PORTE)
+      publisher: Alfa Romeo eLearn (mirror by 4CarData)
+      url: https://4cardata.info/elearn/190/2/2002030/2000206/2001822/3023379
+      accessed: "2026-09-23"
+      locator: Description; optional CD-CHANGER paragraph
+  - topic: cd_changer
+    claim: Connects2 lists its CTAARBT001 interface for Alfa Romeo 147 Type 937 (2000-2007) with a Mini-ISO connection and states that the interface plugs into the original CD-changer port on the OEM stereo.
+    implication: This independently corroborates a usable changer connector on at least some 937-era OEM radio installations; exact ALFA-937 SW3.17 compatibility remains a hardware check.
+    source:
+      source_type: component_vendor
+      title: CTAARBT001 Alfa Romeo A2DP Interface
+      publisher: Connects2
+      url: https://www.connects2.com/Product/ProductItem/CTAARBT001
+      accessed: "2026-09-23"
+      locator: Features & Benefits and Vehicle Applications tables
+  - topic: controls
+    claim: Connects2 states that its changer-port CTAARBT001 integration can answer and end calls using the OEM radio fast-forward button.
+    implication: A commercial changer-port integration can consume at least one OEM head-unit control, supporting a future adapter concept without establishing the underlying protocol or message encoding.
+    source:
+      source_type: component_vendor
+      title: CTAARBT001 Alfa Romeo A2DP Interface
+      publisher: Connects2
+      url: https://www.connects2.com/Product/ProductItem/CTAARBT001
+      accessed: "2026-09-23"
+      locator: Features & Benefits
+  - topic: cd_changer
+    claim: A mirrored Yatour YT-M06 application guide lists Alfa Romeo 147 with Blaupunkt 376/378/379/937/947 radios and describes the unit as a CD-changer replacement controlled by the vehicle head unit.
+    implication: A second commercial implementation targets the ALFA-937 family as a changer emulator, strengthening the case for researching changer emulation while still not proving this exact firmware revision.
+    source:
+      source_type: component_vendor_manual_mirror
+      title: Car Digital Music Changer YT-M06 application guide
+      publisher: Yatour (manual mirror by Manuals+)
+      url: https://manuals.plus/m/9921c86f4ad53408abf45b538a8fd98b7e499750560fd2c89f7f8f36daab09d8
+      accessed: "2026-09-23"
+      locator: Application Guide; Alfa Romeo 147 / Blaupunkt 376, 378, 379, 937, 947
+  - topic: software_behavior
+    claim: A community Alfa 147 AUX guide reports that front-panel CHANGER/AUX forcing is expected only on radio software earlier than 3.17 and recommends using an interface when passive AUX cannot be enabled.
+    implication: For this SW3.17 profile, passive AUX activation should remain explicitly unverified; integration work should not depend on the SRC/ON button trick and should prefer a real changer-emulation path.
+    source:
+      source_type: community
+      title: Requisiti Alfa 147
+      publisher: WileCoyote.it
+      url: https://www.wilecoyote.it/web/requisiti.htm
+      accessed: "2026-09-23"
+      locator: Compatibility discussion for software version 3.17 and CHANGER activation
+notes: Reference profile for conservative legacy-CD compatibility testing. Research evidence documents planning inputs only and is not a substitute for PDv1 physical test reports.

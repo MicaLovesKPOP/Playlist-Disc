@@ -35,6 +35,7 @@
 - Added Draft 0.2 safeguards requiring physical reports to use test-namespace PD IDs and preventing impossible attempt counts/status combinations.
 - Migrated the Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4 reference profiles while keeping them honestly marked `planned`.
 - Added deterministic compatibility JSON export plus `pdv1 validate-compatibility` / `export-compatibility` and CI coverage.
+- Added schema-validated, source-typed pre-hardware research evidence that remains distinct from physical reports, plus an eight-item Alfa 147 / ALFA-937 SW3.17 research set covering documented CAN participation, changer support, commercial changer-emulator evidence, and the community-reported SW3.17 AUX boundary.
 
 ### Catalog evolution safety
 

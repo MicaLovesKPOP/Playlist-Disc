@@ -21,6 +21,14 @@ The source of truth lives in `compatibility/vehicles/*.yaml`. The generated JSON
 
 Draft 0.2 repository profiles for the Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4 remain `planned`. Existing ordinary-radio observations are kept separate from PDv1 test results.
 
+## Research evidence
+
+A profile may contain `research_evidence` gathered before hardware testing. Each item records a bounded claim, its design implication, a topic, and a structured source with source type, publisher, HTTPS URL, access date, and optional locator. The compatibility export counts these items separately from physical reports.
+
+Research never changes a profile from `planned` to `partial`/`tested`, and it must not be rewritten as if it were a measured result. Prefer manufacturer/service documentation and component-vendor documentation. Mirrored manuals must be labeled as mirrors; community material may document a hypothesis or compatibility warning but should remain visibly lower-authority.
+
+The first populated research set is `docs/research/ALFA-937.md`, mirrored into the Alfa 937 profile so future compatibility tooling can consume the same evidence machine-readably. Its conclusions deliberately stop before CAN IDs, changer frames, bus speeds, or other facts that require captures.
+
 ## Test reports
 
 A physical report records:
