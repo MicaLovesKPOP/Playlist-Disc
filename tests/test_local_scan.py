@@ -30,6 +30,16 @@ def test_extract_tag_identity_accepts_mb_trackid_and_isrc():
     }
 
 
+def test_musicbrainz_artist_id_is_not_used_as_artist_hint():
+    tags = {
+        "musicbrainz_trackid": ["aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"],
+        "musicbrainz_artistid": ["11111111-2222-3333-4444-555555555555"],
+    }
+    data = extract_tag_identity(tags)
+    assert data is not None
+    assert "artist_hint" not in data
+
+
 def test_extract_tag_identity_rejects_multiple_recording_mbids():
     tags = {
         "musicbrainz_trackid": [
