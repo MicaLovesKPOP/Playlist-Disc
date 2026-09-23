@@ -31,6 +31,10 @@ jobs:
       - run: pdv1 build-test-kit --output /tmp/pdv1-test-kit
       - run: pdv1 verify-test-kit /tmp/pdv1-test-kit
       - run: pdv1 bridge-validate tests/vectors/bridge-session.jsonl
+      - run: >-
+          pdv1 host-replay tests/vectors/host-adapter-session.jsonl
+          --plan tests/vectors/host-playback-plan.json
+          --output /tmp/host-actions.jsonl
       - run: pdv1 validate-compatibility compatibility
       - run: pdv1 export-compatibility compatibility --output /tmp/compatibility.json
       - run: pdv1 validate-provider-index tests/vectors/provider-index-demo.json
@@ -121,9 +125,11 @@ jobs:
           python -c "from playlistdisc.bridge import load_bridge_schema;
           from playlistdisc.playback import load_playback_plan_schema;
           from playlistdisc.resolver import load_provider_index_schema;
+          from playlistdisc.host import load_host_action_schema;
           assert load_bridge_schema()['title'];
           assert load_playback_plan_schema()['title'];
-          assert load_provider_index_schema()['title']"
+          assert load_provider_index_schema()['title'];
+          assert load_host_action_schema()['title']"
 
 
   local-library-extra:

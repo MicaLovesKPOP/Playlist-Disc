@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/host-action.schema.json",
+  "title": "PDv1 host runtime action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "format",
+    "type",
+    "context"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "format": {
+      "const": "PDv1-host-action"
+    },
+    "type": {
+      "enum": [
+        "source_request",
+        "execute_plan",
+        "provider_control",
+        "stop_playback",
+        "selection_blocked"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_id",
+        "adapter_session",
+        "selection_counter"
+      ],
+      "properties": {
+        "machine_id": {
+          "type": "string",
+          "pattern": "^PD1-[0-9]{6}-[0-9]$"
+        },
+        "adapter_session": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "selection_counter": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "action": {
+      "enum": [
+        "activate_streaming",
+        "deactivate_streaming",
+        "next",
+        "previous",
+        "play_pause"
+      ]
+    },
+    "plan": {
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "partial",
+        "ambiguous",
+        "requires_lookup",
+        "unavailable",
+        "unplayable"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "source_request"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "action"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "execute_plan"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "plan"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "provider_control"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "action"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "stop_playback"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "selection_blocked"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "status",
+          "reason"
+        ]
+      }
+    }
+  ]
+}

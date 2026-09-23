@@ -113,6 +113,14 @@
 - Added provider-index validation plus `pdv1 resolve-canonical` with machine-readable resolution plans and optional complete-coverage enforcement.
 - Added offline fixtures/tests and ADR 0007 documenting the no-fuzzy-resolution rule.
 
+### Offline host orchestration
+
+- Added a packaged `PDv1-host-action` contract and deterministic host-runtime state machine that consumes adapter-side PD Bridge events and emits source/provider actions.
+- Reconnect/state-sync repeats of the same selection are deduplicated; new adapter sessions remain new selections.
+- Automatic source requests honor advertised adapter capability/state, OEM media controls only forward with an active playback context, and disc-removal stop/source behavior is explicit host policy rather than physical-disc semantics.
+- Ready and `requires_lookup` playback plans can execute automatically, partial plans are opt-in, and ambiguous/unavailable/unplayable selections are blocked without guessing.
+- Added `pdv1 host-replay`, reference adapter/plan vectors, schema/package checks, tests, documentation, and ADR 0012.
+
 ### Playback bridge semantic hardening
 
 - Extended transcript validation from structural sequencing into capability contracts: observed detection methods, media controls, source switching, and now-playing support must match the sender's announced session capabilities.

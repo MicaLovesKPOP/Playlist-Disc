@@ -1,0 +1,6 @@
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":0,"type":"hello","payload":{"adapter_id":"fixture-adapter","implementation":"host-runtime-vector","capabilities":{"disc_detection":["toc"],"media_controls":["next","previous","play_pause"],"auto_source_switch":true,"metadata_display":{"supported":false,"fields":[],"targets":[]}}}}
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":1,"type":"state_sync","payload":{"power":"accessory","disc":null,"streaming_source_active":false}}
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":2,"type":"disc_selected","payload":{"machine_id":"PD1-900000-8","selection_counter":1,"evidence":"toc","confidence":"strong"}}
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":3,"type":"source_state","payload":{"active":true}}
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":4,"type":"media_control","payload":{"action":"next"}}
+{"protocol":"pdbridge","version":1,"source":"adapter","session":"car-1","seq":5,"type":"disc_removed","payload":{"selection_counter":1}}

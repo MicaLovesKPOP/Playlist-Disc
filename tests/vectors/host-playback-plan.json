@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "format": "PDv1-playback-plan",
+  "disc_id": "900000",
+  "machine_id": "PD1-900000-8",
+  "title": "Private drive mix",
+  "provider": "local",
+  "status": "ready",
+  "mode": "direct_resource",
+  "resource": "library:playlist:drive",
+  "playback": {
+    "order": "shuffle",
+    "start": "random",
+    "repeat": "context"
+  }
+}

@@ -32,6 +32,7 @@
 ## Milestone 4 — playback bridge
 
 - transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and semantic validator implemented in Draft 0.2, including capability contracts, reconnect-safe selection counters, and explicit acknowledgement targets;
+- offline host-runtime state machine and replay harness implemented in Draft 0.2, covering reconnect deduplication, source requests, playback-plan execution, controls, and removal policy;
 - BLE or equivalent transport profile;
 - deterministic canonical-recording resolution core and provider/local index contract implemented in Draft 0.2;
 - normalized provider-neutral playback-plan compiler implemented in Draft 0.2 across canonical manifests, artist/album entities, federated/provider-native resources, diagnostics, and private mappings;
