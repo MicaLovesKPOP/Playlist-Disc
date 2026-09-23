@@ -2,7 +2,7 @@
 
 PDv1 should spend physical testing time only on questions software cannot answer.
 
-Draft 0.2 therefore adds three software-only gates.
+Draft 0.2 therefore adds software-only gates that make the eventual hardware round narrower and reproducible.
 
 ## Exhaustive identity/TOC audit
 
@@ -50,9 +50,13 @@ All identity channels that the bundle declares present must agree and the beacon
 
 This catches generator regressions before a blank disc is consumed.
 
-## Physical-test-kit generation
+## Physical-test-kit generation and reproducibility
 
 `pdv1 build-test-kit` deterministically creates and verifies the Draft 0.2 compatibility bundles required for the first hardware phase, including a controlled same-ID CD-TEXT on/off pair. This closes a software gap in the planned compatibility matrix: CD-TEXT absence can now be intentional rather than simulated by hand-editing a mastering file.
+
+The generated `test-kit.json` records byte sizes and SHA-256 hashes for every mastering artifact in every variant. It also carries a `content_sha256` over the complete test-kit metadata. `pdv1 verify-test-kit` verifies these hashes as well as each bundle's semantic identity channels.
+
+CI independently builds the entire kit twice and requires the resulting file trees to be byte-for-byte identical. This matters before physical testing because results from two burners or vehicles are only directly comparable when the input mastering material is known to be the same. The fingerprint is intentionally described as reproducibility/provenance metadata rather than a signature; it detects accidental drift but does not authenticate a maliciously rewritten kit.
 
 The official `pdv1 burn` path also verifies the bundle and refuses any non-test namespace while the format remains a draft.
 
