@@ -103,7 +103,7 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 
 ## Vehicle/phone bridge
 
-Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. The transcript validator also enforces session-stable capability contracts, strictly monotonic disc-selection counters across remove/reinsert cycles, and unambiguous session+sequence acknowledgements. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
 
 ## Draft physical test kit
 
