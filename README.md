@@ -53,6 +53,8 @@ pdv1 export-library catalog --output build/library.json
 pdv1 build-site catalog --output build/site
 pdv1 verify-site build/site
 pdv1 bridge-validate tests/vectors/bridge-session.jsonl
+pdv1 host-replay tests/vectors/host-adapter-session.jsonl \\
+  --plan tests/vectors/host-playback-plan.json
 pdv1 validate-compatibility compatibility
 pdv1 export-compatibility compatibility --output build/compatibility.json
 pdv1 validate-provider-index tests/vectors/provider-index-demo.json
@@ -105,6 +107,10 @@ This is a software workflow during Draft 0.2, not permission to burn private IDs
 ## Vehicle/phone bridge
 
 Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. The transcript validator also enforces session-stable capability contracts, strictly monotonic disc-selection counters across remove/reinsert cycles, and unambiguous session+sequence acknowledgements. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+
+## Offline host runtime
+
+Draft 0.2 now has a deterministic host-side state machine between PD Bridge adapter events and provider execution. It deduplicates reconnect/state-sync selections, requests OEM source switching only when the adapter advertises it, forwards normalized media controls only for an active playback context, blocks unavailable/ambiguous plans instead of guessing, and applies configurable disc-removal policy. `pdv1 host-replay` replays a bridge transcript against playback-plan fixtures entirely offline. See `docs/HOST-RUNTIME.md`.
 
 ## Draft physical test kit
 

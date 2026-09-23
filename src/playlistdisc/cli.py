@@ -26,6 +26,7 @@ from .compatibility import (
     write_compatibility_snapshot,
 )
 from .evolution import check_catalog_evolution
+from .host import HostRuntime
 from .identity import PDIdentity, decode_track_durations
 from .library import (
     catalog_entries,
@@ -42,7 +43,11 @@ from .local import (
 )
 from .local_scan import scan_local_library, write_local_provider_index
 from .mastering import build_bundle
-from .playback import compile_catalog_playback, compile_local_playback
+from .playback import (
+    compile_catalog_playback,
+    compile_local_playback,
+    validate_playback_plan,
+)
 from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
 from .testkit import build_test_kit, verify_test_kit
@@ -504,6 +509,69 @@ def cmd_scan_local_library(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_host_replay(args: argparse.Namespace) -> int:
+    try:
+        messages = read_bridge_jsonl(args.transcript)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    transcript_errors = validate_bridge_transcript(messages)
+    if transcript_errors:
+        _print_errors(transcript_errors)
+        return 1
+
+    plans: dict[str, dict[str, object]] = {}
+    for path_value in args.plan:
+        path = Path(path_value)
+        try:
+            data = load_json(path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"error: {path}: {exc}", file=sys.stderr)
+            return 2
+        errors = validate_playback_plan(data)
+        if errors:
+            _print_errors([f"{path}:{message}" for message in errors])
+            return 1
+        machine_id = str(data["machine_id"])
+        if machine_id in plans:
+            print(f"error: duplicate playback plan for {machine_id}", file=sys.stderr)
+            return 2
+        plans[machine_id] = data
+
+    def planner(machine_id: str):
+        if machine_id not in plans:
+            raise KeyError(machine_id)
+        return plans[machine_id]
+
+    runtime = HostRuntime(
+        planner,
+        allow_partial=args.allow_partial,
+        stop_on_remove=not args.leave_playing_on_remove,
+        deactivate_source_on_remove=not args.keep_source_on_remove,
+    )
+    actions = []
+    for message in messages:
+        try:
+            actions.extend(runtime.consume(message))
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+
+    encoded = "".join(
+        json.dumps(action.to_dict(), ensure_ascii=False, sort_keys=True) + "\n"
+        for action in actions
+    )
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(encoded, encoding="utf-8")
+        print(output)
+    else:
+        print(encoded, end="")
+    return 0
+
+
 def cmd_build_site(args: argparse.Namespace) -> int:
     try:
         output = build_static_site(args.catalog, args.output)
@@ -803,6 +871,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="return exit code 3 when any candidate file is unidentified or unreadable",
     )
     local_scan_p.set_defaults(func=cmd_scan_local_library)
+
+    host_replay_p = sub.add_parser(
+        "host-replay",
+        help="replay adapter bridge events through the offline host-runtime state machine",
+    )
+    host_replay_p.add_argument("transcript")
+    host_replay_p.add_argument(
+        "--plan",
+        action="append",
+        default=[],
+        metavar="PLAYBACK_PLAN_JSON",
+        help="repeat for each machine ID the transcript may select",
+    )
+    host_replay_p.add_argument("--output")
+    host_replay_p.add_argument("--allow-partial", action="store_true")
+    host_replay_p.add_argument("--leave-playing-on-remove", action="store_true")
+    host_replay_p.add_argument("--keep-source-on-remove", action="store_true")
+    host_replay_p.set_defaults(func=cmd_host_replay)
 
     site_build_p = sub.add_parser(
         "build-site",

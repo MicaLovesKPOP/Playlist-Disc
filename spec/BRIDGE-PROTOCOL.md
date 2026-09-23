@@ -131,7 +131,15 @@ The reference vehicle profiles may eventually expose very different capabilities
 
 The logical host must degrade gracefully when a capability is absent.
 
-## 9. Validation
+## 9. Reference host behavior
+
+The logical bridge protocol does not mandate playback policy, but Draft 0.2 includes a reference offline host runtime. It consumes validated adapter events and emits a separate `PDv1-host-action` contract for provider/source orchestration. This keeps transport sequencing, provider SDK calls, and user policy separate while making reconnect and selection behavior testable before hardware exists.
+
+The reference host deduplicates the same `(adapter session, selection counter, machine ID)` when it reappears in `state_sync`, but treats the same physical disc under a new adapter session as a new selection. Disc-removal stop/deactivate behavior and partial-plan playback are configurable host policy.
+
+See `docs/HOST-RUNTIME.md`.
+
+## 10. Validation
 
 `pdv1 bridge-validate <transcript.jsonl>` validates:
 
