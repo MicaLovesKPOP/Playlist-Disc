@@ -37,6 +37,8 @@
 - Added deterministic compatibility JSON export plus `pdv1 validate-compatibility` / `export-compatibility` and CI coverage.
 - Added schema-validated, source-typed pre-hardware research evidence that remains distinct from physical reports, plus an eight-item Alfa 147 / ALFA-937 SW3.17 research set covering documented CAN participation, changer support, commercial changer-emulator evidence, and the community-reported SW3.17 AUX boundary.
 - Added a sourced MINI R55 Boost CD / RAD2 research set covering option-6FC/RAD2 identification, MOST/K-CAN gateway architecture, native CD/MP3/WMA support, optical MOST changer integration, factory steering-wheel controls/display targets, and the distinction between OBD diagnostics and direct MOST access.
+- Added a sourced Citroen C3 II / RD4-family research set covering factory steering/media display surfaces, RD4 CD-TEXT/MP3 levels, Comfort CAN radio/display/changer architecture, AEE2004/2007 family compatibility evidence, and related-platform reverse-engineered CD text/tray/disc/timing/source/changer frame classes while explicitly keeping the target C3's exact IDs capture-gated.
+- Added a `manufacturer_documentation_mirror` research source type so mirrored owner documentation is not mislabeled as a direct manufacturer-hosted source.
 
 ### Catalog evolution safety
 

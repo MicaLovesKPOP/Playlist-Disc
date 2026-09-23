@@ -42,5 +42,5 @@
 
 - Alfa 147 / 937 pre-hardware research — sourced CAN/changer/control groundwork implemented; exact bus/changer protocol remains capture-gated;
 - MINI R55 Boost CD/RAD2 pre-hardware research — sourced K-CAN/MOST/gateway/changer/control groundwork implemented; exact bus/MOST behavior remains capture-gated;
-- PSA RD4 family research;
+- Citroen C3 II / PSA RD4-family pre-hardware research — sourced C3 UI, RD4 Comfort-CAN/display/changer architecture, and related AEE2004 CAN groundwork implemented; exact target-car frames remain capture-gated;
 - OEM controls and now-playing metadata where technically feasible.

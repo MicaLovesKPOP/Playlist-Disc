@@ -366,6 +366,7 @@
               "source_type": {
                 "enum": [
                   "manufacturer_documentation",
+                  "manufacturer_documentation_mirror",
                   "manufacturer_service_documentation_mirror",
                   "component_vendor",
                   "component_vendor_manual_mirror",

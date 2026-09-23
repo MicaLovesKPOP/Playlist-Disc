@@ -55,3 +55,9 @@ Do not guess. `not_tested` and `not_observable` are valid outcomes. A reliable n
 For a reference head unit, aim to cover ordinary finalized CD-R, CD-RW where plausible, CD-TEXT on/off, cold start with the disc already inserted, eject/reinsert, visible timing behavior, any vehicle-network TOC exposure, and the analogue beacon path if relevant.
 
 This schema does not claim that those tests have been performed; it only makes sure future results are comparable and reviewable.
+
+## Pre-hardware research versus measured compatibility
+
+A profile may include `research_evidence` sourced from owner manuals, service documentation, component vendors, standards/technical references, or community reverse engineering. That evidence is for planning only and does not change a profile from `planned` to `partial`/`tested`.
+
+For related-platform reverse engineering, record exactly which source vehicles/protocol family produced the observation. Do not promote a CAN identifier or protocol detail into target-car fact until the target profile has a capture/report supporting it.

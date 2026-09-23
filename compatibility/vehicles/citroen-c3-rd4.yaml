@@ -25,4 +25,85 @@ reports: []
 preexisting_observations:
   - The existing factory system displays track/title information on the separate multifunction display.
   - Steering-stalk media controls are present.
-notes: Reference profile for the non-navigation RD4-family setup.
+research_evidence:
+  - topic: controls
+    claim: The 2009 Citroen C3 owner's guide documents audio-equipment steering controls and a separate multifunction screen with the Audio system in the center dashboard.
+    implication: The target platform has documented OEM audio controls and a separate display as legitimate PD Bridge input/output surfaces; exact electrical/message behavior remains a capture question.
+    source:
+      source_type: manufacturer_documentation_mirror
+      title: Citroen C3 2009 Owner's Guide
+      publisher: Citroen (mirror by CarManualsOnline)
+      url: https://www.carmanualsonline.info/citroen-c3-2009-owners-manual
+      accessed: "2026-09-24"
+      locator: Familiarisation; Instruments and controls, pages 5-6
+  - topic: display
+    claim: The 2009 C3 owner's guide says Monochrome Screen C displays audio sources including radio, CD, USB and jack input, and that the Audio system control panel operates the screen's audio functions.
+    implication: The separate display is documented as part of the factory audio user interface, strengthening it as a future metadata target without proving any writable CAN message on this exact car.
+    source:
+      source_type: manufacturer_documentation_mirror
+      title: Citroen C3 2009 Owner's Guide
+      publisher: Citroen (mirror by CarManualsOnline)
+      url: https://www.carmanualsonline.info/citroen-c3-2009-owners-manual/4
+      accessed: "2026-09-24"
+      locator: Monochrome Screen C, page 36
+  - topic: controls
+    claim: The 2009 C3 owner's guide says supported USB/audio files can be managed using the steering controls or audio-equipment control panel and displayed on the multifunction screen.
+    implication: Factory remote controls and the multifunction display are documented to participate in media navigation on at least supported C3 configurations; PDv1 should still capture the target RD4-family unit before assigning protocol details.
+    source:
+      source_type: manufacturer_documentation_mirror
+      title: Citroen C3 2009 Owner's Guide
+      publisher: Citroen (mirror by CarManualsOnline)
+      url: https://www.carmanualsonline.info/citroen-c3-2009-owners-manual/9
+      accessed: "2026-09-24"
+      locator: USB reader / Jack socket, pages 88-89
+  - topic: head_unit
+    claim: Citroen RD4 service documentation describes three RD4 levels; Level 2 supports CD-TEXT and Level 2+ adds MP3 CD playback, with CD-TEXT song/artist/title data displayed on the multifunction screen.
+    implication: RD4-family hardware has a documented OEM path for optical-disc metadata to reach the separate display, but the exact RD4 level and firmware of the target C3 must be identified before PDv1 assumes CD-TEXT capability.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: C6 - D4EABAP0 - Presentation : Audio system
+      publisher: Citroen service documentation (mirror by Scribd)
+      url: https://www.scribd.com/document/821708464/C6-Audio-System-Presentation
+      accessed: "2026-09-24"
+      locator: RD4 levels and CD text description, pages 1-2
+  - topic: vehicle_bus
+    claim: The RD4 service presentation documents multiplexed COMFORT CAN communication between the radio and multifunction display for radio control/status, plus CD-changer display/status/control messages; CD-changer audio itself is described as an analogue connection to the radio.
+    implication: RD4-family integration plausibly separates CAN control/display state from analogue changer audio, making CAN observation plus an audio-side interface a credible architecture; the C6 document does not establish the exact target C3 message IDs.
+    source:
+      source_type: manufacturer_service_documentation_mirror
+      title: C6 - D4EABAP0 - Presentation : Audio system
+      publisher: Citroen service documentation (mirror by Scribd)
+      url: https://www.scribd.com/document/821708464/C6-Audio-System-Presentation
+      accessed: "2026-09-24"
+      locator: General summary connection table, page 2
+  - topic: vehicle_bus
+    claim: The PSAVanCanBridge project states that PSA AEE2004 and AEE2007 are mostly compatible, supports RD4/RD43/RD45 with the radio remote stalk, and notes that the radio and multifunction display exchange a large number of messages during operation.
+    implication: Existing AEE2004/2007 reverse engineering is a useful family-level starting point for a C3 RD4 adapter, but exact applicability to the target vehicle and head-unit software must be confirmed by captures.
+    source:
+      source_type: technical_reference
+      title: PSAVanCanBridge v3 readme
+      publisher: morcibacsi / GitHub
+      url: https://github.com/morcibacsi/PSAVanCanBridge/blob/v3/readme.md
+      accessed: "2026-09-24"
+      locator: Architecture compatibility, functionality and display/head-unit coupling sections
+  - topic: vehicle_bus
+    claim: A community PSA CAN reverse-engineering reference for Peugeot 407 and Citroen C4-family vehicles documents radio-to-display frames for current CD track text (0x0A4), CD tray state (0x325), disc track-count/full-duration information (0x365), current track timing (0x3A5), and radio source state including tuner/CD/changer/AUX/USB/Bluetooth (0x165).
+    implication: Related AEE2004-era PSA systems demonstrably expose exactly the classes of information PDv1 needs, including enough disc information to fingerprint a deliberately authored token disc. These frame IDs are hypotheses only for the target C3 until its traffic is captured.
+    source:
+      source_type: technical_reference
+      title: PSA CAN bus reverse-engineering reference
+      publisher: AutoWP / community reverse engineering
+      url: https://autowp.github.io/
+      accessed: "2026-09-24"
+      locator: CAN-INFO radio/display messages 0x0A4, 0x165, 0x325, 0x365 and 0x3A5
+  - topic: cd_changer
+    claim: The same PSA CAN reverse-engineering reference documents a radio-originated CD-changer command frame (0x131) and Yatour-observed changer status/current-disc traffic on related PSA platforms.
+    implication: Changer emulation is a technically evidenced path on related PSA CAN systems, but the target C3/RD4 implementation must not inherit those exact frames without capture-based confirmation.
+    source:
+      source_type: technical_reference
+      title: PSA CAN bus reverse-engineering reference
+      publisher: AutoWP / community reverse engineering
+      url: https://autowp.github.io/
+      accessed: "2026-09-24"
+      locator: CAN-INFO CD changer command/status entries, including 0x131 and Yatour-derived messages
+notes: Reference profile for the non-navigation RD4-family setup. Research evidence combines C3 owner documentation, RD4-family service documentation and related-platform reverse engineering; none of it substitutes for PDv1 physical tests or target-car CAN captures.
