@@ -163,6 +163,16 @@ def test_media_control_and_removal_are_normalized():
     assert removed[1].action == "deactivate_streaming"
 
 
+def test_already_active_source_is_not_claimed_or_deactivated():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello())
+    runtime.consume(_state_sync(source=True))
+    actions = runtime.consume(_selected())
+    assert [action.type for action in actions] == ["execute_plan"]
+    removed = runtime.consume(_removed())
+    assert [action.type for action in removed] == ["stop_playback"]
+
+
 def test_no_auto_source_request_when_adapter_does_not_support_it():
     runtime = HostRuntime(lambda machine_id: _plan())
     runtime.consume(_hello(auto_source_switch=False))

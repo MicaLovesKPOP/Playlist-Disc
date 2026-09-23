@@ -144,6 +144,7 @@ class HostRuntime:
         self._handled: set[tuple[str, int, str]] = set()
         self._active_selection: SelectionContext | None = None
         self._playback_context: SelectionContext | None = None
+        self._source_owned_context: SelectionContext | None = None
 
     def _finish(self, *actions: HostAction) -> tuple[HostAction, ...]:
         for action in actions:
@@ -218,6 +219,7 @@ class HostRuntime:
                     action="activate_streaming",
                 )
             )
+            self._source_owned_context = context
         actions.append(HostAction("execute_plan", context, plan=plan))
         self._playback_context = context
         return self._finish(*actions)
@@ -239,8 +241,8 @@ class HostRuntime:
 
         if (
             self.deactivate_source_on_remove
+            and self._source_owned_context == context
             and self._auto_source_switch(context.adapter_session)
-            and self._source_active.get(context.adapter_session, False)
         ):
             actions.append(
                 HostAction(
@@ -249,6 +251,7 @@ class HostRuntime:
                     action="deactivate_streaming",
                 )
             )
+            self._source_owned_context = None
 
         if self._active_selection == context:
             self._active_selection = None
