@@ -21,6 +21,15 @@
 - Catalog export now refuses invalid source data and includes canonical-manifest content hashes/counts.
 - Added architecture decisions documenting provider-neutral public IDs and canonical recording manifests.
 
+### Local/private workflow
+
+- Added a user-owned private registry for IDs `900000-989999` with deterministic sharding and local-only provider/resource bindings.
+- Added lowest-free-ID allocation with optional explicit private IDs and exclusive, non-overwriting file creation.
+- Added `pdv1 local-create`, `pdv1 local-validate`, and `pdv1 local-list` commands.
+- `pdv1 build --local-library` can resolve private title/CD-TEXT metadata before virtual bundle verification.
+- Added validation/tests for namespace isolation, deterministic paths, allocation collisions, binding syntax, CLI round-trips, and private virtual builds.
+- Added ADR 0003 documenting the privacy boundary, lack of central private allocation, multi-device collision behavior, and non-recycling guidance.
+
 ## 0.1.0a1 — initial draft
 
 - PDv1 Draft 0.1 physical-format proposal.

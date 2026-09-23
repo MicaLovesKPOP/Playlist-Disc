@@ -22,6 +22,14 @@ jobs:
       - run: pdv1 export-catalog catalog --output /tmp/catalog.json
       - run: pdv1 build 999901 --output /tmp/PD1-999901
       - run: pdv1 verify-build /tmp/PD1-999901
+      - run: >-
+          pdv1 local-create /tmp/pdv1-local
+          --title "CI private playlist"
+          --short-title "CI PRIVATE"
+          --binding local=library:playlist:ci
+      - run: pdv1 local-validate /tmp/pdv1-local
+      - run: pdv1 build 900000 --local-library /tmp/pdv1-local --output /tmp/PD1-900000
+      - run: pdv1 verify-build /tmp/PD1-900000
 
   exhaustive-encoding-audit:
     runs-on: ubuntu-latest

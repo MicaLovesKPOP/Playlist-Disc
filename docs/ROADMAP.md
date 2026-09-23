@@ -24,7 +24,7 @@
 
 - searchable static catalog;
 - pack/wallet support (12/24/48/96);
-- private/local disc creation;
+- private/local disc creation — software allocation, validation, listing, and virtual-build lookup implemented in Draft 0.2;
 - contribution workflow and generated catalog snapshots;
 - friendly desktop application.
 

@@ -45,6 +45,27 @@ tracks: 0:09, 0:16, 0:20, 0:24, 0:28, 0:32, 0:36, 0:24
 total: 3:09
 ```
 
+## Local/private workflow
+
+Private IDs `900000-989999` can be allocated and mapped entirely in a user-owned local registry, with no account or central registration:
+
+```bash
+pdv1 local-create ~/.playlistdisc \
+  --title "Personal favourites" \
+  --short-title "FAVOURITES" \
+  --binding local=library:playlist:favourites
+
+pdv1 local-validate ~/.playlistdisc
+pdv1 local-list ~/.playlistdisc
+
+pdv1 build 900000 \
+  --local-library ~/.playlistdisc \
+  --output build/PD1-900000
+pdv1 verify-build build/PD1-900000
+```
+
+This is a software workflow during Draft 0.2, not permission to burn private IDs yet. See `docs/LOCAL-DISCS.md` for the storage model, privacy boundary, multi-device collision warning, and virtual-build workflow.
+
 ## Design principles
 
 - **Cheap and cheerful:** ordinary CD-R is the default; finalized CD-RW is allowed for reusable/test discs.
@@ -62,7 +83,7 @@ total: 3:09
 - `compatibility/` — measured legacy-player/vehicle results
 - `src/playlistdisc/` — reference library and CLI
 - `tests/` — algorithm tests and golden vectors
-- `docs/` — burning, validation, compatibility testing, and roadmap
+- `docs/` — burning, validation, compatibility testing, local/private workflow, and roadmap
 
 ## Planned namespace
 
@@ -78,7 +99,7 @@ The exact ranges remain draft until PDv1.0.
 
 ## Current boundary
 
-Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon loopback, and internal mastering-bundle consistency without hardware. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, or analogue-path beacon survival. Those remain explicit physical-test gates.
+Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon loopback, internal mastering-bundle consistency, catalog invariants, and local/private allocation/lookup behavior without hardware. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, or analogue-path beacon survival. Those remain explicit physical-test gates.
 
 ## Licensing
 
