@@ -15,7 +15,7 @@ from .beacon import decode_beacon_wav
 from .identity import PDIdentity, decode_track_durations
 
 _MACHINE_ID_RE = re.compile(
-    r"(?<![A-Z0-9])PD1-\\d{6}-\\d(?!\\d)",
+    r"(?<![A-Z0-9])PD1-\d{6}-\d(?!\d)",
     re.IGNORECASE,
 )
 
