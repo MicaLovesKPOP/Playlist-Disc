@@ -102,7 +102,7 @@ Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a ma
 
 ## Compatibility test preparation
 
-Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations and sourced pre-hardware research are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. Source-typed integration research now covers both the Alfa 937 radio/CAN/changer architecture (`docs/research/ALFA-937.md`) and the MINI R55 Boost CD / RAD2 K-CAN/MOST architecture (`docs/research/MINI-R55-RAD2.md`). See `docs/COMPATIBILITY-TESTING.md`.
+Draft 0.2 includes a structured compatibility schema and deterministic export so eventual physical testing produces comparable evidence instead of free-form anecdotes. The three reference profiles (Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4) are deliberately still marked `planned`; existing ordinary-radio observations and sourced pre-hardware research are separated from PDv1 test reports. Physical Draft 0.2 reports must use development/test IDs. Source-typed integration research now covers the Alfa 937 radio/CAN/changer architecture (`docs/research/ALFA-937.md`), the MINI R55 Boost CD / RAD2 K-CAN/MOST architecture (`docs/research/MINI-R55-RAD2.md`), and the Citroen C3 II / RD4-family display, Comfort CAN, changer, and related AEE2004 reverse-engineering groundwork (`docs/research/CITROEN-C3-RD4.md`). See `docs/COMPATIBILITY-TESTING.md`.
 
 ## Cross-service resolution core
 
