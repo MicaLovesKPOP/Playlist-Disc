@@ -42,6 +42,8 @@ pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
 pdv1 build-test-kit --output build/test-kit
 pdv1 verify-test-kit build/test-kit
+# Optional when cdrdao is installed: parse the exact mastering file with the real tool
+pdv1 cdrdao-preflight build/test-kit/variants/toc-cdtext/disc.toc
 pdv1 validate-catalog catalog
 pdv1 check-catalog-evolution /path/to/baseline/catalog catalog
 pdv1 search-catalog diagnostic --catalog catalog
@@ -105,7 +107,7 @@ Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a ma
 
 ## Draft physical test kit
 
-The software can prepare and verify the future hardware-validation media before a burner or car is involved. `pdv1 build-test-kit` generates four verified bundles: a TOC baseline with CD-TEXT, the same ID without CD-TEXT, a beacon-focused no-CD-TEXT variant, and a dedicated CD-TEXT vector. CD-TEXT is explicitly optional and does not change the canonical TOC identity. During Draft 0.2, `pdv1 burn` refuses public/private IDs and only accepts verified test-namespace bundles. See `docs/BURNING.md`.
+The software can prepare and verify the future hardware-validation media before a burner or car is involved. `pdv1 build-test-kit` generates four verified bundles: a TOC baseline with CD-TEXT, the same ID without CD-TEXT, a beacon-focused no-CD-TEXT variant, and a dedicated CD-TEXT vector. CD-TEXT is explicitly optional and does not change the canonical TOC identity. During Draft 0.2, `pdv1 burn` refuses public/private IDs and only accepts verified test-namespace bundles. When `cdrdao` is installed, `pdv1 cdrdao-preflight` additionally asks the actual mastering tool to parse and size a generated TOC without needing an optical drive; CI runs that external parser over every test-kit variant. See `docs/BURNING.md`.
 
 ## Compatibility test preparation
 

@@ -9,6 +9,12 @@
 - Added package project URLs, keywords, and a `release` dependency extra for reproducible artifact checks.
 - Added structured GitHub issue forms for compatibility evidence, catalog proposals, and bugs plus a pull-request safety/review checklist.
 
+### External mastering-tool preflight
+
+- Added `pdv1 cdrdao-preflight`, which first verifies a bundle internally and then asks the installed cdrdao reference tool to parse (`toc-info`) and size (`toc-size`) its TOC without optical hardware.
+- Added unit coverage for missing tools/parser failures and a Linux CI gate that installs cdrdao and checks every generated Draft 0.2 test-kit variant.
+- Kept this evidence explicitly separate from real writer/media compatibility: parser acceptance is not a physical burn result.
+
 ### Physical-test-kit preparation
 
 - Made CD-TEXT an explicitly optional mastering channel while preserving identical PDv1 TOC identity/timing.

@@ -6,7 +6,7 @@
 - reference Python library and CLI;
 - deterministic TOC encoder/decoder;
 - Damm validation;
-- cdrdao bundle generator;
+- cdrdao bundle generator plus real-tool `toc-info`/`toc-size` parser preflight in CI;
 - experimental audio beacon;
 - catalog schema and development vectors;
 - CI validation.
