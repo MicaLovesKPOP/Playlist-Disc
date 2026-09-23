@@ -9,6 +9,7 @@
 - Added a pure-Python Goertzel DTMF decoder for the experimental repeated beacon.
 - Added synthetic attenuation, noise, clipping, filtering, redundancy, and silence tests.
 - Added `pdv1 verify-build` to independently cross-check manifest, TOC, CD-TEXT, and audio-beacon identity.
+- Centralized Draft 0.2 build metadata and hardened virtual verification against stale draft labels, namespace/checksum/total-duration mismatches, duration-vector drift, TOC-signature drift, and the wrong beacon profile.
 - CI verifies generated bundles on Python 3.11–3.13 and runs the exhaustive encoding audit separately.
 - Added a pre-hardware validation document separating software evidence from claims that still require physical testing.
 
