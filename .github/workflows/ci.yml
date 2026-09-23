@@ -34,6 +34,7 @@ jobs:
       - run: pdv1 validate-compatibility compatibility
       - run: pdv1 export-compatibility compatibility --output /tmp/compatibility.json
       - run: pdv1 validate-provider-index tests/vectors/provider-index-demo.json
+      - run: pdv1 plan-playback 999901 --provider demo --output /tmp/diagnostic-plan.json
       - run: pytest tests/test_local_scan.py
       - run: >-
           pdv1 local-create /tmp/pdv1-local
@@ -118,8 +119,10 @@ jobs:
       - name: Verify packaged schemas
         run: >-
           python -c "from playlistdisc.bridge import load_bridge_schema;
+          from playlistdisc.playback import load_playback_plan_schema;
           from playlistdisc.resolver import load_provider_index_schema;
           assert load_bridge_schema()['title'];
+          assert load_playback_plan_schema()['title'];
           assert load_provider_index_schema()['title']"
 
 
