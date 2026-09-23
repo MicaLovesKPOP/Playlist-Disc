@@ -14,7 +14,7 @@ from jsonschema import Draft202012Validator
 from .beacon import decode_beacon_wav
 from .identity import PDIdentity, decode_track_durations
 
-_MACHINE_ID_RE = re.compile(r"PD1-\\d{6}-\\d", re.IGNORECASE)
+_MACHINE_ID_RE = re.compile(r"PD1-\d{6}-\d", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,6 +154,9 @@ def recognize_observations(
     different valid channel. Two valid channels that disagree produce conflict and
     therefore no identity.
     """
+    if toc_tolerance < 0 or toc_tolerance >= 2:
+        raise ValueError("TOC tolerance must be >= 0 and < 2 seconds")
+
     evidence: list[tuple[str, PDIdentity]] = []
     errors: list[str] = []
 
