@@ -41,6 +41,14 @@
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
 - Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.
 
+### Playback bridge groundwork
+
+- Replaced the bridge sketch with a versioned transport-neutral logical protocol.
+- Added a packaged JSON Schema covering capability negotiation, state sync, disc selection/removal, OEM media controls, source switching, playback state, now-playing metadata, acknowledgements, and errors.
+- Added transcript validation for PD machine-ID checksums, per-session sequence monotonicity, and adapter selection/removal counters.
+- Added a deterministic reference JSONL session plus CLI/CI validation.
+- Added ADR 0005 documenting the separation between logical bridge semantics and BLE/USB/vehicle-specific transport layers.
+
 ## 0.1.0a1 — initial draft
 
 - PDv1 Draft 0.1 physical-format proposal.

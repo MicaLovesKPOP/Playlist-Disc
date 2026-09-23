@@ -36,6 +36,7 @@ pdv1 pack-show draft-0-2-test-vectors --catalog catalog
 pdv1 export-library catalog --output build/library.json
 pdv1 build-site catalog --output build/site
 pdv1 verify-site build/site
+pdv1 bridge-validate tests/vectors/bridge-session.jsonl
 pytest
 ```
 
@@ -79,6 +80,10 @@ pdv1 verify-build build/PD1-900000
 ```
 
 This is a software workflow during Draft 0.2, not permission to burn private IDs yet. See `docs/LOCAL-DISCS.md` for the storage model, privacy boundary, multi-device collision warning, and virtual-build workflow.
+
+## Vehicle/phone bridge
+
+Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
 
 ## Design principles
 

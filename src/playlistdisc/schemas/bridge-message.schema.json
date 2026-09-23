@@ -1,0 +1,713 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/bridge-message.schema.json",
+  "title": "PD Bridge v1 message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "version",
+    "source",
+    "session",
+    "seq",
+    "type",
+    "payload"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "pdbridge"
+    },
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "enum": [
+        "adapter",
+        "host"
+      ]
+    },
+    "session": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "type": {
+      "enum": [
+        "hello",
+        "hello_ack",
+        "state_sync",
+        "disc_selected",
+        "disc_removed",
+        "media_control",
+        "source_state",
+        "playback_state",
+        "now_playing",
+        "source_request",
+        "ack",
+        "error"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "machineId": {
+      "type": "string",
+      "pattern": "^PD1-[0-9]{6}-[0-9]$"
+    },
+    "discState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_id",
+        "selection_counter",
+        "evidence"
+      ],
+      "properties": {
+        "machine_id": {
+          "$ref": "#/$defs/machineId"
+        },
+        "selection_counter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence": {
+          "enum": [
+            "toc",
+            "cdtext",
+            "audio_beacon",
+            "manual"
+          ]
+        }
+      }
+    },
+    "helloPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter_id",
+        "implementation",
+        "capabilities"
+      ],
+      "properties": {
+        "adapter_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "implementation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "vehicle_profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "disc_detection",
+            "media_controls",
+            "auto_source_switch",
+            "metadata_display"
+          ],
+          "properties": {
+            "disc_detection": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "toc",
+                  "cdtext",
+                  "audio_beacon",
+                  "manual"
+                ]
+              }
+            },
+            "media_controls": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "next",
+                  "previous",
+                  "play_pause"
+                ]
+              }
+            },
+            "auto_source_switch": {
+              "type": "boolean"
+            },
+            "metadata_display": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "supported",
+                "fields"
+              ],
+              "properties": {
+                "supported": {
+                  "type": "boolean"
+                },
+                "fields": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "title",
+                      "artist",
+                      "album",
+                      "playback_state"
+                    ]
+                  }
+                },
+                "targets": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "head_unit",
+                      "cluster",
+                      "other"
+                    ]
+                  }
+                },
+                "max_chars": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "helloAckPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id",
+        "implementation",
+        "capabilities"
+      ],
+      "properties": {
+        "host_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "implementation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "now_playing",
+            "source_request"
+          ],
+          "properties": {
+            "now_playing": {
+              "type": "boolean"
+            },
+            "source_request": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "stateSyncPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "power",
+        "disc",
+        "streaming_source_active"
+      ],
+      "properties": {
+        "power": {
+          "enum": [
+            "off",
+            "accessory",
+            "run",
+            "unknown"
+          ]
+        },
+        "disc": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/discState"
+            }
+          ]
+        },
+        "streaming_source_active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "discSelectedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_id",
+        "selection_counter",
+        "evidence",
+        "confidence"
+      ],
+      "properties": {
+        "machine_id": {
+          "$ref": "#/$defs/machineId"
+        },
+        "selection_counter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence": {
+          "enum": [
+            "toc",
+            "cdtext",
+            "audio_beacon",
+            "manual"
+          ]
+        },
+        "confidence": {
+          "const": "strong"
+        }
+      }
+    },
+    "discRemovedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection_counter"
+      ],
+      "properties": {
+        "selection_counter": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "mediaControlPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "next",
+            "previous",
+            "play_pause"
+          ]
+        }
+      }
+    },
+    "sourceStatePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active"
+      ],
+      "properties": {
+        "active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "playbackStatePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "playing",
+            "paused",
+            "stopped",
+            "buffering",
+            "error"
+          ]
+        },
+        "context_id": {
+          "$ref": "#/$defs/machineId"
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "nowPlayingPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "artist": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "album": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "track_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "position_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "sourceRequestPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "activate_streaming",
+            "deactivate_streaming"
+          ]
+        }
+      }
+    },
+    "ackPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ack_seq"
+      ],
+      "properties": {
+        "ack_seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "errorPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "related_seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "hello"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/helloPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "hello_ack"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "host"
+          },
+          "payload": {
+            "$ref": "#/$defs/helloAckPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "state_sync"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/stateSyncPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "disc_selected"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/discSelectedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "disc_removed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/discRemovedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_control"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/mediaControlPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "source_state"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "adapter"
+          },
+          "payload": {
+            "$ref": "#/$defs/sourceStatePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "playback_state"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "host"
+          },
+          "payload": {
+            "$ref": "#/$defs/playbackStatePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "now_playing"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "host"
+          },
+          "payload": {
+            "$ref": "#/$defs/nowPlayingPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "source_request"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "const": "host"
+          },
+          "payload": {
+            "$ref": "#/$defs/sourceRequestPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ack"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ackPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "error"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/errorPayload"
+          }
+        }
+      }
+    }
+  ]
+}
