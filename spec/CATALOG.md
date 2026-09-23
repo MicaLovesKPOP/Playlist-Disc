@@ -2,28 +2,129 @@
 
 The public catalog is a registry of **meanings**, not a pile of streaming URLs.
 
+A physical Playlist Disc identifies a stable semantic record. Providers, URLs, market availability, and cached playlists are realization details layered on top.
+
 ## Categories are facets, not ID ranges
 
-The same entry can be a community-maintained, living, canonical, K-pop collection. These properties are stored independently. Numeric IDs do not encode category, provider, genre, ownership, or curation authority.
+The same entry can be community-maintained, living, canonical, K-pop, shuffled, and available on several providers at once. These properties are stored independently.
+
+Numeric IDs do **not** encode category, provider, genre, ownership, curation authority, or lifecycle.
+
+## Definition types
+
+Draft 0.2 recognizes these catalog definition types:
+
+- `artist_catalog` — a service-neutral artist identity, anchored by a MusicBrainz artist MBID;
+- `album` — a service-neutral release-group identity, anchored by a MusicBrainz release-group MBID;
+- `canonical_manifest` — an explicit list of service-neutral recordings;
+- `federated_collection` — a concept deliberately realized by different provider editorial collections;
+- `provider_native` — a resource that intentionally belongs to one provider;
+- `diagnostic` — development/test namespace entries.
+
+A schema-valid record can still be semantically invalid. `pdv1 validate-catalog` therefore enforces cross-file and cross-field invariants in addition to JSON Schema.
+
+## Portability classes
+
+### Canonical
+
+Canonical means the record has provider-independent meaning.
+
+Artist and album entities can be canonical directly. Curated track sets use a canonical recording manifest. A canonical entry must not simply wrap a provider-native URL while claiming universality.
+
+### Federated
+
+Federated means the *concept* is shared but individual services are permitted to realize it differently.
+
+Example: "current mainstream pop hits" could deliberately bind to each service's own current editorial list. A federated entry requires at least two provider bindings, and those bindings are marked `equivalent` or `best_available` rather than `direct`.
+
+### Provider-native
+
+Provider-native means the resource itself is part of one provider.
+
+A provider-native record declares the provider and requires a matching `direct` binding. Unsupported services remain unsupported; the registry must not manufacture fake equivalence.
+
+## Canonical recording manifests
+
+A canonical manifest is JSON at the deterministic path:
+
+```text
+catalog/manifests/042/042381.json
+```
+
+for disc ID `042381`.
+
+The catalog entry points to that path. The manifest repeats the disc ID and contains one or more recording records.
+
+Each recording must contain at least one service-neutral identifier:
+
+- a MusicBrainz Recording MBID; and/or
+- one or more uppercase ISRCs.
+
+Optional human `title_hint` and `artist_hint` fields exist for review/debugging only. They are not identity.
+
+Provider-specific exact-track overrides may be stored when automated resolution would otherwise be ambiguous. They are realization hints, not canonical identity.
+
+Within one manifest, the same MBID or ISRC cannot identify two different recording rows. Ambiguous manifests are rejected by validation.
+
+## Catalog file layout is normative
+
+A catalog entry must live at:
+
+```text
+catalog/discs/<first three ID digits>/<six-digit ID>.yaml
+```
+
+A canonical manifest must live at:
+
+```text
+catalog/manifests/<first three ID digits>/<six-digit ID>.json
+```
+
+This makes IDs reviewable, prevents accidental duplicate locations, and keeps large registries reasonably sharded.
+
+## Living and snapshot collections
+
+A `snapshot` entry has membership intended to stabilize apart from corrections.
+
+A `living` entry can gain newly qualifying music without changing semantic meaning—for example an artist's complete catalog or an ongoing genre collection.
+
+Living does not mean "anything maintainers feel like adding." The semantic scope must remain stable enough that an old physical disc still means the same thing years later.
+
+## Successors and retirement
+
+Public IDs are never recycled.
+
+A retired entry may name a `successor`, but:
+
+- it cannot point to itself;
+- the successor must exist in the catalog;
+- retirement does not change the old entry's historical meaning.
+
+## Export behavior
+
+`pdv1 export-catalog` refuses to emit a generated snapshot if the source catalog is invalid.
+
+For canonical-manifest entries, generated export metadata includes:
+
+- SHA-256 of the manifest bytes;
+- recording count.
+
+This allows clients and mirrors to detect changed living manifests without treating provider URLs as physical-disc identity.
 
 ## Examples
 
 ### Artist catalog
 
-A disc can mean "play this artist's catalog". Provider plugins are free to materialize or directly play the catalog while preserving the declared playback behavior.
+A disc can mean "play aespa's catalog." Provider plugins resolve the stable artist identity to the user's selected service or local library.
 
 ### Canonical community collection
 
-A community collection such as "K-Pop Girl Group Singles" should ideally identify service-neutral recordings in a manifest, using stable music metadata identifiers where available. Spotify, Apple Music, local-library, and future-provider bindings become resolvers for the same collection.
+A community collection such as "K-Pop Girl Group Singles" can be an explicit service-neutral recording manifest. Spotify, Apple Music, local-library, and future-provider support all resolve from the same membership list.
 
 ### Federated editorial concept
 
-A concept such as "Current Global Pop Hits" may intentionally map to each service's own editorial equivalent. Its portability must be declared `federated` so users are not told those track lists are identical.
+"Current Global Pop Hits" may intentionally map to each service's own editorial equivalent. Those lists do not need to contain identical tracks because the catalog explicitly labels the record as federated.
 
 ### Provider-native record
 
-A public disc may deliberately identify one provider's editorial or user-owned playlist. Its portability is `provider_native`; unsupported providers remain unsupported rather than pretending to be equivalent.
-
-## Living and snapshot collections
-
-A `snapshot` entry has membership intended to stabilize apart from corrections. A `living` entry can gain newly qualifying music without changing its semantic meaning—for example an artist's complete catalog or an ongoing genre collection.
+A specific provider editorial playlist can still have a physical Playlist Disc, but its catalog page and machine metadata must state that it is provider-native.
