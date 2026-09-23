@@ -30,3 +30,42 @@ def test_test_kit_detects_bundle_fingerprint_drift(tmp_path: Path):
     toc.write_text(toc.read_text(encoding="utf-8") + "// drift\n", encoding="utf-8")
     errors = verify_test_kit(root)
     assert any("bundle SHA-256 disagrees" in error for error in errors)
+
+
+def test_test_kit_rejects_reference_metadata_drift(tmp_path: Path):
+    root = build_test_kit(tmp_path / "kit")
+    path = root / "test-kit.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest["variants"][0]["purpose"] = "Different experiment"
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    errors = verify_test_kit(root)
+    assert any("purpose disagrees with Draft" in error for error in errors)
+
+
+def test_test_kit_rejects_self_consistent_variant_repoint(tmp_path: Path):
+    root = build_test_kit(tmp_path / "kit")
+    path = root / "test-kit.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+
+    target = manifest["variants"][2]
+    manifest["variants"][0].update(
+        {
+            field: target[field]
+            for field in (
+                "id_number",
+                "id",
+                "machine_id",
+                "cd_text",
+                "bundle",
+                "bundle_sha256",
+            )
+        }
+    )
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    errors = verify_test_kit(root)
+    assert any("id_number disagrees with Draft" in error for error in errors)
+    assert any("machine_id disagrees with Draft" in error for error in errors)
+    assert any("bundle disagrees with Draft" in error for error in errors)
+    assert any("CD-TEXT" in error or "cd_text disagrees" in error for error in errors)

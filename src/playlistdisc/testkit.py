@@ -68,6 +68,16 @@ VARIANTS: tuple[TestVariant, ...] = (
 )
 
 
+def _expected_variant_record(variant: TestVariant) -> dict[str, Any]:
+    identity = PDIdentity(variant.id_number)
+    return {
+        **asdict(variant),
+        "id": identity.canonical,
+        "machine_id": identity.machine_id,
+        "bundle": (Path("variants") / variant.name).as_posix(),
+    }
+
+
 def build_test_kit(output_dir: str | Path) -> Path:
     output = Path(output_dir)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -92,10 +102,7 @@ def build_test_kit(output_dir: str | Path) -> Path:
                 raise ValueError(f"generated variant {variant.name} failed verification")
             records.append(
                 {
-                    **asdict(variant),
-                    "id": identity.canonical,
-                    "machine_id": identity.machine_id,
-                    "bundle": bundle_rel.as_posix(),
+                    **_expected_variant_record(variant),
                     "bundle_sha256": report.bundle_sha256,
                 }
             )
@@ -152,7 +159,7 @@ def verify_test_kit(root: str | Path) -> list[str]:
 
     expected_names = [variant.name for variant in VARIANTS]
     actual_names = [item.get("name") for item in variants if isinstance(item, dict)]
-    if actual_names != expected_names:
+    if actual_names != expected_names or len(variants) != len(VARIANTS):
         errors.append(
             f"test-kit.json: variant order/names disagree with reference {expected_names!r}"
         )
@@ -162,15 +169,26 @@ def verify_test_kit(root: str | Path) -> list[str]:
             errors.append(f"variant {index}: expected object")
             continue
         name = str(item.get("name", f"#{index}"))
-        bundle_value = item.get("bundle")
-        if not isinstance(bundle_value, str):
-            errors.append(f"{name}: bundle path missing")
+        if index >= len(VARIANTS):
             continue
-        bundle = (base / bundle_value).resolve()
+
+        variant = VARIANTS[index]
+        expected = _expected_variant_record(variant)
+        for field, expected_value in expected.items():
+            if item.get(field) != expected_value:
+                errors.append(
+                    f"{name}: {field} disagrees with Draft {DRAFT_VERSION} test-kit reference"
+                )
+
+        # Verification deliberately follows the immutable reference path rather
+        # than a mutable path supplied by test-kit.json. This prevents a
+        # self-consistent manifest edit from silently repointing one named test
+        # vector at another valid bundle.
+        bundle = (base / expected["bundle"]).resolve()
         try:
             bundle.relative_to(base.resolve())
         except ValueError:
-            errors.append(f"{name}: bundle path escapes test kit")
+            errors.append(f"{name}: reference bundle path escapes test kit")
             continue
         try:
             report = verify_build(bundle)
@@ -178,15 +196,11 @@ def verify_test_kit(root: str | Path) -> list[str]:
             errors.append(f"{name}: {exc}")
             continue
 
-        try:
-            expected_identity = PDIdentity.parse(str(item["machine_id"]))
-        except (KeyError, ValueError) as exc:
-            errors.append(f"{name}: invalid machine_id: {exc}")
-            continue
+        expected_identity = PDIdentity(variant.id_number)
         if report.identity != expected_identity:
-            errors.append(f"{name}: bundle identity disagrees with test-kit manifest")
-        if report.cd_text_present is not item.get("cd_text"):
-            errors.append(f"{name}: CD-TEXT mode disagrees with test-kit manifest")
+            errors.append(f"{name}: bundle identity disagrees with test-kit reference")
+        if report.cd_text_present is not variant.cd_text:
+            errors.append(f"{name}: CD-TEXT mode disagrees with test-kit reference")
 
         expected_fingerprint = item.get("bundle_sha256")
         if not isinstance(expected_fingerprint, str):
