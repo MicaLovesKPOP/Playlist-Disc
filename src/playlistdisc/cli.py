@@ -18,6 +18,11 @@ from .catalog import (
     load_yaml,
     validate_catalog,
 )
+from .compatibility import (
+    iter_compatibility_profiles,
+    validate_compatibility,
+    write_compatibility_snapshot,
+)
 from .evolution import check_catalog_evolution
 from .identity import PDIdentity, decode_track_durations
 from .library import (
@@ -178,6 +183,27 @@ def cmd_check_catalog_evolution(args: argparse.Namespace) -> int:
         _print_errors(errors)
         return 1
     print("catalog evolution: PASS")
+    return 0
+
+
+def cmd_validate_compatibility(args: argparse.Namespace) -> int:
+    errors = validate_compatibility(args.compatibility)
+    if errors:
+        _print_errors(errors)
+        return 1
+    count = sum(1 for _ in iter_compatibility_profiles(args.compatibility))
+    print(f"validated {count} compatibility profiles")
+    return 0
+
+
+def cmd_export_compatibility(args: argparse.Namespace) -> int:
+    errors = validate_compatibility(args.compatibility)
+    if errors:
+        _print_errors(errors)
+        print("error: refusing to export invalid compatibility data", file=sys.stderr)
+        return 1
+    path = write_compatibility_snapshot(args.compatibility, args.output)
+    print(path)
     return 0
 
 
@@ -442,6 +468,21 @@ def build_parser() -> argparse.ArgumentParser:
     evolution_p.add_argument("baseline")
     evolution_p.add_argument("current", nargs="?", default="catalog")
     evolution_p.set_defaults(func=cmd_check_catalog_evolution)
+
+    compat_validate_p = sub.add_parser(
+        "validate-compatibility",
+        help="validate structured vehicle/head-unit compatibility profiles and test reports",
+    )
+    compat_validate_p.add_argument("compatibility", nargs="?", default="compatibility")
+    compat_validate_p.set_defaults(func=cmd_validate_compatibility)
+
+    compat_export_p = sub.add_parser(
+        "export-compatibility",
+        help="export a deterministic compatibility JSON snapshot",
+    )
+    compat_export_p.add_argument("compatibility", nargs="?", default="compatibility")
+    compat_export_p.add_argument("--output", default="build/compatibility.json")
+    compat_export_p.set_defaults(func=cmd_export_compatibility)
 
     export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")

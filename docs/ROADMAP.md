@@ -14,6 +14,7 @@
 ## Milestone 2 — physical validation and PDv1.0
 
 - burn development discs on multiple writers;
+- structured compatibility profile/report schema, validator, deterministic export, and three planned reference profiles implemented in Draft 0.2;
 - test reference cars and additional legacy players;
 - settle TOC tolerance rules;
 - settle audio-beacon profile;

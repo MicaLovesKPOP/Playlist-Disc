@@ -21,6 +21,14 @@
 - Catalog export now refuses invalid source data and includes canonical-manifest content hashes/counts.
 - Added architecture decisions documenting provider-neutral public IDs and canonical recording manifests.
 
+### Compatibility-test preparation
+
+- Replaced loose vehicle notes with schema-validated head-unit compatibility profiles.
+- Added structured physical-test reports for media/finalization/CD-TEXT state, writer details, repeated attempts, load/track behavior, TOC timing, cold-start/reinsert behavior, vehicle-bus visibility, and beacon outcomes.
+- Added Draft 0.2 safeguards requiring physical reports to use test-namespace PD IDs and preventing impossible attempt counts/status combinations.
+- Migrated the Alfa 147 ALFA-937 SW3.17, MINI R55 Boost CD, and Citroen C3 RD4 reference profiles while keeping them honestly marked `planned`.
+- Added deterministic compatibility JSON export plus `pdv1 validate-compatibility` / `export-compatibility` and CI coverage.
+
 ### Catalog evolution safety
 
 - Added a baseline/current catalog evolution guard for activated and retired permanent public IDs.
