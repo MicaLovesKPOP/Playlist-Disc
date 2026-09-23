@@ -138,12 +138,10 @@ def extract_tag_identity(tags: object) -> dict[str, Any] | None:
     title_values = _values_for(
         tags,
         exact={"title", "tit2"},
-        contains=("title",),
     )
     artist_values = _values_for(
         tags,
         exact={"artist", "tpe1"},
-        contains=("artist",),
     )
 
     result: dict[str, Any] = {}
