@@ -56,6 +56,12 @@ This catches generator regressions before a blank disc is consumed.
 
 The official `pdv1 burn` path also verifies the bundle and refuses any non-test namespace while the format remains a draft.
 
+## External mastering-tool parser gate
+
+The project also tests the generated mastering syntax against the actual `cdrdao` parser. A dedicated CI job installs cdrdao, regenerates the physical test kit, and runs `toc-info` plus `toc-size` on every variant through `pdv1 cdrdao-preflight`.
+
+This is deliberately a separate layer from `verify-build`: our verifier proves PDv1's own invariants, while cdrdao preflight proves that the external reference mastering tool accepts the file it will later be asked to write. No optical drive is needed for this check.
+
 ## What software cannot prove
 
 Draft 0.2 intentionally does **not** claim to establish:
@@ -65,6 +71,6 @@ Draft 0.2 intentionally does **not** claim to establish:
 - how an actual head unit rounds or exposes TOC durations;
 - whether its CD-TEXT implementation is correct;
 - whether the DTMF beacon survives a real radio/DAC/analogue signal path;
-- whether cdrdao plus a specific writer produces the intended physical TOC on media.
+- whether cdrdao plus a specific writer produces the intended physical TOC on media (the parser gate only proves the mastering file is accepted and sizeable by cdrdao).
 
 Those remain the purpose of the eventual physical compatibility round.

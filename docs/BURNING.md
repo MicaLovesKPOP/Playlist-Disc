@@ -4,6 +4,14 @@ PDv1 draft discs require **Disc-At-Once (DAO)** recording because their identity
 
 The reference backend is `cdrdao`.
 
+Before a physical drive is involved, an installed `cdrdao` can already parse the exact mastering file:
+
+```bash
+pdv1 cdrdao-preflight build/PD1-999901/disc.toc --verbose
+```
+
+This first runs the project's own `verify-build` checks, then invokes `cdrdao toc-info` and `cdrdao toc-size`. Those commands exercise cdrdao's real TOC parser without writing media or requiring an optical drive. They do **not** prove that a specific burner/media/head unit will behave correctly.
+
 ## Draft safety rule
 
 During Draft 0.2, the official `pdv1 burn` command only accepts:
@@ -64,3 +72,7 @@ toc-no-cdtext
 ```
 
 Avoid adhesive labels in slot-loading automotive mechanisms.
+
+## CI parser gate
+
+Linux CI installs the distribution `cdrdao` package, generates the complete Draft 0.2 physical test kit, and runs `pdv1 cdrdao-preflight` on every variant. This catches differences between our internal TOC parser and the external mastering tool before hardware testing.

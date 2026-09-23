@@ -11,6 +11,7 @@ import sys
 
 from .audit import assert_reference_audit, audit_encoding
 from .bridge import read_bridge_jsonl, validate_bridge_transcript
+from .cdrdao import cdrdao_preflight
 from .catalog import (
     find_entry,
     iter_entries,
@@ -484,6 +485,21 @@ def cmd_verify_test_kit(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cdrdao_preflight(args: argparse.Namespace) -> int:
+    try:
+        report = cdrdao_preflight(args.target, executable=args.executable)
+    except (OSError, RuntimeError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"cdrdao parser: PASS ({report.toc})")
+    if args.verbose:
+        if report.toc_info:
+            print(report.toc_info)
+        if report.toc_size:
+            print(report.toc_size)
+    return 0
+
+
 def cmd_burn(args: argparse.Namespace) -> int:
     toc = Path(args.toc)
     if not toc.exists():
@@ -732,6 +748,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     kit_verify_p.add_argument("kit", nargs="?", default="build/test-kit")
     kit_verify_p.set_defaults(func=cmd_verify_test_kit)
+
+    cdrdao_p = sub.add_parser(
+        "cdrdao-preflight",
+        help="verify a bundle and parse/size its TOC with the installed cdrdao tool",
+    )
+    cdrdao_p.add_argument("target", help="bundle directory or disc.toc path")
+    cdrdao_p.add_argument(
+        "--executable",
+        help="explicit cdrdao executable path/name; default searches PATH",
+    )
+    cdrdao_p.add_argument("--verbose", action="store_true")
+    cdrdao_p.set_defaults(func=cmd_cdrdao_preflight)
 
     burn_p = sub.add_parser("burn", help="write a verified Draft test disc using cdrdao")
     burn_p.add_argument("toc")

@@ -133,3 +133,27 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e '.[local-library,dev]'
       - run: pytest tests/test_local_scan.py
+
+
+  cdrdao-parser-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e .
+      - name: Install cdrdao reference mastering tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cdrdao
+      - run: pdv1 build-test-kit --output /tmp/pdv1-test-kit
+      - name: Parse every generated TOC with cdrdao
+        shell: bash
+        run: |
+          set -euo pipefail
+          for toc in /tmp/pdv1-test-kit/variants/*/disc.toc; do
+            echo "Checking $toc"
+            pdv1 cdrdao-preflight "$toc" --verbose
+          done
