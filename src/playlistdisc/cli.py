@@ -10,7 +10,13 @@ import subprocess
 import sys
 
 from .audit import assert_reference_audit, audit_encoding
-from .catalog import find_entry, iter_entries, load_schema, load_yaml, validate_entry
+from .catalog import (
+    find_entry,
+    iter_entries,
+    load_yaml,
+    manifest_metadata,
+    validate_catalog,
+)
 from .identity import PDIdentity, decode_track_durations
 from .mastering import build_bundle
 from .verify import verify_build
@@ -91,32 +97,28 @@ def cmd_audit_encoding(args: argparse.Namespace) -> int:
 
 
 def cmd_validate_catalog(args: argparse.Namespace) -> int:
-    schema_path = Path(args.schema or Path(args.catalog) / "schema" / "disc.schema.json")
-    schema = load_schema(schema_path)
-    failed = False
-    count = 0
-    seen: dict[str, Path] = {}
-    for path in iter_entries(args.catalog):
-        count += 1
-        data = load_yaml(path)
-        errors = validate_entry(data, schema)
-        ident = str(data.get("id", "")).zfill(6)
-        if ident in seen:
-            errors.append(f"id: duplicate of {seen[ident]}")
-        else:
-            seen[ident] = path
-        if errors:
-            failed = True
-            print(f"{path}:", file=sys.stderr)
-            for message in errors:
-                print(f"  - {message}", file=sys.stderr)
-    if failed:
+    errors = validate_catalog(
+        args.catalog,
+        entry_schema_path=args.schema,
+        manifest_schema_path=args.manifest_schema,
+    )
+    if errors:
+        for message in errors:
+            print(message, file=sys.stderr)
         return 1
+    count = sum(1 for _ in iter_entries(args.catalog))
     print(f"validated {count} catalog entries")
     return 0
 
 
 def cmd_export_catalog(args: argparse.Namespace) -> int:
+    errors = validate_catalog(args.catalog)
+    if errors:
+        for message in errors:
+            print(message, file=sys.stderr)
+        print("error: refusing to export invalid catalog", file=sys.stderr)
+        return 1
+
     entries = []
     for path in iter_entries(args.catalog):
         data = load_yaml(path)
@@ -126,7 +128,11 @@ def cmd_export_catalog(args: argparse.Namespace) -> int:
         item["namespace"] = ident.namespace
         item["track_durations_seconds"] = list(ident.track_durations)
         item["toc_sha256"] = ident.toc_signature
+        manifest = manifest_metadata(args.catalog, data)
+        if manifest is not None:
+            item["canonical_manifest"] = manifest
         entries.append(item)
+
     entries.sort(key=lambda item: item["id"])
     payload = {"schema_version": 1, "format": "PDv1", "entries": entries}
     output = Path(args.output)
@@ -191,12 +197,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     audit_p.set_defaults(func=cmd_audit_encoding)
 
-    val_p = sub.add_parser("validate-catalog", help="validate all registry entries")
+    val_p = sub.add_parser("validate-catalog", help="validate registry schemas and cross-file invariants")
     val_p.add_argument("catalog", nargs="?", default="catalog")
     val_p.add_argument("--schema")
+    val_p.add_argument("--manifest-schema")
     val_p.set_defaults(func=cmd_validate_catalog)
 
-    export_p = sub.add_parser("export-catalog", help="build a single generated JSON catalog snapshot")
+    export_p = sub.add_parser("export-catalog", help="build a validated generated JSON catalog snapshot")
     export_p.add_argument("catalog", nargs="?", default="catalog")
     export_p.add_argument("--output", default="build/catalog.json")
     export_p.set_defaults(func=cmd_export_catalog)

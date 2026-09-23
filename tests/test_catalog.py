@@ -1,13 +1,164 @@
+import json
 from pathlib import Path
 
-from playlistdisc.catalog import iter_entries, load_schema, load_yaml, validate_entry
+import yaml
+
+from playlistdisc.catalog import (
+    load_schema,
+    load_yaml,
+    validate_catalog,
+    validate_entry,
+    validate_manifest,
+)
 
 ROOT = Path(__file__).parents[1]
+ENTRY_SCHEMA = ROOT / "catalog/schema/disc.schema.json"
+MANIFEST_SCHEMA = ROOT / "catalog/schema/canonical-manifest.schema.json"
+
+
+def _write_yaml(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+
+def _write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def _base_entry(id6: str, definition: dict, portability: str = "canonical") -> dict:
+    return {
+        "schema_version": 1,
+        "id": id6,
+        "title": "Test collection",
+        "short_title": "TEST",
+        "status": "draft",
+        "definition": definition,
+        "provenance": {"authority": "community", "maintainers": ["tester"]},
+        "lifecycle": "snapshot",
+        "portability": portability,
+        "playback": {"order": "shuffle", "start": "random", "repeat": "context"},
+        "tags": ["test"],
+    }
 
 
 def test_draft_catalog_validates():
-    schema = load_schema(ROOT / "catalog/schema/disc.schema.json")
-    paths = list(iter_entries(ROOT / "catalog"))
-    assert paths
-    for path in paths:
-        assert validate_entry(load_yaml(path), schema) == []
+    assert validate_catalog(ROOT / "catalog") == []
+
+
+def test_single_entry_schema_still_validates_test_vectors():
+    schema = load_schema(ENTRY_SCHEMA)
+    data = load_yaml(ROOT / "catalog/discs/999/999901.yaml")
+    assert validate_entry(data, schema) == []
+
+
+def test_canonical_manifest_schema_and_cross_file_validation(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    manifest_rel = f"manifests/{id6[:3]}/{id6}.json"
+    entry = _base_entry(
+        id6,
+        {
+            "type": "canonical_manifest",
+            "manifest": manifest_rel,
+            "membership_policy": "Exact service-neutral recording set.",
+        },
+    )
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+    _write_json(
+        catalog / manifest_rel,
+        {
+            "schema_version": 1,
+            "disc_id": id6,
+            "recordings": [
+                {
+                    "musicbrainz_recording_id": "11111111-2222-3333-4444-555555555555",
+                    "title_hint": "Example A",
+                },
+                {
+                    "isrcs": ["KRABC2600001"],
+                    "title_hint": "Example B",
+                },
+            ],
+        },
+    )
+    assert validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    ) == []
+
+
+def test_manifest_rejects_ambiguous_duplicate_recording_identifiers():
+    schema = load_schema(MANIFEST_SCHEMA)
+    manifest = {
+        "schema_version": 1,
+        "disc_id": "042381",
+        "recordings": [
+            {"isrcs": ["KRABC2600001"]},
+            {"isrcs": ["KRABC2600001"]},
+        ],
+    }
+    errors = validate_manifest(manifest, schema)
+    assert any("appears in more than one recording" in error for error in errors)
+
+
+def test_catalog_rejects_wrong_path_and_missing_successor(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    entry = _base_entry(
+        "042381",
+        {"type": "artist_catalog", "musicbrainz_artist_id": "11111111-2222-3333-4444-555555555555"},
+    )
+    entry["successor"] = "042382"
+    _write_yaml(catalog / "discs/999/wrong.yaml", entry)
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    assert any("catalog entry must live at discs/042/042381.yaml" in error for error in errors)
+    assert any("successor: referenced catalog ID 042382 does not exist" in error for error in errors)
+
+
+def test_provider_native_requires_matching_direct_binding(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    entry = _base_entry(
+        id6,
+        {"type": "provider_native", "provider": "spotify"},
+        portability="provider_native",
+    )
+    entry["providers"] = {
+        "spotify": {"strategy": "equivalent", "resource": "spotify:playlist:test"}
+    }
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    assert any("provider-native binding must use 'direct'" in error for error in errors)
+
+
+def test_federated_collection_requires_multiple_equivalent_bindings(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    entry = _base_entry(
+        id6,
+        {"type": "federated_collection", "concept": "Provider editorial current-hits collection."},
+        portability="federated",
+    )
+    entry["providers"] = {
+        "spotify": {"strategy": "direct", "resource": "spotify:playlist:test"}
+    }
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    assert any("requires at least two provider bindings" in error for error in errors)
+    assert any("must use 'equivalent' or 'best_available'" in error for error in errors)

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playlistdisc.example/schema/canonical-manifest.schema.json",
+  "title": "PDv1 canonical recording manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "disc_id",
+    "recordings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "disc_id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "recordings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "musicbrainz_recording_id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "isrcs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$"
+            }
+          },
+          "title_hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "artist_hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "provider_overrides": {
+            "type": "object",
+            "propertyNames": {
+              "pattern": "^[a-z0-9][a-z0-9_-]*$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "musicbrainz_recording_id"
+            ]
+          },
+          {
+            "required": [
+              "isrcs"
+            ]
+          }
+        ]
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

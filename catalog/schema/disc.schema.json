@@ -4,60 +4,285 @@
   "title": "PDv1 catalog entry",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "id", "title", "short_title", "status", "definition", "provenance", "lifecycle", "portability", "playback", "tags"],
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "short_title",
+    "status",
+    "definition",
+    "provenance",
+    "lifecycle",
+    "portability",
+    "playback",
+    "tags"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "id": {"type": "string", "pattern": "^[0-9]{6}$"},
-    "title": {"type": "string", "minLength": 1, "maxLength": 160},
-    "short_title": {"type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[ -~]+$"},
-    "status": {"enum": ["draft", "active", "retired"]},
-    "successor": {"type": "string", "pattern": "^[0-9]{6}$"},
-    "family": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "short_title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[ -~]+$"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "active",
+        "retired"
+      ]
+    },
+    "successor": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "family": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
     "definition": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["type"],
-      "properties": {
-        "type": {"enum": ["artist_catalog", "album", "canonical_manifest", "ruleset", "provider_native", "diagnostic"]}
-      }
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "purpose"
+          ],
+          "properties": {
+            "type": {
+              "const": "diagnostic"
+            },
+            "purpose": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "manifest"
+          ],
+          "properties": {
+            "type": {
+              "const": "canonical_manifest"
+            },
+            "manifest": {
+              "type": "string",
+              "pattern": "^manifests/[0-9]{3}/[0-9]{6}\\.json$"
+            },
+            "membership_policy": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "musicbrainz_artist_id"
+          ],
+          "properties": {
+            "type": {
+              "const": "artist_catalog"
+            },
+            "musicbrainz_artist_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            },
+            "scope": {
+              "enum": [
+                "recordings",
+                "official_releases"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "musicbrainz_release_group_id"
+          ],
+          "properties": {
+            "type": {
+              "const": "album"
+            },
+            "musicbrainz_release_group_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "provider"
+          ],
+          "properties": {
+            "type": {
+              "const": "provider_native"
+            },
+            "provider": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "concept"
+          ],
+          "properties": {
+            "type": {
+              "const": "federated_collection"
+            },
+            "concept": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      ]
     },
     "provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["authority"],
+      "required": [
+        "authority"
+      ],
       "properties": {
-        "authority": {"enum": ["project", "community", "artist", "label", "provider"]},
-        "maintainers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+        "authority": {
+          "enum": [
+            "project",
+            "community",
+            "artist",
+            "label",
+            "provider"
+          ]
+        },
+        "maintainers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
       }
     },
-    "lifecycle": {"enum": ["snapshot", "living"]},
-    "portability": {"enum": ["canonical", "federated", "provider_native"]},
+    "lifecycle": {
+      "enum": [
+        "snapshot",
+        "living"
+      ]
+    },
+    "portability": {
+      "enum": [
+        "canonical",
+        "federated",
+        "provider_native"
+      ]
+    },
     "playback": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["order", "start", "repeat"],
+      "required": [
+        "order",
+        "start",
+        "repeat"
+      ],
       "properties": {
-        "order": {"enum": ["ordered", "shuffle"]},
-        "start": {"enum": ["first", "random", "resume"]},
-        "repeat": {"enum": ["off", "context", "one"]}
+        "order": {
+          "enum": [
+            "ordered",
+            "shuffle"
+          ]
+        },
+        "start": {
+          "enum": [
+            "first",
+            "random",
+            "resume"
+          ]
+        },
+        "repeat": {
+          "enum": [
+            "off",
+            "context",
+            "one"
+          ]
+        }
       }
     },
     "tags": {
       "type": "array",
-      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
       "uniqueItems": true
     },
     "providers": {
       "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9_-]*$"
+      },
       "additionalProperties": {
         "type": "object",
-        "additionalProperties": true,
-        "required": ["strategy"],
+        "additionalProperties": false,
+        "required": [
+          "strategy"
+        ],
         "properties": {
-          "strategy": {"enum": ["materialize", "direct", "equivalent", "best_available", "unsupported"]}
+          "strategy": {
+            "enum": [
+              "materialize",
+              "direct",
+              "equivalent",
+              "best_available",
+              "unsupported"
+            ]
+          },
+          "resource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "market": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "notes": {
+            "type": "string"
+          }
         }
       }
     },
-    "notes": {"type": "string"}
+    "notes": {
+      "type": "string"
+    }
   }
 }
