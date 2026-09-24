@@ -67,21 +67,52 @@ def validate_recognition_result(
     if messages:
         return messages
 
+    evidence_identities: dict[int, PDIdentity] = {}
+    for index, item in enumerate(data["evidence"]):
+        try:
+            identity = PDIdentity.parse(item["machine_id"])
+        except ValueError as exc:
+            messages.append(f"evidence.{index}.machine_id: {exc}")
+        else:
+            evidence_identities[identity.number] = identity
+
     status = data["status"]
     has_identity = "machine_id" in data or "id" in data
+    claimed_identity: PDIdentity | None = None
     if status == "recognized":
         if "machine_id" not in data or "id" not in data:
             messages.append("machine_id/id: recognized result requires identity")
         else:
             try:
-                identity = PDIdentity.parse(data["machine_id"])
+                claimed_identity = PDIdentity.parse(data["machine_id"])
             except ValueError as exc:
                 messages.append(f"machine_id: {exc}")
             else:
-                if identity.id6 != data["id"]:
+                if claimed_identity.id6 != data["id"]:
                     messages.append("id: does not match machine_id")
     elif has_identity:
         messages.append("machine_id/id: non-recognized result must not claim identity")
+
+    if messages:
+        return messages
+
+    if not evidence_identities:
+        expected_status = "unknown"
+    elif len(evidence_identities) == 1:
+        expected_status = "recognized"
+    else:
+        expected_status = "conflict"
+
+    if status != expected_status:
+        messages.append(
+            f"status: {status!r} contradicts strong evidence; expected {expected_status!r}"
+        )
+    elif status == "recognized":
+        evidence_identity = next(iter(evidence_identities.values()))
+        if claimed_identity is None or claimed_identity.number != evidence_identity.number:
+            messages.append(
+                "machine_id/id: recognized identity does not match strong evidence"
+            )
     return messages
 
 
