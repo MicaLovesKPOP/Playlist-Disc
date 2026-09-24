@@ -42,6 +42,8 @@ The packaged `PDv1-recognition` JSON schema carries:
 - deduplicated strong evidence channels and their machine IDs;
 - diagnostic errors from invalid supplied observations.
 
+The serialized result is itself fail-closed. `recognized` requires at least one checksum-valid evidence item and every accepted evidence identity must agree with the claimed identity. `unknown` cannot carry accepted identity evidence. `conflict` requires evidence for at least two distinct checksum-valid identities and cannot carry a chosen ID. These invariants are checked again when externally supplied JSON is validated, rather than trusting a self-described status field.
+
 This is suitable as the disc-recognition input to a future vehicle adapter/PD Bridge implementation.
 
 ## Hardware boundary
