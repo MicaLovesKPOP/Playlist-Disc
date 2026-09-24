@@ -89,3 +89,19 @@ Draft 0.2 intentionally does **not** claim to establish:
 - whether cdrdao plus a specific writer produces the intended physical TOC on media (the parser gate only proves the mastering file is accepted and sizeable by cdrdao).
 
 Those remain the purpose of the eventual physical compatibility round.
+## Pre-hardware readiness conclusion
+
+The software-only gates needed before the **first controlled physical validation round** are complete for Draft 0.2:
+
+- the complete six-digit identity/TOC space is exhaustively audited and pinned;
+- generated mastering bundles and the four-variant physical test kit are independently verified and fingerprinted;
+- the reference mastering syntax is exercised by the real `cdrdao` parser in CI;
+- beacon decoding covers realistic synthetic capture formats/failures without treating those tests as vehicle evidence;
+- catalog, playback-plan, bridge, host-runtime, materialization, compatibility-report, library/site, and pack/wallet artifacts have fail-closed validation at their software boundaries;
+- one offline vertical test proves recognition -> exact provider resolution -> host execution -> materialization composition;
+- the bounded P1 head-unit/integration-family research sweep is complete, with exact bus/protocol claims left capture-gated;
+- `docs/HARDWARE-VALIDATION-RUNBOOK.md` defines the evidence order and stop conditions for the first burns.
+
+The following work is intentionally **not a prerequisite** for first physical validation: P2 vehicle-family expansion, live Spotify/Apple/provider authentication and playback, standalone desktop binaries, hosted-site deployment, physical wallet/label/artwork ergonomics, and speculative vehicle-bus implementations without captures. Those can proceed after real hardware evidence identifies which paths are worth productizing.
+
+Further software-only changes should now require a concrete defect or a new constraint revealed by physical evidence. Otherwise, the next highest-information step is hardware.

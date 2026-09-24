@@ -46,6 +46,7 @@
 - CI verifies generated bundles on Python 3.11–3.13 and runs the exhaustive encoding audit separately.
 - Added a pre-hardware validation document separating software evidence from claims that still require physical testing.
 - Added an offline vertical integration test spanning TOC recognition, canonical provider resolution, PD Bridge host execution, validated host actions, and materialization-cache round-trip without hardware or provider accounts.
+- Declared the Draft 0.2 software-only first-hardware readiness boundary: remaining P2 family expansion, live provider integrations, standalone apps, and physical label/wallet ergonomics are explicitly non-blocking until hardware evidence creates a concrete need.
 
 ### Catalog hardening
 

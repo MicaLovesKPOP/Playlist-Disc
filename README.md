@@ -184,7 +184,7 @@ The exact ranges remain draft until PDv1.0.
 
 ## Current boundary
 
-Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon loopback, internal mastering-bundle consistency, catalog/pack invariants, deterministic library/search behavior, and local/private allocation/lookup behavior without hardware. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, physical wallet ergonomics, or analogue-path beacon survival. Those remain explicit physical-test gates.
+Draft 0.2 can prove deterministic encoding, checksum behavior, synthetic beacon/capture decoding, internal mastering-bundle consistency, catalog/pack invariants, deterministic library/search behavior, local/private allocation/lookup behavior, and the offline recognition-to-host-to-materialization software chain without hardware. The software-only gates needed before the first controlled physical round are now complete; see `docs/PREHARDWARE-VALIDATION.md` and `docs/HARDWARE-VALIDATION-RUNBOOK.md`. It **cannot** prove optical-drive compatibility, actual CD-RW support, real head-unit timing behavior, physical wallet ergonomics, vehicle-bus behavior, or analogue-path beacon survival. Those are now the highest-value evidence gates.
 
 ## Licensing
 
