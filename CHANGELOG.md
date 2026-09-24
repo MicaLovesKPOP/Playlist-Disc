@@ -29,6 +29,7 @@
 - One valid strong channel can recognize a disc; matching channels corroborate it; independently valid disagreement returns `conflict` and no identity rather than applying a hidden precedence rule.
 - Invalid/missing optional channels remain diagnostics and do not suppress a different valid channel; coarse track-count/total-duration evidence is never treated as identity.
 - Tightened CD-TEXT identifier token boundaries to avoid matching valid IDs as prefixes embedded inside longer values.
+- Hardened recognition-result validation so evidence machine IDs must pass their check digits and the top-level `unknown` / `recognized` / `conflict` conclusion must be exactly derivable from the strong evidence set.
 - Added `pdv1 recognize`, schema/package checks, tests, documentation, and ADR 0014.
 
 ### Physical-format software validation
