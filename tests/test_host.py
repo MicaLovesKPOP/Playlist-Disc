@@ -1,10 +1,13 @@
 import copy
 
+import pytest
+
 from playlistdisc.host import HostRuntime, validate_host_action
 from playlistdisc.identity import PDIdentity
 
 
 MACHINE_ID = PDIdentity(900000).machine_id
+OTHER_MACHINE_ID = PDIdentity(900001).machine_id
 
 
 def _plan(*, status: str = "ready") -> dict:
@@ -235,6 +238,75 @@ def test_new_adapter_session_is_a_new_selection_even_for_same_disc():
     assert runtime.consume(selected2)[0].type == "execute_plan"
 
 
+def test_stale_adapter_session_controls_cannot_drive_new_playback_context():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    runtime.consume(_selected())
+
+    hello2 = copy.deepcopy(_hello(False))
+    hello2["session"] = "car-2"
+    runtime.consume(hello2)
+    selected2 = copy.deepcopy(_selected())
+    selected2["session"] = "car-2"
+    selected2["seq"] = 1
+    runtime.consume(selected2)
+
+    stale = _control(seq=3)
+    assert runtime.consume(stale) == ()
+
+
+def test_runtime_rejects_non_increasing_adapter_sequence():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    runtime.consume(_state_sync(seq=1))
+    with pytest.raises(ValueError, match="sequence must increase strictly"):
+        runtime.consume(_control(seq=1))
+
+
+def test_runtime_rejects_unadvertised_media_control():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    hello = _hello(False)
+    hello["payload"]["capabilities"]["media_controls"] = ["next"]
+    runtime.consume(hello)
+    runtime.consume(_selected())
+    with pytest.raises(ValueError, match="was not advertised"):
+        runtime.consume(_control(action="previous", seq=3))
+
+
+def test_runtime_rejects_state_sync_identity_change_for_reused_counter():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    runtime.consume(_selected())
+    with pytest.raises(ValueError, match="changed identity"):
+        runtime.consume(
+            _state_sync(
+                {
+                    "machine_id": OTHER_MACHINE_ID,
+                    "selection_counter": 1,
+                    "evidence": "toc",
+                },
+                seq=3,
+            )
+        )
+
+
+def test_runtime_rejects_removal_without_matching_active_selection():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    with pytest.raises(ValueError, match="no active selection"):
+        runtime.consume(_removed(seq=1))
+
+
+def test_reannounced_runtime_capabilities_cannot_change_inside_one_session():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    changed = _hello(False)
+    changed["seq"] = 1
+    changed["payload"]["capabilities"]["media_controls"] = ["next"]
+    with pytest.raises(ValueError, match="hello changed within session"):
+        runtime.consume(changed)
+
+
 def test_removal_policy_can_leave_playing_and_keep_source():
     runtime = HostRuntime(
         lambda machine_id: _plan(),
@@ -247,6 +319,7 @@ def test_removal_policy_can_leave_playing_and_keep_source():
     runtime.consume(_source(True))
     assert runtime.consume(_removed()) == ()
     assert runtime.consume(_control(seq=6))[0].type == "provider_control"
+
 
 def _host_action(action_type: str, **fields) -> dict:
     data = {
@@ -357,4 +430,3 @@ def test_host_action_contract_accepts_each_runtime_shape():
         ),
     ]
     assert all(validate_host_action(item) == [] for item in valid)
-
