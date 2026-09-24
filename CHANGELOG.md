@@ -106,6 +106,7 @@
 - Added a development test-vector pack to exercise pack validation and slot resolution without opening permanent public IDs.
 - Added deterministic catalog search with status/tag filters plus `pdv1 search-catalog`.
 - Added `pdv1 pack-list` and `pdv1 pack-show` with resolved 1-based wallet slots.
+- Added `pdv1 build-wallet` for deterministic dependency-free printable HTML pack indexes, including empty capacity slots and fixed 24-slot pagination; physical label/artwork ergonomics remain deliberately out of scope.
 - Added `pdv1 export-library`, a validated static JSON snapshot containing entries, resolved packs, and browsing facets.
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
 - Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.

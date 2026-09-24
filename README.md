@@ -51,6 +51,7 @@ pdv1 check-catalog-evolution /path/to/baseline/catalog catalog
 pdv1 search-catalog diagnostic --catalog catalog
 pdv1 pack-list catalog
 pdv1 pack-show draft-0-2-test-vectors --catalog catalog
+pdv1 build-wallet draft-0-2-test-vectors --catalog catalog --output build/wallet.html
 pdv1 export-library catalog --output build/library.json
 pdv1 build-site catalog --output build/site
 pdv1 verify-site build/site
@@ -82,7 +83,7 @@ total: 3:09
 
 ## Library, search, packs, and wallets
 
-The validated public/test catalog can be searched locally and exported as deterministic static JSON. Packs are ordered views of existing disc IDs and resolve to explicit 1-based wallet slots; they never redefine disc identity.
+The validated public/test catalog can be searched locally and exported as deterministic static JSON. Packs are ordered views of existing disc IDs and resolve to explicit 1-based wallet slots; they never redefine disc identity. Draft 0.2 can also render a deterministic printable HTML index for a pack; physical wallet ergonomics and label/artwork design remain hardware/UX work.
 
 `pdv1 export-library` produces a provider-neutral payload suitable for a future static website, offline browser, mirror, or desktop client without adding accounts, telemetry, or a hosted search dependency. See `docs/LIBRARY.md` and `catalog/packs/README.md`.
 

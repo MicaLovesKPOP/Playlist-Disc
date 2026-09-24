@@ -54,6 +54,7 @@ from .resolver import load_provider_index, resolve_canonical_manifest
 from .site import build_static_site, verify_static_site
 from .testkit import build_test_kit, verify_test_kit
 from .verify import verify_build
+from .wallet import build_wallet_index
 
 
 def _format_duration(seconds: float) -> str:
@@ -467,6 +468,20 @@ def cmd_pack_show(args: argparse.Namespace) -> int:
             f"{slot['slot']:02d}\t{slot['id']}\t"
             f"{slot['short_title']}\t{slot['title']}"
         )
+    return 0
+
+
+def cmd_build_wallet(args: argparse.Namespace) -> int:
+    if not _validated_catalog(args.catalog):
+        print("error: refusing to build wallet index from invalid catalog", file=sys.stderr)
+        return 1
+    output = args.output or f"build/wallet-{args.slug}.html"
+    try:
+        path = build_wallet_index(args.catalog, args.slug, output)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(path)
     return 0
 
 
@@ -929,6 +944,15 @@ def build_parser() -> argparse.ArgumentParser:
     pack_show_p.add_argument("--catalog", default="catalog")
     pack_show_p.add_argument("--json", action="store_true")
     pack_show_p.set_defaults(func=cmd_pack_show)
+
+    wallet_p = sub.add_parser(
+        "build-wallet",
+        help="build a deterministic printable HTML index for one catalog pack",
+    )
+    wallet_p.add_argument("slug")
+    wallet_p.add_argument("--catalog", default="catalog")
+    wallet_p.add_argument("--output")
+    wallet_p.set_defaults(func=cmd_build_wallet)
 
     local_create_p = sub.add_parser(
         "local-create",

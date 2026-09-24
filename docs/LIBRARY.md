@@ -32,6 +32,14 @@ pdv1 pack-show draft-0-2-test-vectors --catalog catalog
 
 A source pack is an ordered list of existing IDs. `pack-show` resolves that order into 1-based wallet slots and adds the referenced disc's machine ID and display metadata.
 
+For a deterministic printable index of one pack:
+
+```bash
+pdv1 build-wallet draft-0-2-test-vectors --catalog catalog --output build/wallet.html
+```
+
+The generated dependency-free HTML renders every declared wallet slot, including empty positions, and paginates larger capacities without changing pack order. It is an index/reference sheet, not a claim that any particular physical wallet or label size is ergonomically correct.
+
 Pack capacity is descriptive organization data, not part of PDv1's physical identity encoding.
 
 ## Static-library export
