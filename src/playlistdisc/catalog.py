@@ -240,15 +240,21 @@ def _entry_semantic_errors(
         elif not manifest_path.is_file():
             messages.append(f"definition.manifest: missing file {relative_manifest}")
         else:
-            manifest = load_json(manifest_path)
-            manifest_errors = validate_manifest(manifest, manifest_schema)
-            messages.extend(
-                f"manifest:{message}" for message in manifest_errors
-            )
-            if not manifest_errors and manifest["disc_id"] != id6:
+            try:
+                manifest = load_json(manifest_path)
+            except (OSError, ValueError) as exc:
                 messages.append(
-                    "manifest:disc_id: manifest identity does not match catalog entry"
+                    f"definition.manifest: cannot load {relative_manifest}: {exc}"
                 )
+            else:
+                manifest_errors = validate_manifest(manifest, manifest_schema)
+                messages.extend(
+                    f"manifest:{message}" for message in manifest_errors
+                )
+                if not manifest_errors and manifest["disc_id"] != id6:
+                    messages.append(
+                        "manifest:disc_id: manifest identity does not match catalog entry"
+                    )
 
     successor = data.get("successor")
     if successor:
@@ -258,6 +264,42 @@ def _entry_semantic_errors(
             messages.append("successor: entry cannot succeed itself")
         elif successor not in entries_by_id:
             messages.append(f"successor: referenced catalog ID {successor} does not exist")
+
+    return messages
+
+
+def _successor_cycle_errors(
+    entries_by_id: dict[str, tuple[Path, dict[str, Any]]],
+) -> list[str]:
+    """Return deterministic errors for multi-entry successor cycles."""
+    messages: list[str] = []
+    reported: set[tuple[str, ...]] = set()
+
+    for start in sorted(entries_by_id):
+        chain: list[str] = []
+        positions: dict[str, int] = {}
+        current = start
+        while current in entries_by_id:
+            if current in positions:
+                cycle = chain[positions[current] :]
+                if len(cycle) > 1:
+                    pivot = min(range(len(cycle)), key=cycle.__getitem__)
+                    canonical = tuple(cycle[pivot:] + cycle[:pivot])
+                    if canonical not in reported:
+                        reported.add(canonical)
+                        path = entries_by_id[canonical[0]][0]
+                        route = " -> ".join((*canonical, canonical[0]))
+                        messages.append(
+                            f"{path}:successor: successor cycle detected: {route}"
+                        )
+                break
+
+            positions[current] = len(chain)
+            chain.append(current)
+            successor = entries_by_id[current][1].get("successor")
+            if not successor or successor == current:
+                break
+            current = successor
 
     return messages
 
@@ -346,6 +388,8 @@ def validate_catalog(
             manifest_schema=manifest_schema,
         ):
             messages.append(f"{path}:{message}")
+
+    messages.extend(_successor_cycle_errors(entries_by_id))
 
     if pack_schema is not None:
         seen_slugs: dict[str, Path] = {}

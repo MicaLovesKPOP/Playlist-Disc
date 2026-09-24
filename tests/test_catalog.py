@@ -89,6 +89,35 @@ def test_canonical_manifest_schema_and_cross_file_validation(tmp_path: Path):
     ) == []
 
 
+def test_catalog_reports_unreadable_canonical_manifest_instead_of_crashing(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    manifest_rel = f"manifests/{id6[:3]}/{id6}.json"
+    entry = _base_entry(
+        id6,
+        {
+            "type": "canonical_manifest",
+            "manifest": manifest_rel,
+            "membership_policy": "Exact service-neutral recording set.",
+        },
+    )
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+    manifest_path = catalog / manifest_rel
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    for content in ("{not-json", "[]"):
+        manifest_path.write_text(content, encoding="utf-8")
+        errors = validate_catalog(
+            catalog,
+            entry_schema_path=ENTRY_SCHEMA,
+            manifest_schema_path=MANIFEST_SCHEMA,
+        )
+        assert any(
+            f"definition.manifest: cannot load {manifest_rel}" in error
+            for error in errors
+        )
+
+
 def test_manifest_rejects_ambiguous_duplicate_recording_identifiers():
     schema = load_schema(MANIFEST_SCHEMA)
     manifest = {
@@ -119,6 +148,31 @@ def test_catalog_rejects_wrong_path_and_missing_successor(tmp_path: Path):
     )
     assert any("catalog entry must live at discs/042/042381.yaml" in error for error in errors)
     assert any("successor: referenced catalog ID 042382 does not exist" in error for error in errors)
+
+
+def test_catalog_rejects_successor_cycles(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    ids = ["042381", "042382", "042383"]
+    for id6, successor in zip(ids, ids[1:] + ids[:1]):
+        entry = _base_entry(
+            id6,
+            {
+                "type": "artist_catalog",
+                "musicbrainz_artist_id": "11111111-2222-3333-4444-555555555555",
+            },
+        )
+        entry["status"] = "retired"
+        entry["successor"] = successor
+        _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    cycle_errors = [error for error in errors if "successor cycle detected" in error]
+    assert len(cycle_errors) == 1
+    assert "042381 -> 042382 -> 042383 -> 042381" in cycle_errors[0]
 
 
 def test_provider_native_requires_matching_direct_binding(tmp_path: Path):

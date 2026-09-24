@@ -48,7 +48,7 @@
 
 - Added a schema for service-neutral canonical recording manifests using MusicBrainz Recording MBIDs and/or ISRCs.
 - Replaced permissive definition objects with typed artist, album, manifest, federated, provider-native, and diagnostic definitions.
-- Added whole-catalog semantic validation for deterministic file paths, portability/definition consistency, provider binding rules, successor integrity, manifest identity, and duplicate canonical recording identifiers.
+- Added whole-catalog semantic validation for deterministic file paths, portability/definition consistency, provider binding rules, successor integrity (including cycle rejection), manifest identity, and duplicate canonical recording identifiers; malformed or non-object canonical manifest files are reported as validation errors instead of aborting validation.
 - Catalog export now refuses invalid source data and includes canonical-manifest content hashes/counts.
 - Added architecture decisions documenting provider-neutral public IDs and canonical recording manifests.
 

@@ -136,6 +136,7 @@ Only a retired entry may name a `successor`, and:
 
 - it cannot point to itself;
 - the successor must exist in the catalog;
+- successor chains must be acyclic;
 - retirement does not change the old entry's historical meaning.
 
 ## Export behavior
