@@ -115,7 +115,7 @@ Draft 0.2 now has a conservative runtime recognizer for the three strong identit
 
 ## Vehicle/phone bridge
 
-Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. The transcript validator also enforces session-stable capability contracts, strictly monotonic disc-selection counters across remove/reinsert cycles, and unambiguous session+sequence acknowledgements. BLE/USB framing and vehicle wiring remain deliberately separate. See `spec/BRIDGE-PROTOCOL.md`.
+Draft 0.2 now includes a transport-neutral logical PD Bridge Draft 0.1 plus a machine-readable schema and reference JSONL transcript. Vehicle adapters normalize disc selection, OEM media controls, source state, and display capabilities; playback hosts return playback state and now-playing metadata. The transcript validator also enforces session-stable capability contracts, strictly monotonic disc-selection counters across remove/reinsert cycles, and unambiguous session+sequence acknowledgements. Vehicle wiring remains deliberately separate. Draft 0.2 now also defines a software-tested BLE GATT transport profile: adapter→host indications, host→adapter writes with response, and a bounded length-prefixed UTF-8 JSON stream that is independent of negotiated ATT chunk size. Real phone/adapter BLE interoperability is still hardware-gated. See `spec/BRIDGE-PROTOCOL.md` and `docs/BLE-TRANSPORT.md`.
 
 ## Offline host runtime
 

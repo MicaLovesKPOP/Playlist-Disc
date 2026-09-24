@@ -34,14 +34,13 @@ def test_frame_encoding_is_deterministic():
     assert encode_bridge_frame(MESSAGE) == encode_bridge_frame(reordered)
 
 
-@pytest.mark.parametrize("split", range(1, 32))
-def test_decoder_handles_arbitrary_two_chunk_splits(split: int):
+def test_decoder_handles_every_two_chunk_split():
     frame = encode_bridge_frame(MESSAGE)
-    split = min(split, len(frame) - 1)
-    decoder = BridgeFrameDecoder()
-    assert decoder.feed(frame[:split]) == ()
-    assert decoder.feed(frame[split:]) == (MESSAGE,)
-    assert decoder.buffered_bytes == 0
+    for split in range(1, len(frame)):
+        decoder = BridgeFrameDecoder()
+        assert decoder.feed(frame[:split]) == ()
+        assert decoder.feed(frame[split:]) == (MESSAGE,)
+        assert decoder.buffered_bytes == 0
 
 
 def test_decoder_handles_one_byte_chunks():
@@ -124,3 +123,12 @@ def test_custom_max_payload_is_enforced_on_both_sides():
     decoder = BridgeFrameDecoder(max_frame_bytes=10)
     with pytest.raises(BridgeFrameError, match="maximum"):
         decoder.feed(frame[:4])
+
+
+def test_documented_profile_vector_matches_reference_constants():
+    import yaml
+
+    documented = yaml.safe_load(
+        (ROOT / "tests/vectors/ble-profile.yaml").read_text(encoding="utf-8")
+    )
+    assert documented == ble_profile()

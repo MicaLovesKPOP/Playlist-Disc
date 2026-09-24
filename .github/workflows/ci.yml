@@ -140,12 +140,14 @@ jobs:
           from playlistdisc.host import load_host_action_schema;
           from playlistdisc.materialization import load_materialization_schema;
           from playlistdisc.recognition import load_recognition_schema;
+          from playlistdisc.ble_transport import ble_profile;
           assert load_bridge_schema()['title'];
           assert load_playback_plan_schema()['title'];
           assert load_provider_index_schema()['title'];
           assert load_host_action_schema()['title'];
           assert load_materialization_schema()['title'];
-          assert load_recognition_schema()['title']"
+          assert load_recognition_schema()['title'];
+          assert ble_profile()['version']=='0.1'"
 
 
   local-library-extra:

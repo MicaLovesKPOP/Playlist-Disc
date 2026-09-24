@@ -129,6 +129,14 @@
 - Restricted the generic cache to ready/partial `track_list` plans; direct resources do not need materialization and unresolved entity/provider lookups require provider-specific freshness rules.
 - Added privacy/freshness documentation and ADR 0013.
 
+### BLE transport profile
+
+- Added a Draft 0.1 PD Bridge BLE GATT profile with one custom service, reliable adapter→host indications, and host→adapter writes with response.
+- Added bounded 4-byte big-endian length-prefixed UTF-8 JSON framing so logical bridge messages are independent of ATT MTU and GATT chunk boundaries.
+- Added a library-independent incremental framing codec that validates every decoded logical PD Bridge message and fails closed until reset after invalid length/UTF-8/JSON/schema input.
+- Added exhaustive two-chunk split coverage, one-byte fragmentation, concatenated-frame, oversize/corruption/reset tests, a fixed profile vector, documentation, and ADR 0015.
+- BLE link encryption is required by the draft profile, while actual pairing UX/security strength and phone/adapter interoperability remain hardware/mobile implementation evidence rather than software claims.
+
 ### Offline host orchestration
 
 - Added a packaged `PDv1-host-action` contract and deterministic host-runtime state machine that consumes adapter-side PD Bridge events and emits source/provider actions.

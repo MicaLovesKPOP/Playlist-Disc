@@ -25,6 +25,14 @@ Every message contains:
 
 The machine-readable schema is shipped as `playlistdisc/schemas/bridge-message.schema.json`.
 
+### Draft BLE transport profile
+
+Draft 0.2 includes a non-normative-to-PDv1-physical-format BLE transport profile for carrying these same logical JSON messages. The adapter is the GATT peripheral/server and the phone/playback host is the central/client. Adapter→host traffic uses indications; host→adapter traffic uses writes with response. Each logical message is encoded as a four-byte unsigned big-endian payload length followed by canonical UTF-8 JSON, with a 16,384-byte payload maximum. The framed stream may be split across any number of GATT operations and does not assume a particular negotiated ATT MTU.
+
+A framing or decoded-message validation error terminates the logical stream until reset/reconnect; implementations do not attempt byte-level resynchronization after a corrupted length prefix. On a fresh secure connection, normal logical startup remains `hello` → `hello_ack` → `state_sync`.
+
+The current custom service/characteristic UUIDs and transport profile are Draft 0.1 and are versioned independently of PDv1 physical identity. See `docs/BLE-TRANSPORT.md`.
+
 A transcript validator may be run on a partial capture. Capability-dependent checks are therefore applied only after the corresponding `hello` or `hello_ack` has appeared.
 
 ## 3. Adapter → host messages
