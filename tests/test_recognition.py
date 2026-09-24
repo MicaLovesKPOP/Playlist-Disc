@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 
 from playlistdisc.beacon import write_beacon_wav
@@ -121,3 +122,51 @@ def test_duplicate_matching_cdtext_fields_deduplicate_evidence():
     assert result.status == "recognized"
     assert result.identity == identity
     assert len(result.evidence) == 1
+
+
+def test_serialized_recognized_result_requires_corresponding_evidence():
+    first = PDIdentity(999901)
+    second = PDIdentity(999902)
+    payload = recognize_observations(cdtext_values=[first.machine_id]).to_dict()
+
+    missing = deepcopy(payload)
+    missing["evidence"] = []
+    assert validate_recognition_result(missing)
+
+    mismatched = deepcopy(payload)
+    mismatched["evidence"][0]["machine_id"] = second.machine_id
+    errors = validate_recognition_result(mismatched)
+    assert any("must match the claimed identity" in error for error in errors)
+
+    bad_checksum = deepcopy(payload)
+    bad_checksum["evidence"][0]["machine_id"] = "PD1-999901-0"
+    errors = validate_recognition_result(bad_checksum)
+    assert any("check digit" in error for error in errors)
+
+
+def test_serialized_unknown_result_cannot_carry_accepted_evidence():
+    identity = PDIdentity(999901)
+    payload = recognize_observations().to_dict()
+    payload["evidence"] = [
+        {"channel": "toc", "machine_id": identity.machine_id}
+    ]
+    assert validate_recognition_result(payload)
+
+
+def test_serialized_conflict_requires_distinct_valid_identities():
+    first = PDIdentity(999901)
+    second = PDIdentity(999902)
+    payload = recognize_observations(
+        track_durations=first.track_durations,
+        cdtext_values=[second.machine_id],
+    ).to_dict()
+
+    same_identity = deepcopy(payload)
+    for item in same_identity["evidence"]:
+        item["machine_id"] = first.machine_id
+    errors = validate_recognition_result(same_identity)
+    assert any("two distinct valid identities" in error for error in errors)
+
+    too_little = deepcopy(payload)
+    too_little["evidence"] = too_little["evidence"][:1]
+    assert validate_recognition_result(too_little)
