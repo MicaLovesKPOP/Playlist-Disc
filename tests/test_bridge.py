@@ -78,6 +78,55 @@ def test_sequence_error_does_not_lower_validation_baseline():
     assert all("<= 5" in error for error in sequence_errors)
 
 
+def test_semantically_rejected_message_does_not_advance_sequence_baseline():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    hello["payload"]["capabilities"]["media_controls"] = ["next"]
+    invalid = copy.deepcopy(messages[8])
+    invalid["seq"] = 9
+    invalid["payload"]["action"] = "previous"
+    retry = copy.deepcopy(messages[5])
+    retry["seq"] = 1
+
+    errors = validate_bridge_transcript([hello, invalid, retry])
+    assert any("was not advertised by adapter" in error for error in errors)
+    assert not any("sequence must increase strictly" in error for error in errors)
+
+
+def test_non_increasing_state_sync_does_not_clear_active_selection():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    selected = copy.deepcopy(messages[3])
+    selected["seq"] = 5
+    stale_sync = copy.deepcopy(messages[2])
+    stale_sync["seq"] = 4
+    removed = copy.deepcopy(messages[-1])
+    removed["seq"] = 6
+
+    errors = validate_bridge_transcript([hello, selected, stale_sync, removed])
+    assert any("sequence must increase strictly" in error for error in errors)
+    assert not any("no active disc selection" in error for error in errors)
+    assert not any("does not match active selection" in error for error in errors)
+
+
+def test_non_increasing_selection_does_not_advance_counter_state():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    selected = copy.deepcopy(messages[3])
+    selected["seq"] = 5
+    selected["payload"]["selection_counter"] = 1
+    stale = copy.deepcopy(selected)
+    stale["seq"] = 4
+    stale["payload"]["selection_counter"] = 99
+    valid = copy.deepcopy(selected)
+    valid["seq"] = 6
+    valid["payload"]["selection_counter"] = 2
+
+    errors = validate_bridge_transcript([hello, selected, stale, valid])
+    assert any("sequence must increase strictly" in error for error in errors)
+    assert not any("selection counter must increase" in error for error in errors)
+
+
 def test_bridge_rejects_mismatched_removal_counter():
     messages = read_bridge_jsonl(VECTOR)
     bad = copy.deepcopy(messages)
@@ -278,6 +327,80 @@ def test_reannounced_capabilities_cannot_change_inside_one_session():
     messages.append(hello)
     errors = validate_bridge_transcript(messages)
     assert any("adapter hello changed within session" in error for error in errors)
+
+
+def test_rejected_adapter_hello_does_not_replace_capability_contract():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    hello["payload"]["capabilities"]["auto_source_switch"] = False
+    changed = copy.deepcopy(hello)
+    changed["seq"] = 1
+    changed["payload"]["capabilities"]["auto_source_switch"] = True
+    host_hello = copy.deepcopy(messages[1])
+    source_request = copy.deepcopy(messages[4])
+
+    errors = validate_bridge_transcript([hello, host_hello, changed, source_request])
+    assert any("adapter hello changed within session" in error for error in errors)
+    assert any("auto_source_switch=false" in error for error in errors)
+
+
+def test_rejected_host_hello_ack_does_not_replace_capability_contract():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    host_hello = copy.deepcopy(messages[1])
+    host_hello["payload"]["capabilities"]["source_request"] = False
+    changed = copy.deepcopy(host_hello)
+    changed["seq"] = 1
+    changed["payload"]["capabilities"]["source_request"] = True
+    source_request = copy.deepcopy(messages[4])
+    source_request["seq"] = 2
+
+    errors = validate_bridge_transcript([hello, host_hello, changed, source_request])
+    assert any("host hello_ack changed within session" in error for error in errors)
+    assert any("source_request=false" in error for error in errors)
+
+
+def test_rejected_selection_evidence_does_not_advance_selection_state():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    hello["payload"]["capabilities"]["disc_detection"] = ["toc"]
+    invalid = copy.deepcopy(messages[3])
+    invalid["seq"] = 1
+    invalid["payload"]["evidence"] = "audio_beacon"
+    valid = copy.deepcopy(invalid)
+    valid["seq"] = 2
+    valid["payload"]["evidence"] = "toc"
+    removed = copy.deepcopy(messages[-1])
+    removed["seq"] = 3
+
+    errors = validate_bridge_transcript([hello, invalid, valid, removed])
+    assert any("was not advertised by adapter" in error for error in errors)
+    assert not any("selection counter must increase" in error for error in errors)
+    assert not any("no active disc selection" in error for error in errors)
+    assert not any("does not match active selection" in error for error in errors)
+
+
+def test_rejected_state_sync_evidence_does_not_advance_selection_state():
+    messages = read_bridge_jsonl(VECTOR)
+    hello = copy.deepcopy(messages[0])
+    hello["payload"]["capabilities"]["disc_detection"] = ["toc"]
+    invalid = copy.deepcopy(messages[2])
+    invalid["seq"] = 1
+    invalid["payload"]["disc"] = {
+        "machine_id": messages[3]["payload"]["machine_id"],
+        "selection_counter": 5,
+        "evidence": "audio_beacon",
+    }
+    valid = copy.deepcopy(messages[3])
+    valid["seq"] = 2
+    valid["payload"]["selection_counter"] = 1
+    removed = copy.deepcopy(messages[-1])
+    removed["seq"] = 3
+
+    errors = validate_bridge_transcript([hello, invalid, valid, removed])
+    assert any("was not advertised by adapter" in error for error in errors)
+    assert not any("selection counter must increase" in error for error in errors)
+    assert not any("does not match active selection" in error for error in errors)
 
 
 def test_ack_is_bound_to_peer_session_and_seen_sequence():

@@ -156,11 +156,12 @@ See `docs/HOST-RUNTIME.md`.
 `pdv1 bridge-validate <transcript.jsonl>` validates:
 
 - JSON Schema and PD machine-ID check digits;
-- per-session message sequence monotonicity, without letting an invalid lower/duplicate sequence rewrite the accepted sequence baseline;
+- per-session message sequence monotonicity, with only semantically accepted messages advancing the accepted sequence baseline so a rejected frame cannot poison a later valid retry;
 - selection-counter monotonicity across remove/reinsert cycles, without letting an invalid reused counter replace the active selection;
 - state-sync counter non-regression;
 - declared detection/control/source/now-playing capabilities;
-- stable repeated capability announcements within a session;
+- stable repeated capability announcements within a session, without letting a rejected mutation replace the accepted capability contract;
+- capability-invalid selection/state-sync evidence without letting the rejected event advance accepted selection state;
 - display-capability self-consistency;
 - acknowledgement and related-error references against explicit peer sessions.
 

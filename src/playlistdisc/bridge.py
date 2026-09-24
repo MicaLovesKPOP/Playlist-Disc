@@ -149,14 +149,15 @@ def validate_bridge_transcript(
         payload = message["payload"]
 
         key = (source, session)
+        message_error_start = len(errors)
         previous_seq = last_seq.get(key)
+        sequence_valid = True
         if previous_seq is not None and seq <= previous_seq:
             errors.append(
                 f"message {index}:seq: {source}/{session} sequence must increase "
                 f"strictly ({seq} <= {previous_seq})"
             )
-        else:
-            last_seq[key] = seq
+            sequence_valid = False
         seen_seq.add((source, session, seq))
 
         if msg_type == "hello":
@@ -168,15 +169,16 @@ def validate_bridge_transcript(
                     f"message {index}:payload: adapter hello changed within "
                     f"session {session!r}"
                 )
-            adapter_hello[session] = fingerprint
-            capabilities = payload["capabilities"]
-            adapter_capabilities[session] = capabilities
-            if (
-                latest_adapter_session is None
-                or session == latest_adapter_session
-                or first_hello_for_session
-            ):
-                latest_adapter_session = session
+            elif sequence_valid:
+                adapter_hello[session] = fingerprint
+                capabilities = payload["capabilities"]
+                adapter_capabilities[session] = capabilities
+                if (
+                    latest_adapter_session is None
+                    or session == latest_adapter_session
+                    or first_hello_for_session
+                ):
+                    latest_adapter_session = session
 
         elif msg_type == "hello_ack":
             fingerprint = _payload_fingerprint(payload)
@@ -186,8 +188,9 @@ def validate_bridge_transcript(
                     f"message {index}:payload: host hello_ack changed within "
                     f"session {session!r}"
                 )
-            host_hello[session] = fingerprint
-            host_capabilities[session] = payload["capabilities"]
+            elif sequence_valid:
+                host_hello[session] = fingerprint
+                host_capabilities[session] = payload["capabilities"]
 
         if source == "adapter":
             capabilities = adapter_capabilities.get(session)
@@ -195,9 +198,11 @@ def validate_bridge_transcript(
             if msg_type == "state_sync":
                 disc = payload["disc"]
                 if disc is None:
-                    active_selection[session] = None
+                    if sequence_valid:
+                        active_selection[session] = None
                 else:
                     evidence = disc["evidence"]
+                    evidence_valid = True
                     if (
                         capabilities is not None
                         and evidence not in capabilities["disc_detection"]
@@ -206,10 +211,14 @@ def validate_bridge_transcript(
                             f"message {index}:payload.disc.evidence: {evidence!r} "
                             "was not advertised by adapter"
                         )
+                        evidence_valid = False
                     counter = disc["selection_counter"]
                     machine_id = disc["machine_id"]
                     previous_counter = last_selection_counter.get(session)
                     counter_valid = True
+                    counter_advances = (
+                        previous_counter is None or counter > previous_counter
+                    )
                     if previous_counter is not None and counter < previous_counter:
                         errors.append(
                             f"message {index}:payload.disc.selection_counter: "
@@ -230,14 +239,15 @@ def validate_bridge_transcript(
                                 "changed identity for an existing selection counter"
                             )
                             counter_valid = False
-                    else:
-                        last_selection_counter[session] = counter
 
-                    if counter_valid:
+                    if sequence_valid and evidence_valid and counter_valid:
+                        if counter_advances:
+                            last_selection_counter[session] = counter
                         active_selection[session] = (counter, machine_id)
 
             elif msg_type == "disc_selected":
                 evidence = payload["evidence"]
+                evidence_valid = True
                 if (
                     capabilities is not None
                     and evidence not in capabilities["disc_detection"]
@@ -246,15 +256,18 @@ def validate_bridge_transcript(
                         f"message {index}:payload.evidence: {evidence!r} "
                         "was not advertised by adapter"
                     )
+                    evidence_valid = False
 
                 counter = payload["selection_counter"]
                 previous_counter = last_selection_counter.get(session)
+                counter_valid = True
                 if previous_counter is not None and counter <= previous_counter:
                     errors.append(
                         f"message {index}:payload.selection_counter: selection counter "
                         f"must increase ({counter} <= {previous_counter})"
                     )
-                else:
+                    counter_valid = False
+                if sequence_valid and evidence_valid and counter_valid:
                     last_selection_counter[session] = counter
                     active_selection[session] = (counter, payload["machine_id"])
 
@@ -271,7 +284,7 @@ def validate_bridge_transcript(
                         f"message {index}:payload.selection_counter: removal counter "
                         f"{counter} does not match active selection {active[0]}"
                     )
-                else:
+                elif sequence_valid:
                     active_selection[session] = None
 
             elif msg_type == "media_control" and capabilities is not None:
@@ -329,5 +342,8 @@ def validate_bridge_transcript(
                     f"message {index}:payload.related_seq: error target "
                     f"{target[0]}/{target[1]} seq {target[2]} has not been seen"
                 )
+
+        if sequence_valid and len(errors) == message_error_start:
+            last_seq[key] = seq
 
     return errors
