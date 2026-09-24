@@ -94,6 +94,39 @@ def validate_playback_plan(
         messages.append("resources: track_list plan requires resources")
     if mode in {"entity_lookup", "recording_resolution"} and "lookup" not in data:
         messages.append(f"lookup: {mode} plan requires lookup")
+
+    if mode == "recording_resolution" and isinstance(data.get("lookup"), dict):
+        lookup = data["lookup"]
+        recordings = lookup.get("recordings")
+        count = lookup.get("recording_count")
+        if isinstance(recordings, list) and isinstance(count, int):
+            if count != len(recordings):
+                messages.append(
+                    "lookup.recording_count: does not match lookup.recordings length"
+                )
+
+            seen_mbids: set[str] = set()
+            seen_isrcs: set[str] = set()
+            for index, recording in enumerate(recordings):
+                if not isinstance(recording, dict):
+                    continue
+                mbid = recording.get("musicbrainz_recording_id")
+                if isinstance(mbid, str):
+                    normalized = mbid.lower()
+                    if normalized in seen_mbids:
+                        messages.append(
+                            f"lookup.recordings.{index}.musicbrainz_recording_id: "
+                            f"duplicate recording MBID {mbid}"
+                        )
+                    seen_mbids.add(normalized)
+                for isrc in recording.get("isrcs", []):
+                    normalized = str(isrc).upper()
+                    if normalized in seen_isrcs:
+                        messages.append(
+                            f"lookup.recordings.{index}.isrcs: "
+                            f"ISRC {isrc} appears in more than one recording"
+                        )
+                    seen_isrcs.add(normalized)
     return messages
 
 
@@ -186,6 +219,51 @@ def _binding_plan(
     )
 
 
+def _canonical_lookup(manifest: dict[str, Any], provider: str) -> dict[str, Any]:
+    """Embed exact canonical recording identity needed by a live provider resolver."""
+    raw_recordings = manifest.get("recordings")
+    if not isinstance(raw_recordings, list) or not raw_recordings:
+        raise ValueError("canonical manifest must contain at least one recording")
+
+    recordings: list[dict[str, Any]] = []
+    for index, raw in enumerate(raw_recordings):
+        if not isinstance(raw, dict):
+            raise ValueError(f"canonical manifest recording {index} is not an object")
+        item: dict[str, Any] = {}
+
+        mbid = raw.get("musicbrainz_recording_id")
+        if isinstance(mbid, str) and mbid:
+            item["musicbrainz_recording_id"] = mbid.lower()
+
+        isrcs = raw.get("isrcs")
+        if isinstance(isrcs, list) and isrcs:
+            item["isrcs"] = sorted(
+                {
+                    value.upper()
+                    for value in isrcs
+                    if isinstance(value, str) and value
+                }
+            )
+
+        overrides = raw.get("provider_overrides")
+        if isinstance(overrides, dict):
+            override = overrides.get(provider)
+            if isinstance(override, str) and override:
+                item["provider_override"] = override
+
+        if "musicbrainz_recording_id" not in item and not item.get("isrcs"):
+            raise ValueError(
+                f"canonical manifest recording {index} has no service-neutral identity"
+            )
+        recordings.append(item)
+
+    return {
+        "type": "canonical_manifest",
+        "recording_count": len(recordings),
+        "recordings": recordings,
+    }
+
+
 def _canonical_plan(
     entry: dict[str, Any],
     provider: str,
@@ -227,10 +305,7 @@ def _canonical_plan(
                     if isinstance(binding, dict) and binding.get("strategy") is not None
                     else None
                 ),
-                lookup={
-                    "type": "canonical_manifest",
-                    "recording_count": len(manifest.get("recordings", [])),
-                },
+                lookup=_canonical_lookup(manifest, provider),
                 reason="a provider/local index is required to resolve canonical recordings",
             )
         )

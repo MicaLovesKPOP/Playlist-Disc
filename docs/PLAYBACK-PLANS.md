@@ -29,7 +29,7 @@ pdv1 plan-playback 900000 --provider local --local-library ~/.playlistdisc
 
 ## Plan modes
 
-`direct_resource` identifies one provider/local resource. `track_list` supplies resolved resources for an explicit canonical recording collection. `entity_lookup` carries a MusicBrainz artist or release-group identity. `recording_resolution` says a canonical manifest needs an exact-ID provider index. `none` means there is no playable provider action.
+`direct_resource` identifies one provider/local resource. `track_list` supplies resolved resources for an explicit canonical recording collection. `entity_lookup` carries a MusicBrainz artist or release-group identity. `recording_resolution` carries the canonical recording identities that a provider still needs to resolve into an exact-ID provider index. `none` means there is no playable provider action.
 
 ## Contract invariants
 
@@ -40,7 +40,7 @@ Status and mode are not independent labels. The packaged JSON Schema rejects com
 | `direct_resource` | `ready` | `resource` |
 | `track_list` | `ready`, `partial`, `ambiguous` | `resources` |
 | `entity_lookup` | `requires_lookup` | `lookup.type` = `artist` or `release_group`, plus `musicbrainz_id` |
-| `recording_resolution` | `requires_lookup` | `lookup.type` = `canonical_manifest`, plus `recording_count` |
+| `recording_resolution` | `requires_lookup` | `lookup.type` = `canonical_manifest`, `recording_count`, and ordered `recordings` containing exact MBID/ISRC identity |
 | `none` | `ambiguous`, `unavailable`, `unplayable` | no executable resource/lookup payload |
 
 Mode-specific payloads are mutually exclusive. For example a `direct_resource` plan cannot also carry `resources`, `lookup`, or a resolution report, and a `track_list` cannot simultaneously claim a single `resource` or unresolved `lookup`. This makes the playback plan a discriminated contract rather than a bag of optional fields, which is important because host orchestration and materialization-cache logic accept plans generated outside the compiler as well as compiler-produced plans.
@@ -53,7 +53,11 @@ When a provider/local index is supplied, the compiler calls the existing exact M
 
 Coverage is honest: missing recordings stay missing, conflicting exact identifiers stay ambiguous, and title/artist hints are never used as fuzzy substitutes. The full resolution report is embedded in the plan for diagnostics while the `resources` list contains only successfully resolved items.
 
-If no provider index is supplied, the plan is still useful: it returns `requires_lookup` / `recording_resolution` with the canonical recording count. A future live provider plugin can satisfy that requirement.
+If no provider index is supplied, the plan remains **self-contained**: it returns `requires_lookup` / `recording_resolution` with the canonical recording count plus an ordered `recordings` array. Each row contains the MusicBrainz Recording MBID and/or ISRC values from the canonical manifest, normalized for exact matching. If that manifest row has an exact override for the selected provider, only that provider's override is included as `provider_override`.
+
+Human title/artist hints are deliberately not copied into this resolver payload. A future live provider plugin therefore has everything required for exact identity resolution without being tempted to fuzzy-match display text, and it does not need direct access to the catalog/manifests as a hidden side channel.
+
+Playback-plan validation also requires `recording_count == len(recordings)` and rejects duplicate MBIDs/ISRCs across rows.
 
 ## Artist and album records
 

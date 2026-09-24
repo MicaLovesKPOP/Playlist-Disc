@@ -48,7 +48,16 @@ def _plan(status: str, mode: str, **extra) -> dict:
         (
             "requires_lookup",
             "recording_resolution",
-            {"lookup": {"type": "canonical_manifest", "recording_count": 2}},
+            {
+                "lookup": {
+                    "type": "canonical_manifest",
+                    "recording_count": 2,
+                    "recordings": [
+                        {"musicbrainz_recording_id": MBID},
+                        {"isrcs": ["KRABC2600002"]},
+                    ],
+                }
+            },
         ),
         ("unavailable", "none", {}),
         ("unplayable", "none", {}),

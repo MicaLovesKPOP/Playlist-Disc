@@ -135,7 +135,7 @@ Draft 0.2 now includes deterministic canonical-recording resolution that can be 
 
 ## Provider-neutral playback plans
 
-Draft 0.2 can compile any catalog/private disc into one normalized offline playback-plan contract before a streaming SDK, phone UI, BLE transport, or vehicle adapter is involved. Canonical manifests become exact resolved track lists (or honest partial/ambiguous/missing plans), provider-native/federated records become direct resources, artist/album records can fall back to service-neutral MusicBrainz entity lookups, private bindings use the same contract, and diagnostics are explicitly unplayable. Future provider plugins can therefore focus on authentication, lookup/materialization, and actual playback instead of redefining what each physical disc means. See `docs/PLAYBACK-PLANS.md`.
+Draft 0.2 can compile any catalog/private disc into one normalized offline playback-plan contract before a streaming SDK, phone UI, BLE transport, or vehicle adapter is involved. Canonical manifests become exact resolved track lists (or honest partial/ambiguous/missing plans), provider-native/federated records become direct resources, artist/album records can fall back to service-neutral MusicBrainz entity lookups, unresolved canonical manifests carry the exact MBID/ISRC recording identities a live provider must resolve, private bindings use the same contract, and diagnostics are explicitly unplayable. Future provider plugins can therefore focus on authentication, lookup/materialization, and actual playback instead of redefining what each physical disc means. See `docs/PLAYBACK-PLANS.md`.
 
 ## Local music libraries
 

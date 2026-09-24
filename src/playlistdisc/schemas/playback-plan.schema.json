@@ -97,6 +97,45 @@
         "recording_count": {
           "type": "integer",
           "minimum": 0
+        },
+        "recordings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "musicbrainz_recording_id": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+              },
+              "isrcs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$"
+                }
+              },
+              "provider_override": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "musicbrainz_recording_id"
+                ]
+              },
+              {
+                "required": [
+                  "isrcs"
+                ]
+              }
+            ]
+          }
         }
       }
     },
@@ -301,7 +340,8 @@
             },
             "required": [
               "type",
-              "recording_count"
+              "recording_count",
+              "recordings"
             ]
           }
         },
