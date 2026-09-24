@@ -31,6 +31,22 @@ pdv1 plan-playback 900000 --provider local --local-library ~/.playlistdisc
 
 `direct_resource` identifies one provider/local resource. `track_list` supplies resolved resources for an explicit canonical recording collection. `entity_lookup` carries a MusicBrainz artist or release-group identity. `recording_resolution` says a canonical manifest needs an exact-ID provider index. `none` means there is no playable provider action.
 
+## Contract invariants
+
+Status and mode are not independent labels. The packaged JSON Schema rejects combinations that could otherwise make different consumers interpret the same plan differently:
+
+| Mode | Allowed status | Required mode payload |
+| --- | --- | --- |
+| `direct_resource` | `ready` | `resource` |
+| `track_list` | `ready`, `partial`, `ambiguous` | `resources` |
+| `entity_lookup` | `requires_lookup` | `lookup.type` = `artist` or `release_group`, plus `musicbrainz_id` |
+| `recording_resolution` | `requires_lookup` | `lookup.type` = `canonical_manifest`, plus `recording_count` |
+| `none` | `ambiguous`, `unavailable`, `unplayable` | no executable resource/lookup payload |
+
+Mode-specific payloads are mutually exclusive. For example a `direct_resource` plan cannot also carry `resources`, `lookup`, or a resolution report, and a `track_list` cannot simultaneously claim a single `resource` or unresolved `lookup`. This makes the playback plan a discriminated contract rather than a bag of optional fields, which is important because host orchestration and materialization-cache logic accept plans generated outside the compiler as well as compiler-produced plans.
+
+A canonical resolution report may accompany resolved `track_list` plans and non-executable `none` plans so incomplete/ambiguous coverage remains inspectable without turning that report itself into a playback action.
+
 ## Canonical manifests
 
 When a provider/local index is supplied, the compiler calls the existing exact MBID/ISRC resolver. It preserves manifest order in the resulting resource list; `shuffle` remains a playback policy for the host rather than randomizing the plan at compile time.
