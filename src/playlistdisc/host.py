@@ -140,6 +140,10 @@ class HostRuntime:
         self.stop_on_remove = stop_on_remove
         self.deactivate_source_on_remove = deactivate_source_on_remove
         self._capabilities: dict[str, dict[str, Any]] = {}
+        self._hello_fingerprints: dict[str, str] = {}
+        self._last_seq: dict[str, int] = {}
+        self._last_selection_counter: dict[str, int] = {}
+        self._current_adapter_session: str | None = None
         self._source_active: dict[str, bool] = {}
         self._handled: set[tuple[str, int, str]] = set()
         self._active_selection: SelectionContext | None = None
@@ -156,6 +160,47 @@ class HostRuntime:
     def _auto_source_switch(self, session: str) -> bool:
         capabilities = self._capabilities.get(session)
         return bool(capabilities and capabilities.get("auto_source_switch") is True)
+
+    def _require_advertised_evidence(self, session: str, evidence: str) -> None:
+        capabilities = self._capabilities.get(session)
+        if capabilities is not None and evidence not in capabilities["disc_detection"]:
+            raise ValueError(
+                f"adapter evidence {evidence!r} was not advertised for session {session!r}"
+            )
+
+    def _record_disc_selected(self, session: str, counter: int) -> None:
+        previous = self._last_selection_counter.get(session)
+        if previous is not None and counter <= previous:
+            raise ValueError(
+                "adapter selection counter must increase strictly "
+                f"within session {session!r} ({counter} <= {previous})"
+            )
+        self._last_selection_counter[session] = counter
+
+    def _record_state_sync_selection(self, context: SelectionContext) -> None:
+        session = context.adapter_session
+        counter = context.selection_counter
+        previous = self._last_selection_counter.get(session)
+        if previous is None or counter > previous:
+            self._last_selection_counter[session] = counter
+            return
+        if counter < previous:
+            raise ValueError(
+                "adapter state-sync selection counter regressed "
+                f"within session {session!r} ({counter} < {previous})"
+            )
+
+        active = self._active_selection
+        if active is None or active.adapter_session != session:
+            raise ValueError(
+                "adapter state sync reused an inactive selection counter "
+                f"within session {session!r}"
+            )
+        if active.selection_counter != counter or active.machine_id != context.machine_id:
+            raise ValueError(
+                "adapter state sync changed identity for an existing selection counter "
+                f"within session {session!r}"
+            )
 
     def _selection_actions(
         self,
@@ -265,11 +310,37 @@ class HostRuntime:
             return ()
 
         session = message["session"]
+        seq = message["seq"]
         msg_type = message["type"]
         payload = message["payload"]
 
+        if msg_type != "hello" and self._current_adapter_session is not None:
+            if session != self._current_adapter_session:
+                return ()
+
+        previous_seq = self._last_seq.get(session)
+        if previous_seq is not None and seq <= previous_seq:
+            raise ValueError(
+                "adapter sequence must increase strictly "
+                f"within session {session!r} ({seq} <= {previous_seq})"
+            )
+        self._last_seq[session] = seq
+
         if msg_type == "hello":
+            fingerprint = json.dumps(
+                payload,
+                ensure_ascii=True,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            previous = self._hello_fingerprints.get(session)
+            if previous is not None and previous != fingerprint:
+                raise ValueError(
+                    f"adapter hello changed within session {session!r}"
+                )
+            self._hello_fingerprints[session] = fingerprint
             self._capabilities[session] = dict(payload["capabilities"])
+            self._current_adapter_session = session
             return ()
 
         if msg_type == "source_state":
@@ -277,6 +348,8 @@ class HostRuntime:
             return ()
 
         if msg_type == "disc_selected":
+            self._require_advertised_evidence(session, payload["evidence"])
+            self._record_disc_selected(session, payload["selection_counter"])
             context = SelectionContext(
                 machine_id=payload["machine_id"],
                 adapter_session=session,
@@ -292,26 +365,40 @@ class HostRuntime:
                 if active is not None and active.adapter_session == session:
                     return self._remove_actions(active)
                 return ()
+            self._require_advertised_evidence(session, disc["evidence"])
             context = SelectionContext(
                 machine_id=disc["machine_id"],
                 adapter_session=session,
                 selection_counter=disc["selection_counter"],
             )
+            self._record_state_sync_selection(context)
             return self._selection_actions(context)
 
         if msg_type == "disc_removed":
             active = self._active_selection
-            if (
-                active is None
-                or active.adapter_session != session
-                or active.selection_counter != payload["selection_counter"]
-            ):
-                return ()
+            if active is None or active.adapter_session != session:
+                raise ValueError(
+                    f"adapter removal has no active selection in session {session!r}"
+                )
+            if active.selection_counter != payload["selection_counter"]:
+                raise ValueError(
+                    "adapter removal counter does not match active selection "
+                    f"({payload['selection_counter']} != {active.selection_counter})"
+                )
             return self._remove_actions(active)
 
         if msg_type == "media_control":
+            capabilities = self._capabilities.get(session)
+            if (
+                capabilities is not None
+                and payload["action"] not in capabilities["media_controls"]
+            ):
+                raise ValueError(
+                    f"adapter media control {payload['action']!r} was not advertised "
+                    f"for session {session!r}"
+                )
             context = self._playback_context
-            if context is None:
+            if context is None or context.adapter_session != session:
                 return ()
             return self._finish(
                 HostAction(
