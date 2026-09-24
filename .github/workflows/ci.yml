@@ -26,6 +26,11 @@ jobs:
       - run: pdv1 pack-show draft-0-2-test-vectors --catalog catalog --json
       - run: pdv1 build 999901 --output /tmp/PD1-999901
       - run: pdv1 verify-build /tmp/PD1-999901
+      - run: >-
+          pdv1 recognize
+          --toc 9 48 48 48 48 12 16 40
+          --cdtext PD1-999901-7
+          --require-recognized
       - run: pdv1 build 999901 --no-cdtext --output /tmp/PD1-999901-no-cdtext
       - run: pdv1 verify-build /tmp/PD1-999901-no-cdtext
       - run: pdv1 build-test-kit --output /tmp/pdv1-test-kit
@@ -134,11 +139,13 @@ jobs:
           from playlistdisc.resolver import load_provider_index_schema;
           from playlistdisc.host import load_host_action_schema;
           from playlistdisc.materialization import load_materialization_schema;
+          from playlistdisc.recognition import load_recognition_schema;
           assert load_bridge_schema()['title'];
           assert load_playback_plan_schema()['title'];
           assert load_provider_index_schema()['title'];
           assert load_host_action_schema()['title'];
-          assert load_materialization_schema()['title']"
+          assert load_materialization_schema()['title'];
+          assert load_recognition_schema()['title']"
 
 
   local-library-extra:

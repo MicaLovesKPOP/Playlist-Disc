@@ -40,6 +40,8 @@ pdv1 inspect 999901
 pdv1 audit-encoding
 pdv1 build 999901 --output build/PD1-999901
 pdv1 verify-build build/PD1-999901
+pdv1 recognize --toc 9 48 48 48 48 12 16 40 \\
+  --cdtext PD1-999901-7 --require-recognized
 pdv1 build-test-kit --output build/test-kit
 pdv1 verify-test-kit build/test-kit
 # Optional when cdrdao is installed: parse the exact mastering file with the real tool
@@ -106,6 +108,10 @@ pdv1 verify-build build/PD1-900000
 ```
 
 This is a software workflow during Draft 0.2, not permission to burn private IDs yet. See `docs/LOCAL-DISCS.md` for the storage model, privacy boundary, multi-device collision warning, and virtual-build workflow.
+
+## Runtime disc recognition
+
+Draft 0.2 now has a conservative runtime recognizer for the three strong identity channels: full checked TOC timing, checksum-valid PDv1 CD-TEXT identifiers, and the repeated audio beacon. One strong channel can recognize a disc; matching channels corroborate it; two independently valid channels that disagree return `conflict` with **no selected identity**. Malformed optional metadata remains diagnostic rather than suppressing another valid channel. Coarse evidence such as track count or total duration is never promoted to identity. See `docs/RECOGNITION.md`.
 
 ## Vehicle/phone bridge
 
