@@ -14,6 +14,7 @@ from playlistdisc.catalog import (
 ROOT = Path(__file__).parents[1]
 ENTRY_SCHEMA = ROOT / "catalog/schema/disc.schema.json"
 MANIFEST_SCHEMA = ROOT / "catalog/schema/canonical-manifest.schema.json"
+PACK_SCHEMA = ROOT / "catalog/schema/pack.schema.json"
 
 
 def _write_yaml(path: Path, data: dict) -> None:
@@ -116,6 +117,101 @@ def test_catalog_reports_unreadable_canonical_manifest_instead_of_crashing(tmp_p
             f"definition.manifest: cannot load {manifest_rel}" in error
             for error in errors
         )
+
+
+def test_catalog_rejects_unreferenced_canonical_manifests(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    entry = _base_entry(
+        id6,
+        {
+            "type": "artist_catalog",
+            "musicbrainz_artist_id": "11111111-2222-3333-4444-555555555555",
+        },
+    )
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+    _write_json(
+        catalog / f"manifests/{id6[:3]}/{id6}.json",
+        {
+            "schema_version": 1,
+            "disc_id": id6,
+            "recordings": [{"isrcs": ["KRABC2600001"]}],
+        },
+    )
+    orphan_id = "042382"
+    _write_json(
+        catalog / f"manifests/{orphan_id[:3]}/{orphan_id}.json",
+        {
+            "schema_version": 1,
+            "disc_id": orphan_id,
+            "recordings": [{"isrcs": ["KRABC2600002"]}],
+        },
+    )
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    assert any("is not a canonical_manifest definition" in error for error in errors)
+    assert any("no catalog entry exists for canonical manifest 042382" in error for error in errors)
+
+
+def test_catalog_rejects_malformed_unreferenced_manifest(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    path = catalog / "manifests/042/042381.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("{not-json", encoding="utf-8")
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+    )
+    assert any("unreferenced canonical manifest cannot be loaded" in error for error in errors)
+
+
+def test_catalog_rejects_misplaced_manifest_and_pack(tmp_path: Path):
+    catalog = tmp_path / "catalog"
+    id6 = "042381"
+    entry = _base_entry(
+        id6,
+        {
+            "type": "artist_catalog",
+            "musicbrainz_artist_id": "11111111-2222-3333-4444-555555555555",
+        },
+    )
+    _write_yaml(catalog / f"discs/{id6[:3]}/{id6}.yaml", entry)
+    _write_json(
+        catalog / "manifests/wrong/place.json",
+        {
+            "schema_version": 1,
+            "disc_id": "042382",
+            "recordings": [{"isrcs": ["KRABC2600002"]}],
+        },
+    )
+    _write_yaml(
+        catalog / "packs/nested/test-pack.yaml",
+        {
+            "schema_version": 1,
+            "slug": "test-pack",
+            "title": "Test pack",
+            "status": "draft",
+            "capacity": 12,
+            "discs": [id6],
+            "provenance": {"authority": "community", "maintainers": ["tester"]},
+            "tags": ["test"],
+        },
+    )
+
+    errors = validate_catalog(
+        catalog,
+        entry_schema_path=ENTRY_SCHEMA,
+        manifest_schema_path=MANIFEST_SCHEMA,
+        pack_schema_path=PACK_SCHEMA,
+    )
+    assert any("canonical manifest must live at manifests/042/042382.json" in error for error in errors)
+    assert any("pack must live at packs/test-pack.yaml" in error for error in errors)
 
 
 def test_manifest_rejects_ambiguous_duplicate_recording_identifiers():

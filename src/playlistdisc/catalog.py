@@ -96,11 +96,18 @@ def iter_entries(catalog_dir: str | Path) -> Iterable[Path]:
     yield from sorted(root.rglob("*.yaml"))
 
 
+def iter_manifests(catalog_dir: str | Path) -> Iterable[Path]:
+    root = Path(catalog_dir) / "manifests"
+    if not root.exists():
+        return
+    yield from sorted(root.rglob("*.json"))
+
+
 def iter_packs(catalog_dir: str | Path) -> Iterable[Path]:
     root = Path(catalog_dir) / "packs"
     if not root.exists():
         return
-    yield from sorted(root.glob("*.yaml"))
+    yield from sorted(root.rglob("*.yaml"))
 
 
 def find_entry(
@@ -390,6 +397,55 @@ def validate_catalog(
             messages.append(f"{path}:{message}")
 
     messages.extend(_successor_cycle_errors(entries_by_id))
+
+    referenced_manifests: set[Path] = set()
+    for _, data in parsed:
+        definition = data.get("definition", {})
+        if definition.get("type") != "canonical_manifest":
+            continue
+        manifest_path = _safe_catalog_relative_path(catalog_root, definition["manifest"])
+        if manifest_path is not None:
+            referenced_manifests.add(manifest_path.resolve())
+
+    for path in iter_manifests(catalog_root):
+        if path.resolve() in referenced_manifests:
+            continue
+        try:
+            manifest = load_json(path)
+        except (OSError, ValueError) as exc:
+            messages.append(f"{path}: unreferenced canonical manifest cannot be loaded: {exc}")
+            continue
+
+        manifest_errors = validate_manifest(manifest, manifest_schema)
+        if manifest_errors:
+            messages.extend(f"{path}:{message}" for message in manifest_errors)
+            continue
+
+        id6 = manifest["disc_id"]
+        expected_path = _expected_manifest_path(catalog_root, id6)
+        if path.resolve() != expected_path.resolve():
+            messages.append(
+                f"{path}:path: canonical manifest must live at "
+                f"{expected_path.relative_to(catalog_root).as_posix()}"
+            )
+
+        entry_record = entries_by_id.get(id6)
+        if entry_record is None:
+            messages.append(
+                f"{path}:disc_id: no catalog entry exists for canonical manifest {id6}"
+            )
+            continue
+
+        entry = entry_record[1]
+        definition = entry.get("definition", {})
+        if definition.get("type") != "canonical_manifest":
+            messages.append(
+                f"{path}:disc_id: catalog entry {id6} is not a canonical_manifest definition"
+            )
+        else:
+            messages.append(
+                f"{path}:path: manifest is not the file referenced by catalog entry {id6}"
+            )
 
     if pack_schema is not None:
         seen_slugs: dict[str, Path] = {}

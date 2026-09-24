@@ -53,7 +53,7 @@ catalog/manifests/042/042381.json
 
 for disc ID `042381`.
 
-The catalog entry points to that path. The manifest repeats the disc ID and contains one or more recording records.
+The catalog entry points to that path. The manifest repeats the disc ID and contains one or more recording records. Every JSON file below `catalog/manifests/` must belong to a matching `canonical_manifest` catalog entry; orphaned, misplaced, or malformed manifest files invalidate the catalog rather than being silently ignored.
 
 Each recording must contain at least one service-neutral identifier:
 
@@ -76,7 +76,7 @@ The Draft 0.2 reference `provider-index` format exists as an offline/testing int
 
 ## Packs and wallet order
 
-Packs are curated ordered views over existing catalog IDs. They do not allocate IDs and do not alter disc meaning.
+Packs are curated ordered views over existing catalog IDs. They do not allocate IDs and do not alter disc meaning. Pack YAML is discovered recursively for validation, so files placed outside the deterministic `catalog/packs/<slug>.yaml` location are rejected instead of escaping validation.
 
 Source packs live at:
 
