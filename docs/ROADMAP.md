@@ -10,7 +10,8 @@
 - experimental audio beacon;
 - fail-open runtime recognition aggregator for strong TOC/CD-TEXT/beacon evidence implemented in Draft 0.2;
 - catalog schema and development vectors;
-- CI validation.
+- CI validation;
+- offline vertical integration from TOC recognition through provider-neutral resolution, host execution, and materialization-cache validation implemented.
 
 ## Milestone 2 — physical validation and PDv1.0
 

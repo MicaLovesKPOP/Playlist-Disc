@@ -65,6 +65,18 @@ The project also tests the generated mastering syntax against the actual `cdrdao
 
 This is deliberately a separate layer from `verify-build`: our verifier proves PDv1's own invariants, while cdrdao preflight proves that the external reference mastering tool accepts the file it will later be asked to write. No optical drive is needed for this check.
 
+## Offline vertical integration gate
+
+The test suite also carries one deliberately cross-layer path rather than testing every component only in isolation. It:
+
+1. recognizes a checksum-valid PD identity from deterministic TOC durations;
+2. resolves a canonical manifest through an exact provider index into a ready playback plan;
+3. feeds the recognized machine ID through the live PD Bridge host runtime;
+4. validates the resulting source-switch and execute-plan actions;
+5. materializes the resolved track-list plan into the local cache and reads it back through the cache-validation path.
+
+The fixture is entirely synthetic and offline. It does not prove provider authentication/playback, BLE interoperability, vehicle electronics, or audio routing; it proves that the software contracts on either side of those future hardware/network boundaries compose without a hidden side channel.
+
 ## What software cannot prove
 
 Draft 0.2 intentionally does **not** claim to establish:
