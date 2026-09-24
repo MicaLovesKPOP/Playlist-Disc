@@ -42,6 +42,8 @@ The packaged `PDv1-recognition` JSON schema carries:
 - deduplicated strong evidence channels and their machine IDs;
 - diagnostic errors from invalid supplied observations.
 
+Validation is semantic as well as structural. Every evidence machine ID must pass its PDv1 check digit, and the result status is derived from the distinct valid identities in the evidence: zero means `unknown`, exactly one means `recognized`, and more than one means `conflict`. A `recognized` top-level ID must be that same evidence identity. This prevents a stored or transported result from changing its conclusion while leaving contradictory strong evidence behind.
+
 This is suitable as the disc-recognition input to a future vehicle adapter/PD Bridge implementation.
 
 ## Hardware boundary
