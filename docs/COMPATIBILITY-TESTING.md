@@ -53,7 +53,7 @@ A physical report records:
 - audio-beacon outcome;
 - optional repeated-attempt counts.
 
-During Draft 0.2, physical reports must use IDs in the development/test namespace `999900-999999`. A report also requires the 64-character `bundle_sha256` of the exact three-file mastering bundle. This distinguishes experiments even when the logical PD ID is intentionally the same (for example the `999901` CD-TEXT on/off A/B pair) and pins evidence if a draft generator later changes.
+During Draft 0.2, physical reports must use IDs in the development/test namespace `999900-999999`. A report also requires the 64-character `bundle_sha256` of the exact three-file mastering bundle. This distinguishes experiments even when the logical PD ID is intentionally the same (for example the `999901` CD-TEXT on/off A/B pair) and pins evidence if a draft generator later changes. If `test_variant` is supplied, validation also pins that label to the reference variant's machine identity and CD-TEXT mode; the exact bundle hash remains the historical artifact authority rather than being forced to equal whatever a later generator version produces.
 
 ## Unknown and negative results
 

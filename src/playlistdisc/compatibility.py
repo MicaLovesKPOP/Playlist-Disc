@@ -11,6 +11,9 @@ from jsonschema import Draft202012Validator
 
 from .catalog import load_schema, load_yaml
 from .identity import PDIdentity
+from .testkit import VARIANTS
+
+_TEST_VARIANTS = {variant.name: variant for variant in VARIANTS}
 
 
 def iter_compatibility_profiles(root: str | Path) -> Iterable[Path]:
@@ -58,6 +61,24 @@ def validate_compatibility_profile(
                     f"reports.{index}.disc_machine_id: physical Draft 0.2 tests "
                     "must use the development/test namespace"
                 )
+
+        test_variant = report.get("test_variant")
+        if test_variant is not None:
+            variant = _TEST_VARIANTS.get(test_variant)
+            if variant is None:
+                messages.append(
+                    f"reports.{index}.test_variant: unknown Draft 0.2 test-kit variant {test_variant!r}"
+                )
+            else:
+                expected_identity = PDIdentity(variant.id_number)
+                if report["disc_machine_id"] != expected_identity.machine_id:
+                    messages.append(
+                        f"reports.{index}.disc_machine_id: does not match test variant {test_variant!r}"
+                    )
+                if report["media"]["cd_text"] is not variant.cd_text:
+                    messages.append(
+                        f"reports.{index}.media.cd_text: does not match test variant {test_variant!r}"
+                    )
 
         attempts = report.get("attempts")
         if attempts and attempts["successful_loads"] > attempts["total"]:

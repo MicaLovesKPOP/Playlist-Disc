@@ -22,6 +22,7 @@
 - Added a deterministic four-variant Draft 0.2 physical compatibility kit, including a same-ID CD-TEXT on/off A/B pair and a beacon-focused no-CD-TEXT variant.
 - Added `pdv1 build-test-kit` / `verify-test-kit` and `pdv1 build --no-cdtext`.
 - Restricted the official Draft 0.2 `pdv1 burn` path to verified test-namespace bundles so unfinished public/private physical identities cannot be minted accidentally.
+- Added a first-hardware validation runbook that orders CD-R baseline, CD-TEXT A/B, cold-start/reinsert, beacon capture, CD-RW, and later bus observation with explicit provenance and early-stop rules.
 
 ### Runtime recognition
 
@@ -59,7 +60,7 @@
 
 - Added a deterministic SHA-256 fingerprint over each exact three-file mastering bundle (`manifest.json`, `disc.toc`, `beacon.wav`) with unambiguous filename/length framing.
 - `pdv1 verify-build` now prints the exact bundle fingerprint; generated test-kit manifests pin a fingerprint for every variant and verification detects artifact drift.
-- Structured physical compatibility reports now require `bundle_sha256` and may record a test-kit variant name, preventing results from becoming detached from the exact draft artifact that was burned.
+- Structured physical compatibility reports now require `bundle_sha256` and may record a test-kit variant name, preventing results from becoming detached from the exact draft artifact that was burned. Optional test-kit variant labels are now also checked against the reference variant identity and CD-TEXT semantics, preventing a self-contradictory report from passing validation.
 - Added regression tests proving identical bundles fingerprint identically and even harmless byte-level mastering drift changes the fingerprint.
 
 ### Compatibility-test preparation

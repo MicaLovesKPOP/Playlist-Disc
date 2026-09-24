@@ -15,7 +15,7 @@
 
 ## Milestone 2 — physical validation and PDv1.0
 
-- deterministic Draft 0.2 physical-test kit, optional CD-TEXT A/B mastering, virtual verification, and test-namespace burn guard implemented; burn development discs on multiple writers;
+- deterministic Draft 0.2 physical-test kit, optional CD-TEXT A/B mastering, virtual verification, test-namespace burn guard, and first-hardware evidence runbook implemented; next step is controlled development-disc burns on real writers/head units;
 - structured compatibility profile/report schema, exact mastering-bundle fingerprints, validator, deterministic export, and three planned reference profiles implemented in Draft 0.2;
 - test reference cars and additional legacy players;
 - settle TOC tolerance rules;

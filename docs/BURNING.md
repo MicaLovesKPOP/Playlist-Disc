@@ -62,6 +62,8 @@ The two `999901` variants deliberately have the same machine identity. Their onl
 
 When physical work begins, burn only the variants actually needed for the next experiment rather than consuming the entire kit automatically.
 
+For the evidence order, early-stop rules, media progression, bus-capture boundary, and structured reporting checklist for the first hardware round, follow `docs/HARDWARE-VALIDATION-RUNBOOK.md`.
+
 ## Practical labeling
 
 A handwritten test label is sufficient. Include both the machine ID and variant name, for example:

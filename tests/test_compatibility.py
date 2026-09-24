@@ -71,6 +71,36 @@ def test_partial_profile_requires_report_and_valid_test_id():
     assert any("development/test namespace" in error for error in errors)
 
 
+def test_test_variant_pins_reference_identity_and_cdtext_semantics():
+    profile = _base_profile()
+    profile["status"] = "partial"
+
+    report = _report()
+    report["test_variant"] = "toc-cdtext"
+    profile["reports"] = [report]
+    assert validate_compatibility_profile(profile, SCHEMA) == []
+
+    wrong_identity = _report()
+    wrong_identity["test_variant"] = "toc-cdtext"
+    wrong_identity["disc_machine_id"] = "PD1-999902-5"
+    profile["reports"] = [wrong_identity]
+    errors = validate_compatibility_profile(profile, SCHEMA)
+    assert any("does not match test variant" in error for error in errors)
+
+    wrong_cdtext = _report()
+    wrong_cdtext["test_variant"] = "toc-cdtext"
+    wrong_cdtext["media"]["cd_text"] = False
+    profile["reports"] = [wrong_cdtext]
+    errors = validate_compatibility_profile(profile, SCHEMA)
+    assert any("media.cd_text" in error and "test variant" in error for error in errors)
+
+    unknown = _report()
+    unknown["test_variant"] = "made-up-variant"
+    profile["reports"] = [unknown]
+    errors = validate_compatibility_profile(profile, SCHEMA)
+    assert any("unknown Draft 0.2 test-kit variant" in error for error in errors)
+
+
 def test_attempt_successes_cannot_exceed_attempts():
     profile = _base_profile()
     profile["status"] = "partial"
