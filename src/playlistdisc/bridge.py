@@ -198,15 +198,34 @@ def validate_bridge_transcript(
                             "was not advertised by adapter"
                         )
                     counter = disc["selection_counter"]
+                    machine_id = disc["machine_id"]
                     previous_counter = last_selection_counter.get(session)
+                    counter_valid = True
                     if previous_counter is not None and counter < previous_counter:
                         errors.append(
                             f"message {index}:payload.disc.selection_counter: "
                             f"state sync regressed ({counter} < {previous_counter})"
                         )
+                        counter_valid = False
+                    elif previous_counter is not None and counter == previous_counter:
+                        active = active_selection.get(session)
+                        if active is None:
+                            errors.append(
+                                f"message {index}:payload.disc.selection_counter: "
+                                "state sync reused an inactive selection counter"
+                            )
+                            counter_valid = False
+                        elif active != (counter, machine_id):
+                            errors.append(
+                                f"message {index}:payload.disc.machine_id: state sync "
+                                "changed identity for an existing selection counter"
+                            )
+                            counter_valid = False
                     else:
                         last_selection_counter[session] = counter
-                    active_selection[session] = (counter, disc["machine_id"])
+
+                    if counter_valid:
+                        active_selection[session] = (counter, machine_id)
 
             elif msg_type == "disc_selected":
                 evidence = payload["evidence"]

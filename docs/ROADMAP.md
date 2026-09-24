@@ -32,8 +32,8 @@
 
 ## Milestone 4 — playback bridge
 
-- transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and semantic validator implemented in Draft 0.2, including capability contracts, reconnect-safe selection counters, and explicit acknowledgement targets;
-- offline host-runtime state machine and replay harness implemented in Draft 0.2, covering reconnect deduplication, source requests, playback-plan execution, controls, and removal policy;
+- transport-neutral logical message protocol, packaged JSON Schema, reference transcript, and semantic validator implemented in Draft 0.2, including capability contracts, reconnect-safe selection counters, counter/identity-consistent state sync, and explicit acknowledgement targets;
+- offline host-runtime state machine and replay harness implemented in Draft 0.2, covering reconnect deduplication, live per-session sequence/capability/counter guards, stale-session isolation, source requests, playback-plan execution, controls, and removal policy;
 - Draft 0.1 BLE GATT transport profile and fully software-tested fragmentation/reassembly framing implemented in Draft 0.2; real mobile/adapter interoperability and link-security behavior remain hardware-gated;
 - deterministic canonical-recording resolution core and provider/local index contract implemented in Draft 0.2;
 - normalized provider-neutral playback-plan compiler implemented in Draft 0.2 across canonical manifests, artist/album entities, federated/provider-native resources, diagnostics, and private mappings; unresolved canonical plans now embed their exact recording identities so provider plugins need no side-channel manifest access;

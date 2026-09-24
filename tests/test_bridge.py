@@ -99,6 +99,56 @@ def test_state_sync_cannot_regress_selection_counter():
     assert any("state sync regressed" in error for error in errors)
 
 
+def test_state_sync_cannot_rebind_existing_counter_to_different_identity():
+    messages = read_bridge_jsonl(VECTOR)[:-1]
+    messages.append(
+        {
+            "protocol": "pdbridge",
+            "version": 1,
+            "source": "adapter",
+            "session": "adapter-boot-001",
+            "seq": 5,
+            "type": "state_sync",
+            "payload": {
+                "power": "accessory",
+                "disc": {
+                    "machine_id": "PD1-999902-5",
+                    "selection_counter": 1,
+                    "evidence": "toc",
+                },
+                "streaming_source_active": True,
+            },
+        }
+    )
+    errors = validate_bridge_transcript(messages)
+    assert any("changed identity for an existing selection counter" in error for error in errors)
+
+
+def test_state_sync_cannot_reactivate_removed_counter():
+    messages = read_bridge_jsonl(VECTOR)
+    messages.append(
+        {
+            "protocol": "pdbridge",
+            "version": 1,
+            "source": "adapter",
+            "session": "adapter-boot-001",
+            "seq": 6,
+            "type": "state_sync",
+            "payload": {
+                "power": "accessory",
+                "disc": {
+                    "machine_id": "PD1-999901-7",
+                    "selection_counter": 1,
+                    "evidence": "toc",
+                },
+                "streaming_source_active": False,
+            },
+        }
+    )
+    errors = validate_bridge_transcript(messages)
+    assert any("reused an inactive selection counter" in error for error in errors)
+
+
 def test_adapter_must_not_emit_unadvertised_detection_evidence():
     messages = read_bridge_jsonl(VECTOR)
     bad = copy.deepcopy(messages)
