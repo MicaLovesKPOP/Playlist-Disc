@@ -91,9 +91,36 @@
         ]
       },
       "then": {
+        "properties": {
+          "action": {
+            "enum": [
+              "activate_streaming",
+              "deactivate_streaming"
+            ]
+          }
+        },
         "required": [
           "action"
-        ]
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "plan"
+              ]
+            },
+            {
+              "required": [
+                "status"
+              ]
+            },
+            {
+              "required": [
+                "reason"
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -110,7 +137,26 @@
       "then": {
         "required": [
           "plan"
-        ]
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "action"
+              ]
+            },
+            {
+              "required": [
+                "status"
+              ]
+            },
+            {
+              "required": [
+                "reason"
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -125,9 +171,37 @@
         ]
       },
       "then": {
+        "properties": {
+          "action": {
+            "enum": [
+              "next",
+              "previous",
+              "play_pause"
+            ]
+          }
+        },
         "required": [
           "action"
-        ]
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "plan"
+              ]
+            },
+            {
+              "required": [
+                "status"
+              ]
+            },
+            {
+              "required": [
+                "reason"
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -144,7 +218,26 @@
       "then": {
         "required": [
           "reason"
-        ]
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "action"
+              ]
+            },
+            {
+              "required": [
+                "plan"
+              ]
+            },
+            {
+              "required": [
+                "status"
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -159,10 +252,34 @@
         ]
       },
       "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "partial",
+              "ambiguous",
+              "unavailable",
+              "unplayable"
+            ]
+          }
+        },
         "required": [
           "status",
           "reason"
-        ]
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "action"
+              ]
+            },
+            {
+              "required": [
+                "plan"
+              ]
+            }
+          ]
+        }
       }
     }
   ]
