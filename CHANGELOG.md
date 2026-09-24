@@ -162,6 +162,7 @@
 - Repeated `hello` / `hello_ack` announcements may support reconnects but cannot silently mutate identity/capabilities within one sender session; superseded adapter sessions stay retired even if a late repeated `hello` arrives.
 - Hardened transcript state handling so non-increasing sequences and reused selection counters report errors without lowering/replacing the last accepted sequence or active selection, preventing one bad event from masking later violations.
 - Moved metadata-display self-consistency into single-message validation as well as transcript validation, so the live host runtime rejects the same semantically invalid `hello` payloads as the offline checker.
+- Made the live host require a valid adapter `hello` before consuming session traffic while keeping transcript validation partial-capture friendly; rejected semantic violations no longer advance the live sequence baseline or mutate source/selection state.
 - Made acknowledgements reconnect-safe by requiring both peer `ack_session` and `ack_seq`; optional error references now use the same session+sequence pairing.
 - Added display-capability self-consistency checks, expanded bridge tests, and ADR 0009.
 

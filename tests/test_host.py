@@ -290,6 +290,32 @@ def test_runtime_rejects_non_increasing_adapter_sequence():
         runtime.consume(_control(seq=1))
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        _selected(),
+        _state_sync(),
+        _source(True),
+        _control(),
+        _removed(),
+    ],
+)
+def test_live_runtime_requires_hello_before_adapter_events(message):
+    runtime = HostRuntime(lambda machine_id: _plan())
+    with pytest.raises(ValueError, match="must begin with hello"):
+        runtime.consume(message)
+
+
+def test_prehello_rejection_does_not_poison_session_sequence_state():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    early = _selected(seq=5)
+    with pytest.raises(ValueError, match="must begin with hello"):
+        runtime.consume(early)
+
+    assert runtime.consume(_hello(False)) == ()
+    assert runtime.consume(_state_sync(seq=1)) == ()
+
+
 def test_runtime_rejects_semantically_invalid_adapter_hello():
     runtime = HostRuntime(lambda machine_id: _plan())
     hello = _hello(False)
@@ -309,7 +335,37 @@ def test_runtime_rejects_unadvertised_media_control():
     runtime.consume(hello)
     runtime.consume(_selected())
     with pytest.raises(ValueError, match="was not advertised"):
-        runtime.consume(_control(action="previous", seq=3))
+        runtime.consume(_control(action="previous", seq=5))
+
+    actions = runtime.consume(_control(action="next", seq=3))
+    assert len(actions) == 1
+    assert actions[0].type == "provider_control"
+
+
+def test_rejected_state_sync_does_not_mutate_live_session_state():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello())
+    runtime.consume(_state_sync(source=False, seq=1))
+    first = runtime.consume(_selected(counter=1, seq=2))
+    assert [action.type for action in first] == ["source_request", "execute_plan"]
+
+    bad = _state_sync(
+        {
+            "machine_id": MACHINE_ID,
+            "selection_counter": 0,
+            "evidence": "toc",
+        },
+        source=True,
+        seq=9,
+    )
+    with pytest.raises(ValueError, match="state-sync selection counter regressed"):
+        runtime.consume(bad)
+
+    removed = runtime.consume(_removed(counter=1, seq=3))
+    assert [action.type for action in removed] == ["stop_playback", "source_request"]
+
+    second = runtime.consume(_selected(counter=2, seq=4))
+    assert [action.type for action in second] == ["source_request", "execute_plan"]
 
 
 def test_runtime_rejects_state_sync_identity_change_for_reused_counter():
@@ -340,10 +396,14 @@ def test_reannounced_runtime_capabilities_cannot_change_inside_one_session():
     runtime = HostRuntime(lambda machine_id: _plan())
     runtime.consume(_hello(False))
     changed = _hello(False)
-    changed["seq"] = 1
+    changed["seq"] = 5
     changed["payload"]["capabilities"]["media_controls"] = ["next"]
     with pytest.raises(ValueError, match="hello changed within session"):
         runtime.consume(changed)
+
+    corrected = _hello(False)
+    corrected["seq"] = 1
+    assert runtime.consume(corrected) == ()
 
 
 def test_removal_policy_can_leave_playing_and_keep_source():

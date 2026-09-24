@@ -31,13 +31,15 @@ The action contract is deliberately discriminated rather than a bag of optional 
 
 `HostRuntime.consume()` validates more than the shape of each incoming bridge message. It keeps the safety-critical adapter session state needed when messages arrive one at a time rather than as a finished transcript:
 
+- a live adapter session must be introduced by a valid `hello` before state, selection, control, removal, acknowledgement, or error traffic from that session is consumed;
 - adapter sequence numbers must increase strictly inside one session;
 - a repeated `hello` may not silently change the adapter identity/capability payload;
 - `disc_selected` counters must increase strictly;
 - `state_sync` may repeat the current counter only for the same still-active machine ID, and may neither regress nor reactivate a removed counter;
 - detection evidence and media-control actions must have been advertised by the adapter when capabilities are known;
 - once a newer adapter session has announced itself, the older observed session is retired: late messages from it, including a repeated `hello`, are ignored so buffered traffic cannot roll the runtime back to an old adapter boot or operate the current playback context;
-- current-session removal messages must match the active selection counter rather than being silently accepted.
+- current-session removal messages must match the active selection counter rather than being silently accepted;
+- a rejected semantic violation does not advance the accepted sequence baseline or mutate source/selection state, so one bad frame cannot poison a later valid retry.
 
 The offline `bridge-validate` transcript checker enforces the same counter/identity rule for `state_sync`, including rejecting a reused counter that is rebound to a different PD identity or resurrected after removal. These checks do not add transport security; they make replay, reconnect, and stale-message behavior deterministic before any BLE or vehicle implementation exists.
 

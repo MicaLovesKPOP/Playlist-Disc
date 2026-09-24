@@ -147,6 +147,8 @@ The logical bridge protocol does not mandate playback policy, but Draft 0.2 incl
 
 The reference host deduplicates the same `(adapter session, selection counter, machine ID)` when it reappears in `state_sync`, but treats the same physical disc under a new adapter session as a new selection. Disc-removal stop/deactivate behavior and partial-plan playback are configurable host policy.
 
+Unlike the transcript validator, which deliberately accepts partial captures, the live reference host requires each adapter session to be introduced by a valid `hello` before it consumes that session's state, selection, control, removal, acknowledgement, or error traffic. This keeps capability negotiation mandatory for execution without making diagnostic capture validation artificially strict. Semantically rejected live messages do not advance the accepted sequence baseline or mutate source/selection state, allowing a later valid retry to be evaluated against the last accepted message.
+
 See `docs/HOST-RUNTIME.md`.
 
 ## 10. Validation

@@ -314,6 +314,15 @@ class HostRuntime:
         msg_type = message["type"]
         payload = message["payload"]
 
+        if msg_type != "hello" and session not in self._hello_fingerprints:
+            if self._current_adapter_session is None:
+                raise ValueError(
+                    f"adapter session {session!r} must begin with hello before {msg_type!r}"
+                )
+            # Traffic from an unseen session cannot supersede the current adapter;
+            # only hello is allowed to introduce the next live session.
+            return ()
+
         if self._current_adapter_session is not None and session != self._current_adapter_session:
             # A previously observed non-current session has already been superseded.
             # Treat every late message from it, including a repeated hello, as stale so
@@ -330,7 +339,6 @@ class HostRuntime:
                 "adapter sequence must increase strictly "
                 f"within session {session!r} ({seq} <= {previous_seq})"
             )
-        self._last_seq[session] = seq
 
         if msg_type == "hello":
             fingerprint = json.dumps(
@@ -344,18 +352,21 @@ class HostRuntime:
                 raise ValueError(
                     f"adapter hello changed within session {session!r}"
                 )
+            self._last_seq[session] = seq
             self._hello_fingerprints[session] = fingerprint
             self._capabilities[session] = dict(payload["capabilities"])
             self._current_adapter_session = session
             return ()
 
         if msg_type == "source_state":
+            self._last_seq[session] = seq
             self._source_active[session] = bool(payload["active"])
             return ()
 
         if msg_type == "disc_selected":
             self._require_advertised_evidence(session, payload["evidence"])
             self._record_disc_selected(session, payload["selection_counter"])
+            self._last_seq[session] = seq
             context = SelectionContext(
                 machine_id=payload["machine_id"],
                 adapter_session=session,
@@ -364,9 +375,10 @@ class HostRuntime:
             return self._selection_actions(context)
 
         if msg_type == "state_sync":
-            self._source_active[session] = bool(payload["streaming_source_active"])
             disc = payload["disc"]
             if disc is None:
+                self._last_seq[session] = seq
+                self._source_active[session] = bool(payload["streaming_source_active"])
                 active = self._active_selection
                 if active is not None and active.adapter_session == session:
                     return self._remove_actions(active)
@@ -378,6 +390,8 @@ class HostRuntime:
                 selection_counter=disc["selection_counter"],
             )
             self._record_state_sync_selection(context)
+            self._last_seq[session] = seq
+            self._source_active[session] = bool(payload["streaming_source_active"])
             return self._selection_actions(context)
 
         if msg_type == "disc_removed":
@@ -391,6 +405,7 @@ class HostRuntime:
                     "adapter removal counter does not match active selection "
                     f"({payload['selection_counter']} != {active.selection_counter})"
                 )
+            self._last_seq[session] = seq
             return self._remove_actions(active)
 
         if msg_type == "media_control":
@@ -403,6 +418,7 @@ class HostRuntime:
                     f"adapter media control {payload['action']!r} was not advertised "
                     f"for session {session!r}"
                 )
+            self._last_seq[session] = seq
             context = self._playback_context
             if context is None or context.adapter_session != session:
                 return ()
@@ -414,4 +430,5 @@ class HostRuntime:
                 )
             )
 
+        self._last_seq[session] = seq
         return ()

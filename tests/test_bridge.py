@@ -19,6 +19,11 @@ def test_reference_bridge_transcript_validates():
     assert validate_bridge_transcript(messages) == []
 
 
+def test_transcript_validator_allows_partial_capture_without_hello():
+    selected = copy.deepcopy(read_bridge_jsonl(VECTOR)[3])
+    assert validate_bridge_transcript([selected]) == []
+
+
 def test_bridge_schema_is_packaged_and_rejects_wrong_source():
     schema = load_bridge_schema()
     message = read_bridge_jsonl(VECTOR)[0]
