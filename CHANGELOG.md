@@ -75,6 +75,7 @@
 - Added the first P1 family research note for VAG legacy/Quadlock systems, separating legacy direct CDC, RCD 300 CAN + dedicated changer wiring, later BAP/MDI integration, Audi copper systems, Skoda pinout variants, and Audi MMI optical architecture without inventing protocol-level hardware facts.
 - Added BMW/MINI legacy changer family research covering BMW NG I/K-Bus control with separate audio, E46 changer wiring, BM24/BM54 remote radio modules and 17/40-pin generations, MINI R50/R53 K-Bus changer integration, and the boundary to MOST-era systems.
 - Added a sourced Fiat/Alfa/Lancia changer-family map separating B-CAN vehicle integration from dedicated ASCI-BUS/CDC control and analogue audio, including cross-marque pin-role reuse, Panda-specific caveats, and changer-capacity dialect risk.
+- Completed the bounded P1 family sweep with PSA RD3/RD4 generations, Renault Tuner/Update List, Ford ACP/Quadlock, Opel/Vauxhall CD30/CDC40/CD70, Toyota/Lexus AVC-LAN, Honda/Acura, Mazda legacy/CAN, and aftermarket head-unit bus notes; low-level constants remain capture-gated and P2 breadth is explicitly non-blocking.
 
 ### Catalog evolution safety
 

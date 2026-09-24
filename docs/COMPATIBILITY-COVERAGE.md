@@ -47,15 +47,15 @@ These are anchor points, not the intended limit of compatibility research.
 | --- | --- | --- | --- | --- |
 | P1 | VAG legacy + Quadlock CDC | Volkswagen, Audi, SEAT, Skoda; split mini-ISO/legacy CDC from later Quadlock/CAN where necessary | sourced family note | Legacy Gamma direct CDC, RCD 300 CAN + separate CDC, later RCD/BAP/MDI boundaries, Audi copper separation, Skoda pinout caveat, and Audi MMI optical exclusion mapped in docs/research/VAG-LEGACY-QUADLOCK.md. |
 | P1 | BMW/MINI legacy CDC | Older BMW/MINI 17-pin/40-pin and changer-era systems outside the R55 RAD2/MOST anchor | sourced family note | BMW NG I/K-Bus + separate changer audio, remote BM24/BM54 radio-module boundary, R50/R53 K-Bus changer wiring, connector generations, and the MOST transition mapped in docs/research/BMW-MINI-LEGACY-CDC.md. |
-| P1 | PSA legacy + later RD4 derivatives | Peugeot/Citroen RD3/VAN plus RD4/RD43/RD45 generation boundaries | anchored via C3 RD4 | Extend the current RD4 note into a family map without promoting related-platform CAN IDs into target fact. |
+| P1 | PSA legacy + later RD4 derivatives | Peugeot/Citroen RD3/VAN plus RD4/RD43/RD45 generation boundaries | sourced family note | RD3 Comfort-VAN changer control + separate audio, the RD4 CAN boundary, AEE2001/2004-2007/2010 generations, and RD43/RD45 identity caveats mapped in docs/research/PSA-RD3-RD4-FAMILY.md. |
 | P1 | Fiat/Alfa/Lancia legacy CDC | Broader Fiat Group changer ecosystem around the Alfa 937 anchor | sourced family note | B-CAN versus dedicated ASCI-BUS surfaces, E13-E20 CDC role reuse, Panda electrical/harness exception, Alfa 159/Lancia family overlap, and changer-capacity dialect caveat mapped in docs/research/FIAT-ALFA-LANCIA-CDC.md. |
-| P1 | Renault changer/CAN families | Tuner List, Update List and later CAN-era factory radios | planned | Separate head-unit generations, changer activation, stalk/display paths, and CAN-mediated variants. |
-| P1 | Ford Europe factory audio | 5000/6000/Sony/TravelPilot-era CD and changer integrations, split by connector/network generation | planned | Establish reusable radio families, steering-control/display path, and where newer units become CAN-dependent. |
-| P1 | Opel/Vauxhall CAN audio | Quadlock/CAN CD/changer-era systems such as CD30/CD70/CDC40-class families | planned | Map display pairing, changer emulation path, controls, and generation-specific security/coding constraints. |
-| P1 | Toyota/Lexus factory CDC | High-volume Japanese OEM changer-port families | planned | Establish connector/protocol generations, text/control capability, and whether a few representative families cover a large model range. |
-| P1 | Honda/Acura factory CDC | Honda/Acura changer-era factory radios | planned | Establish reusable connector/data-bus generations, display/control capability, and clear exclusions. |
-| P1 | Mazda factory CDC/CAN | Legacy changer ports plus later CAN-integrated radios | planned | Split direct CDC and CAN-era families and identify representative head units. |
-| P1 | Aftermarket head-unit buses | Alpine, Becker, Blaupunkt, Clarion, Pioneer, Sony, JVC and other widely fitted legacy units | planned | Treat aftermarket protocols as a portability lane: identify a small number of reusable changer/control buses rather than vehicle-specific adapters. |
+| P1 | Renault changer/CAN families | Tuner List, Update List and later CAN-era factory radios | sourced family note | Tuner List/Update List display topologies, dedicated CDC/S-PDIF path, documented CAN display/control coupling, and later Radio+/Continental Quadlock boundary mapped in docs/research/RENAULT-TUNER-UPDATE-LIST.md. |
+| P1 | Ford Europe factory audio | 5000/6000/Sony/TravelPilot-era CD and changer integrations, split by connector/network generation | sourced family note | Older 12-pin Ford ACP changer systems separated from later 5000C/6000CD/6006CD Quadlock/CAN and OEM Sony branches in docs/research/FORD-ACP-QUADLOCK.md. |
+| P1 | Opel/Vauxhall CAN audio | Quadlock/CAN CD/changer-era systems such as CD30/CD70/CDC40-class families | sourced family note | CD30 TID/GID, CDC40 integrated-changer, CD70 GID/CID and dedicated Opel Quadlock/CAN integration boundaries mapped in docs/research/OPEL-CD30-CDC40-CD70.md. |
+| P1 | Toyota/Lexus factory CDC | High-volume Japanese OEM changer-port families | sourced family note | AVC-LAN/IEBus multimedia architecture, working changer-emulator/decoder evidence, coexistence constraints, and later-generation exclusions mapped in docs/research/TOYOTA-LEXUS-AVCLAN.md. |
+| P1 | Honda/Acura factory CDC | Honda/Acura changer-era factory radios | sourced family-boundary note | Older OEM Alpine/M-Bus systems separated from the later Honda-specific white-connector family, with built-in changer/navigation/XM caveats and low-level protocol work explicitly deferred to bench captures in docs/research/HONDA-ACURA-CDC.md. |
+| P1 | Mazda factory CDC/CAN | Legacy changer ports plus later CAN-integrated radios | sourced family-boundary note | Legacy external-CDC systems, Mazda 6/RX-8 revision caveats, and the later CAN-bus generation mapped in docs/research/MAZDA-CDC-CAN.md; protocol constants remain bench-gated. |
+| P1 | Aftermarket head-unit buses | Alpine, Becker, Blaupunkt, Clarion, Pioneer, Sony, JVC and other widely fitted legacy units | sourced family note | Alpine M-Bus/Ai-NET, Pioneer IP-Bus, Sony UniLink, Clarion CeNET, Blaupunkt DMS/CDC and lower-priority vendor buses mapped as protocol-plugin families in docs/research/AFTERMARKET-HEAD-UNIT-BUSES.md. |
 | P2 | Audi MMI 2G / VAG optical | Optical VAG infotainment outside ordinary copper/Quadlock radio families | planned | Characterize optical changer semantics separately from copper/Quadlock VAG radios; avoid assuming R55 MOST behavior transfers. |
 | P2 | Mercedes/Porsche/Saab optical | D2B/MOST changer-era systems with mature optical gateway products | planned | Establish generation boundaries, coding requirements, display/control capability, and whether one adapter architecture can sensibly serve multiple marques. |
 | P2 | Volvo legacy + optical | HU/MELBUS-era and later optical infotainment families | planned | Determine whether legacy and optical generations offer distinct high-leverage integration paths. |
@@ -80,14 +80,13 @@ A useful family research note should establish, with sources:
 
 Related-platform reverse engineering may define a capture hypothesis, but never becomes target-unit truth without a target capture/report.
 
-## Research order
+## Research status
 
-1. Finish the P1 European families that reuse many radios across many cars: VAG, BMW/MINI legacy, PSA expansion, Fiat/Alfa/Lancia expansion, Renault, Ford, and Opel/Vauxhall.
-2. In parallel, characterize the aftermarket-head-unit lane because one protocol family may cover cars from many manufacturers.
-3. Cover the largest Japanese OEM changer families: Toyota/Lexus, Honda/Acura, and Mazda.
-4. Then tackle optical/premium families and P2 regional expansion where documentation or available hardware makes the result worthwhile.
+The P1 family sweep is complete for the pre-hardware phase. Each lane now has a sourced architecture/family note or an explicit boundary where low-level work is intentionally deferred to representative bench captures.
 
-Within a lane, prefer one strong family note over several shallow model pages.
+P2 optical/premium and regional families remain worthwhile future expansion, but they are **not** a prerequisite for first hardware validation. MINI R55/RAD2 already anchors an optical MOST architecture, while the P1 set covers direct changer buses, vehicle-network-mediated systems, proprietary multimedia buses, and aftermarket head-unit buses.
+
+From this point, prefer physical evidence or a genuinely new architecture over adding more model names to existing families.
 
 ## Stop rule for pre-hardware breadth
 
@@ -99,7 +98,7 @@ Compatibility research is broad enough for the pre-hardware phase when all of th
 - the generic audio-beacon fallback remains available for cars where useful vehicle-side state cannot be accessed;
 - additional desk research would mostly add more model names rather than a new integration architecture or materially new design constraint.
 
-At that point, physical testing should take priority. New families can still be added opportunistically when owners contribute hardware evidence.
+These conditions are now met for the planned P1 breadth. Physical testing should take priority after the remaining format/software readiness gates are closed. New P2 families can still be added opportunistically when hardware, contributors, or materially new architecture justify them.
 
 ## Discovery sources and what they prove
 
