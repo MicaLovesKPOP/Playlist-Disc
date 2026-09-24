@@ -35,6 +35,8 @@ The three reference profiles are architectural anchors, not the breadth limit. B
 
 Do not create concrete compatibility profiles merely to mirror commercial application lists. Add a profile when there is a specific head-unit/vehicle target that can eventually receive a structured physical report. The coverage plan defines P1/P2 research lanes and a stop rule so pre-hardware research spans the important direct-changer, vehicle-network, optical, and aftermarket integration classes without turning into an endless model catalog.
 
+The first family-level note is `docs/research/VAG-LEGACY-QUADLOCK.md`. It maps reusable VAG changer/network architectures and explicit exclusions without converting those families into unearned physical-compatibility profiles.
+
 ## Test reports
 
 A physical report records:

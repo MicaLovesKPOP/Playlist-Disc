@@ -47,5 +47,6 @@
 - MINI R55 Boost CD/RAD2 pre-hardware research — sourced K-CAN/MOST/gateway/changer/control groundwork implemented; exact bus/MOST behavior remains capture-gated;
 - Citroen C3 II / PSA RD4-family pre-hardware research — sourced C3 UI, RD4 Comfort-CAN/display/changer architecture, and related AEE2004 CAN groundwork implemented; exact target-car frames remain capture-gated;
 - family-first compatibility breadth plan established in `docs/COMPATIBILITY-COVERAGE.md`: research reusable head-unit/interface families rather than enumerating every car, with P1 coverage for major VAG, BMW/MINI legacy, PSA expansion, Fiat/Alfa/Lancia, Renault, Ford Europe, Opel/Vauxhall, Toyota/Lexus, Honda/Acura, Mazda, and aftermarket-head-unit lanes;
+- VAG legacy/Quadlock family research implemented: direct-CDC Gamma generations, CAN-connected RCD 300 with a separate CDC bus/audio path, later RCD/BAP/MDI boundaries, Audi copper subfamily separation, Skoda pinout caveats, and Audi MMI kept as a distinct optical lane; exact protocols remain capture-gated;
 - before declaring pre-hardware compatibility breadth complete, either source or explicitly defer every P1 lane and characterize at least one reusable direct-CDC, vehicle-network-mediated, optical, and aftermarket integration class;
 - OEM controls and now-playing metadata where technically feasible.

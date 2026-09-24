@@ -72,6 +72,7 @@
 - Added a sourced Citroen C3 II / RD4-family research set covering factory steering/media display surfaces, RD4 CD-TEXT/MP3 levels, Comfort CAN radio/display/changer architecture, AEE2004/2007 family compatibility evidence, and related-platform reverse-engineered CD text/tray/disc/timing/source/changer frame classes while explicitly keeping the target C3's exact IDs capture-gated.
 - Added a `manufacturer_documentation_mirror` research source type so mirrored owner documentation is not mislabeled as a direct manufacturer-hosted source.
 - Established a bounded family-first compatibility coverage plan across major OEM and aftermarket head-unit/changer ecosystems, with P1/P2 research priorities and a stop rule; the three reference cars are architectural anchors rather than the breadth limit.
+- Added the first P1 family research note for VAG legacy/Quadlock systems, separating legacy direct CDC, RCD 300 CAN + dedicated changer wiring, later BAP/MDI integration, Audi copper systems, Skoda pinout variants, and Audi MMI optical architecture without inventing protocol-level hardware facts.
 
 ### Catalog evolution safety
 

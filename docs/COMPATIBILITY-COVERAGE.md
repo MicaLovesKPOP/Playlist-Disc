@@ -45,7 +45,7 @@ These are anchor points, not the intended limit of compatibility research.
 
 | Priority | Family / lane | Reach to establish | Current state | Pre-hardware deliverable |
 | --- | --- | --- | --- | --- |
-| P1 | VAG legacy + Quadlock CDC | Volkswagen, Audi, SEAT, Skoda; split mini-ISO/legacy CDC from later Quadlock/CAN where necessary | planned | Map reusable radio generations, CDC path, CAN/display involvement, and exact family boundaries. Keep Audi MMI optical systems separate. |
+| P1 | VAG legacy + Quadlock CDC | Volkswagen, Audi, SEAT, Skoda; split mini-ISO/legacy CDC from later Quadlock/CAN where necessary | sourced family note | Legacy Gamma direct CDC, RCD 300 CAN + separate CDC, later RCD/BAP/MDI boundaries, Audi copper separation, Skoda pinout caveat, and Audi MMI optical exclusion mapped in docs/research/VAG-LEGACY-QUADLOCK.md. |
 | P1 | BMW/MINI legacy CDC | Older BMW/MINI 17-pin/40-pin and changer-era systems outside the R55 RAD2/MOST anchor | planned | Establish which generations use direct changer wiring versus I/K-Bus-assisted control, text capability, and where MOST becomes a separate family. |
 | P1 | PSA legacy + later RD4 derivatives | Peugeot/Citroen RD3/VAN plus RD4/RD43/RD45 generation boundaries | anchored via C3 RD4 | Extend the current RD4 note into a family map without promoting related-platform CAN IDs into target fact. |
 | P1 | Fiat/Alfa/Lancia legacy CDC | Broader Fiat Group mini-ISO/changer ecosystem around the Alfa 937 anchor | anchored via Alfa 937 | Determine which OEM units genuinely share connector/protocol behavior and where CAN-era radios diverge. |
