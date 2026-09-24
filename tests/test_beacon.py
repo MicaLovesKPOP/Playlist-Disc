@@ -223,3 +223,11 @@ def test_representative_ids_survive_seeded_six_db_noise():
         )
         assert result.identity == identity
         assert result.valid_frames == 2
+
+
+@pytest.mark.parametrize("payload", [b"", b"not a wav"])
+def test_malformed_wav_is_reported_as_decode_error(tmp_path: Path, payload: bytes):
+    path = tmp_path / "malformed.wav"
+    path.write_bytes(payload)
+    with pytest.raises(ValueError, match="invalid WAV"):
+        decode_beacon_wav(path)

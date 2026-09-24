@@ -285,12 +285,16 @@ def _decode_pcm_samples(raw: bytes, sample_width: int) -> list[float]:
 
 def read_wav_mono(path: str | Path) -> tuple[list[float], int]:
     """Read uncompressed integer-PCM WAV into normalized mono floats."""
-    with wave.open(str(path), "rb") as wav:
-        channels = wav.getnchannels()
-        sample_width = wav.getsampwidth()
-        sample_rate = wav.getframerate()
-        compression = wav.getcomptype()
-        raw = wav.readframes(wav.getnframes())
+    try:
+        with wave.open(str(path), "rb") as wav:
+            channels = wav.getnchannels()
+            sample_width = wav.getsampwidth()
+            sample_rate = wav.getframerate()
+            compression = wav.getcomptype()
+            raw = wav.readframes(wav.getnframes())
+    except (EOFError, wave.Error) as exc:
+        detail = str(exc) or exc.__class__.__name__
+        raise ValueError(f"invalid WAV: {detail}") from exc
 
     if compression != "NONE":
         raise ValueError("beacon decoder requires uncompressed integer PCM WAV")

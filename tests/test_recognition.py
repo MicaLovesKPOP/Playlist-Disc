@@ -69,6 +69,21 @@ def test_bad_optional_channel_does_not_hide_valid_toc():
     assert any("check digit" in error for error in result.errors)
 
 
+def test_malformed_optional_beacon_does_not_hide_valid_toc(tmp_path: Path):
+    identity = PDIdentity(999901)
+    bad_wav = tmp_path / "broken.wav"
+    bad_wav.write_bytes(b"not a wav")
+
+    result = recognize_observations(
+        track_durations=identity.track_durations,
+        beacon_wav=bad_wav,
+    )
+    assert result.status == "recognized"
+    assert result.identity == identity
+    assert [item.channel for item in result.evidence] == ["toc"]
+    assert any("audio_beacon: invalid WAV" in error for error in result.errors)
+
+
 def test_rounded_toc_can_be_recognized_only_with_explicit_tolerance():
     identity = PDIdentity(123456)
     observed = [

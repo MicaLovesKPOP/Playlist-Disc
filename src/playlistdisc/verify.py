@@ -74,8 +74,12 @@ def _msf_seconds(minutes: str, seconds: str, frames: str) -> float:
 
 
 def _wav_seconds(path: Path) -> float:
-    with wave.open(str(path), "rb") as wav:
-        return wav.getnframes() / wav.getframerate()
+    try:
+        with wave.open(str(path), "rb") as wav:
+            return wav.getnframes() / wav.getframerate()
+    except (EOFError, wave.Error) as exc:
+        detail = str(exc) or exc.__class__.__name__
+        raise ValueError(f"invalid WAV artifact {path.name}: {detail}") from exc
 
 
 def _toc_track_durations(toc_path: Path) -> tuple[float, ...]:

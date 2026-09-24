@@ -34,7 +34,7 @@ The reference implementation can decode its own DTMF beacon using block-level ac
 - conflicting individually valid frames fail closed instead of choosing a winner;
 - silence rejection.
 
-These are synthetic tests, not evidence that a particular car's analogue path will preserve the beacon. Physical testing is still required before the waveform can be frozen.
+Malformed or truncated WAV captures are treated as ordinary decode failures rather than escaping the recognition layer, so another valid strong channel can still recognize the disc. These are synthetic tests, not evidence that a particular car's analogue path will preserve the beacon. Physical testing is still required before the waveform can be frozen.
 
 ## Virtual build verification
 

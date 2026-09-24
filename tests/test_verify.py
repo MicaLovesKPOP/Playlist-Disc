@@ -51,6 +51,14 @@ def test_intentional_no_cdtext_bundle_verifies_remaining_channels(tmp_path: Path
     assert report.beacon_identity == identity
 
 
+def test_malformed_beacon_artifact_is_rejected_cleanly(tmp_path: Path):
+    identity = PDIdentity(999901)
+    bundle = build_bundle(identity, tmp_path / "disc", title="Test")
+    (bundle / "beacon.wav").write_bytes(b"not a wav")
+    with pytest.raises(ValueError, match="invalid WAV"):
+        verify_build(bundle)
+
+
 def test_cross_channel_mismatch_is_rejected(tmp_path: Path):
     identity = PDIdentity(999901)
     bundle = build_bundle(identity, tmp_path / "disc", title="Test")
