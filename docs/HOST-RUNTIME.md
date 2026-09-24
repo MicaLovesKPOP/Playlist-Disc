@@ -27,6 +27,20 @@ Every action carries the selected machine ID, adapter session and selection coun
 
 The action contract is deliberately discriminated rather than a bag of optional fields. A `source_request` may carry only its source-switch action, `execute_plan` carries only a validated playback plan, `provider_control` carries only a media-control action, `stop_playback` carries its reason, and `selection_blocked` carries only a non-executable status plus reason. Fields belonging to another action type are rejected. In particular, `ready` and `requires_lookup` cannot be serialized as `selection_blocked`, because the runtime treats both as executable states.
 
+## Live session guardrails
+
+`HostRuntime.consume()` validates more than the shape of each incoming bridge message. It keeps the safety-critical adapter session state needed when messages arrive one at a time rather than as a finished transcript:
+
+- adapter sequence numbers must increase strictly inside one session;
+- a repeated `hello` may not silently change the adapter identity/capability payload;
+- `disc_selected` counters must increase strictly;
+- `state_sync` may repeat the current counter only for the same still-active machine ID, and may neither regress nor reactivate a removed counter;
+- detection evidence and media-control actions must have been advertised by the adapter when capabilities are known;
+- once a newer adapter session has announced itself, late messages from an older session are ignored, so a stale control packet cannot operate the current playback context;
+- current-session removal messages must match the active selection counter rather than being silently accepted.
+
+The offline `bridge-validate` transcript checker enforces the same counter/identity rule for `state_sync`, including rejecting a reused counter that is rebound to a different PD identity or resurrected after removal. These checks do not add transport security; they make replay, reconnect, and stale-message behavior deterministic before any BLE or vehicle implementation exists.
+
 ## Reconnect semantics
 
 Within one adapter session, the tuple:
@@ -39,7 +53,7 @@ identifies one selection event.
 
 If that selection later appears again in `state_sync`, the runtime updates source state but does not start the playlist twice.
 
-A new adapter boot/session is different. Even if the same physical disc remains inserted, its new session/counter is treated as a new selection. The playback plan's own `start` policy (first/random/resume) remains available to the provider layer.
+A new adapter boot/session is different. Even if the same physical disc remains inserted, its new session/counter is treated as a new selection. The playback plan's own `start` policy (first/random/resume) remains available to the provider layer. Messages that arrive late from the older session no longer control the new session's playback context.
 
 ## Playback-plan policy
 
@@ -56,7 +70,7 @@ This prevents the host from turning resolver uncertainty into silent substitutio
 
 A `source_request` is generated only after an adapter `hello` advertises `auto_source_switch=true`.
 
-On selection, an activate request is emitted only when the latest source state is not active. On removal, a deactivate request is emitted only if the source is known active and removal policy asks for it.
+On selection, an activate request is emitted only when the latest source state is not active. On removal, a deactivate request is emitted only if the source was claimed by that selected context and removal policy asks for it.
 
 If the adapter cannot switch source automatically, the runtime simply executes/blocks the provider plan and leaves source selection to the driver.
 
