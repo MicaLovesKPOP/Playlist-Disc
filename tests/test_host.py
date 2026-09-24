@@ -247,3 +247,114 @@ def test_removal_policy_can_leave_playing_and_keep_source():
     runtime.consume(_source(True))
     assert runtime.consume(_removed()) == ()
     assert runtime.consume(_control(seq=6))[0].type == "provider_control"
+
+def _host_action(action_type: str, **fields) -> dict:
+    data = {
+        "schema_version": 1,
+        "format": "PDv1-host-action",
+        "type": action_type,
+        "context": {
+            "machine_id": MACHINE_ID,
+            "adapter_session": "car-1",
+            "selection_counter": 1,
+        },
+    }
+    data.update(fields)
+    return data
+
+
+def test_host_action_contract_rejects_cross_type_payloads():
+    plan = _plan()
+
+    assert validate_host_action(
+        _host_action(
+            "source_request",
+            action="activate_streaming",
+            plan=plan,
+        )
+    )
+    assert validate_host_action(
+        _host_action(
+            "execute_plan",
+            plan=plan,
+            action="next",
+        )
+    )
+    assert validate_host_action(
+        _host_action(
+            "provider_control",
+            action="next",
+            reason="contradictory extra payload",
+        )
+    )
+    assert validate_host_action(
+        _host_action(
+            "stop_playback",
+            reason="disc removed",
+            status="unavailable",
+        )
+    )
+    assert validate_host_action(
+        _host_action(
+            "selection_blocked",
+            status="unavailable",
+            reason="no provider mapping",
+            action="play_pause",
+        )
+    )
+
+
+def test_host_action_contract_rejects_wrong_action_and_blocked_status_domains():
+    assert validate_host_action(
+        _host_action("source_request", action="next")
+    )
+    assert validate_host_action(
+        _host_action("provider_control", action="activate_streaming")
+    )
+    assert validate_host_action(
+        _host_action(
+            "selection_blocked",
+            status="ready",
+            reason="ready plans must execute rather than be blocked",
+        )
+    )
+    assert validate_host_action(
+        _host_action(
+            "selection_blocked",
+            status="requires_lookup",
+            reason="lookup plans are executable by the provider layer",
+        )
+    )
+
+
+def test_host_action_contract_accepts_each_runtime_shape():
+    plan = _plan()
+    valid = [
+        _host_action("source_request", action="activate_streaming"),
+        _host_action("source_request", action="deactivate_streaming"),
+        _host_action("execute_plan", plan=plan),
+        _host_action("provider_control", action="previous"),
+        _host_action("stop_playback", reason="disc removed"),
+        _host_action(
+            "selection_blocked",
+            status="partial",
+            reason="partial playback disabled",
+        ),
+        _host_action(
+            "selection_blocked",
+            status="ambiguous",
+            reason="provider resolution ambiguous",
+        ),
+        _host_action(
+            "selection_blocked",
+            status="unavailable",
+            reason="provider resource unavailable",
+        ),
+        _host_action(
+            "selection_blocked",
+            status="unplayable",
+            reason="diagnostic disc",
+        ),
+    ]
+    assert all(validate_host_action(item) == [] for item in valid)
+
