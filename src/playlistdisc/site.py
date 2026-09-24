@@ -390,6 +390,48 @@ def _local_reference_target(root: Path, page: Path, reference: str) -> Path | No
     return target
 
 
+def _snapshot_page_keys(
+    snapshot: Any,
+) -> tuple[set[str] | None, set[str] | None, list[str]]:
+    """Extract validated page keys from a generated library snapshot."""
+    errors: list[str] = []
+    if not isinstance(snapshot, dict):
+        return None, None, ["library.json: top level must be a JSON object"]
+
+    if snapshot.get("schema_version") != 1:
+        errors.append("library.json: unexpected schema_version")
+    if snapshot.get("format") != "PDv1-library":
+        errors.append("library.json: unexpected format")
+
+    def keys_for(collection: str, key: str) -> set[str] | None:
+        value = snapshot.get(collection)
+        if not isinstance(value, list):
+            errors.append(f"library.json: {collection} must be an array")
+            return None
+        keys: set[str] = set()
+        duplicates: set[str] = set()
+        for index, item in enumerate(value):
+            if not isinstance(item, dict):
+                errors.append(f"library.json: {collection}.{index} must be an object")
+                continue
+            raw = item.get(key)
+            if not isinstance(raw, str) or not raw:
+                errors.append(
+                    f"library.json: {collection}.{index}.{key} must be a non-empty string"
+                )
+                continue
+            if raw in keys:
+                duplicates.add(raw)
+            keys.add(raw)
+        if duplicates:
+            errors.append(
+                f"library.json: duplicate {collection} {key} values: {sorted(duplicates)}"
+            )
+        return keys
+
+    return keys_for("entries", "id"), keys_for("packs", "slug"), errors
+
+
 def verify_static_site(site_dir: str | Path) -> list[str]:
     """Verify generated files, library/detail-page coverage, and local links."""
     root = Path(site_dir)
@@ -412,23 +454,21 @@ def verify_static_site(site_dir: str | Path) -> list[str]:
 
     try:
         snapshot = json.loads((root / "library.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return [f"library.json: {exc}"]
 
-    if snapshot.get("format") != "PDv1-library":
-        errors.append("library.json: unexpected format")
+    expected_discs, expected_packs, snapshot_errors = _snapshot_page_keys(snapshot)
+    errors.extend(snapshot_errors)
 
-    expected_discs = {entry["id"] for entry in snapshot.get("entries", [])}
     actual_discs = {path.stem for path in (root / "discs").glob("*.html")}
-    if actual_discs != expected_discs:
+    if expected_discs is not None and actual_discs != expected_discs:
         errors.append(
             "disc detail pages disagree with library.json: "
             f"expected={sorted(expected_discs)}, actual={sorted(actual_discs)}"
         )
 
-    expected_packs = {pack["slug"] for pack in snapshot.get("packs", [])}
     actual_packs = {path.stem for path in (root / "packs").glob("*.html")}
-    if actual_packs != expected_packs:
+    if expected_packs is not None and actual_packs != expected_packs:
         errors.append(
             "pack pages disagree with library.json: "
             f"expected={sorted(expected_packs)}, actual={sorted(actual_packs)}"

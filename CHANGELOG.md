@@ -101,6 +101,7 @@
 - Added `pdv1 export-library`, a validated static JSON snapshot containing entries, resolved packs, and browsing facets.
 - Added ADR 0004 documenting that packs are mutable curation views rather than physical identities.
 - Added a deterministic, dependency-free static HTML library generator with client-side search/filtering, individual disc pages, pack/wallet pages, machine-readable JSON, and internal-link verification.
+- Hardened static-site verification against malformed/tampered `library.json`, including top-level/version/collection-shape checks and duplicate disc/pack page-key detection.
 
 ### Local-library resolution
 

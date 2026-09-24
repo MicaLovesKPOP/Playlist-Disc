@@ -38,9 +38,12 @@ Every disc has a stable detail-page path based only on its six-digit public ID. 
 `pdv1 verify-site` checks:
 
 - the index, machine-readable library, stylesheet, and script exist;
+- `library.json` is a schema-version-1 `PDv1-library` object with array-shaped entry/pack collections and unique page keys;
 - every library entry has exactly one detail page;
 - every pack has exactly one pack page;
 - every relative HTML link or local asset reference stays inside the generated site and resolves to an existing file.
+
+Malformed or tampered machine-readable snapshots are reported as verification errors rather than causing the verifier itself to crash.
 
 The builder runs the verifier before replacing the requested output directory.
 
