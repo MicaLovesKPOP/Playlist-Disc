@@ -25,6 +25,8 @@ The reference runtime can emit:
 
 Every action carries the selected machine ID, adapter session and selection counter so logs/actions remain correlated across reconnects.
 
+The action contract is deliberately discriminated rather than a bag of optional fields. A `source_request` may carry only its source-switch action, `execute_plan` carries only a validated playback plan, `provider_control` carries only a media-control action, `stop_playback` carries its reason, and `selection_blocked` carries only a non-executable status plus reason. Fields belonging to another action type are rejected. In particular, `ready` and `requires_lookup` cannot be serialized as `selection_blocked`, because the runtime treats both as executable states.
+
 ## Reconnect semantics
 
 Within one adapter session, the tuple:
