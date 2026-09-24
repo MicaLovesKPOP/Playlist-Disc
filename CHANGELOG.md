@@ -150,6 +150,7 @@
 - Reconnect/state-sync repeats of the same selection are deduplicated; new adapter sessions remain new selections.
 - Automatic source requests honor advertised adapter capability/state, OEM media controls only forward with an active playback context, and disc-removal stop/source behavior is explicit host policy rather than physical-disc semantics.
 - Ready and `requires_lookup` playback plans can execute automatically, partial plans are opt-in, and ambiguous/unavailable/unplayable selections are blocked without guessing.
+- Hardened `PDv1-host-action` into a discriminated contract so each action type rejects fields/actions from other types, and blocked selections cannot falsely carry executable `ready`/`requires_lookup` statuses.
 - Added `pdv1 host-replay`, reference adapter/plan vectors, schema/package checks, tests, documentation, and ADR 0012.
 
 ### Playback bridge semantic hardening
