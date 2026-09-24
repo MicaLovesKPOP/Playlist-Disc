@@ -74,6 +74,7 @@
 - Established a bounded family-first compatibility coverage plan across major OEM and aftermarket head-unit/changer ecosystems, with P1/P2 research priorities and a stop rule; the three reference cars are architectural anchors rather than the breadth limit.
 - Added the first P1 family research note for VAG legacy/Quadlock systems, separating legacy direct CDC, RCD 300 CAN + dedicated changer wiring, later BAP/MDI integration, Audi copper systems, Skoda pinout variants, and Audi MMI optical architecture without inventing protocol-level hardware facts.
 - Added BMW/MINI legacy changer family research covering BMW NG I/K-Bus control with separate audio, E46 changer wiring, BM24/BM54 remote radio modules and 17/40-pin generations, MINI R50/R53 K-Bus changer integration, and the boundary to MOST-era systems.
+- Added a sourced Fiat/Alfa/Lancia changer-family map separating B-CAN vehicle integration from dedicated ASCI-BUS/CDC control and analogue audio, including cross-marque pin-role reuse, Panda-specific caveats, and changer-capacity dialect risk.
 
 ### Catalog evolution safety
 
