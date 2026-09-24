@@ -1,0 +1,114 @@
+# Compatibility coverage research plan
+
+Playlist Disc should aim for broad old-car compatibility without pretending that every vehicle variant can be solved before hardware exists.
+
+The scalable unit of pre-hardware research is the **head-unit / integration family**, not the car badge. A single radio, changer interface, display bus, or optical-network family may span many models and sometimes multiple marques. Conversely, one car model may have several fundamentally different radio/navigation options.
+
+This document defines which remaining families are worth researching, how far that research should go before hardware, and when the compatibility-research phase is broad enough to stop expanding.
+
+## What "widest compatibility within reason" means
+
+PDv1 has two distinct compatibility layers:
+
+1. **Physical token compatibility** - can an ordinary finalized CD-DA disc load and play well enough for TOC, CD-TEXT, or the audio beacon to be useful?
+2. **Vehicle integration compatibility** - can an adapter observe useful disc state, normalize OEM controls, switch/reroute audio, or use the factory display?
+
+The first layer is intentionally generic. The second is where family-specific research matters.
+
+Commercial changer-emulator ecosystems are useful discovery evidence because they show that broad reuse exists, but they are **not PDv1 compatibility proof**. Dension explicitly describes the head unit, rather than vehicle model alone, as the key compatibility boundary for changer-emulation products.
+
+## Admission rule for a research family
+
+A family belongs in the near-term plan when it satisfies at least two of these conditions:
+
+- factory CD or CD-changer integration was common during the target old-car era;
+- the same head-unit/interface family spans many models or multiple marques;
+- manufacturer/service documentation or a mature third-party integration ecosystem exists;
+- OEM steering controls or a factory display offer useful PD Bridge surfaces;
+- representative hardware appears realistically obtainable for later testing.
+
+A family can be deferred when documentation is too weak, the installed base is unusually narrow, the system is effectively inseparable from proprietary hardware, or researching it would duplicate an already understood integration class without adding meaningful coverage.
+
+Do not create a vehicle compatibility profile merely because a brand appears in an adapter catalog. Profiles remain concrete head-unit/vehicle targets intended for eventual physical reports.
+
+## Existing reference anchors
+
+The three current reference vehicles remain valuable because they anchor three materially different architectures:
+
+- **Alfa Romeo 147 / ALFA-937 SW3.17** - legacy copper changer integration plus B-CAN participation.
+- **MINI R55 Boost CD / RAD2** - K-CAN plus MOST optical infotainment gateway/changer architecture.
+- **Citroen C3 II / RD4 family** - Comfort CAN radio/display/changer architecture with a separate multifunction display.
+
+These are anchor points, not the intended limit of compatibility research.
+
+## Remaining high-value research matrix
+
+| Priority | Family / lane | Reach to establish | Current state | Pre-hardware deliverable |
+| --- | --- | --- | --- | --- |
+| P1 | VAG legacy + Quadlock CDC | Volkswagen, Audi, SEAT, Skoda; split mini-ISO/legacy CDC from later Quadlock/CAN where necessary | planned | Map reusable radio generations, CDC path, CAN/display involvement, and exact family boundaries. Keep Audi MMI optical systems separate. |
+| P1 | BMW/MINI legacy CDC | Older BMW/MINI 17-pin/40-pin and changer-era systems outside the R55 RAD2/MOST anchor | planned | Establish which generations use direct changer wiring versus I/K-Bus-assisted control, text capability, and where MOST becomes a separate family. |
+| P1 | PSA legacy + later RD4 derivatives | Peugeot/Citroen RD3/VAN plus RD4/RD43/RD45 generation boundaries | anchored via C3 RD4 | Extend the current RD4 note into a family map without promoting related-platform CAN IDs into target fact. |
+| P1 | Fiat/Alfa/Lancia legacy CDC | Broader Fiat Group mini-ISO/changer ecosystem around the Alfa 937 anchor | anchored via Alfa 937 | Determine which OEM units genuinely share connector/protocol behavior and where CAN-era radios diverge. |
+| P1 | Renault changer/CAN families | Tuner List, Update List and later CAN-era factory radios | planned | Separate head-unit generations, changer activation, stalk/display paths, and CAN-mediated variants. |
+| P1 | Ford Europe factory audio | 5000/6000/Sony/TravelPilot-era CD and changer integrations, split by connector/network generation | planned | Establish reusable radio families, steering-control/display path, and where newer units become CAN-dependent. |
+| P1 | Opel/Vauxhall CAN audio | Quadlock/CAN CD/changer-era systems such as CD30/CD70/CDC40-class families | planned | Map display pairing, changer emulation path, controls, and generation-specific security/coding constraints. |
+| P1 | Toyota/Lexus factory CDC | High-volume Japanese OEM changer-port families | planned | Establish connector/protocol generations, text/control capability, and whether a few representative families cover a large model range. |
+| P1 | Honda/Acura factory CDC | Honda/Acura changer-era factory radios | planned | Establish reusable connector/data-bus generations, display/control capability, and clear exclusions. |
+| P1 | Mazda factory CDC/CAN | Legacy changer ports plus later CAN-integrated radios | planned | Split direct CDC and CAN-era families and identify representative head units. |
+| P1 | Aftermarket head-unit buses | Alpine, Becker, Blaupunkt, Clarion, Pioneer, Sony, JVC and other widely fitted legacy units | planned | Treat aftermarket protocols as a portability lane: identify a small number of reusable changer/control buses rather than vehicle-specific adapters. |
+| P2 | Audi MMI 2G / VAG optical | Optical VAG infotainment outside ordinary copper/Quadlock radio families | planned | Characterize optical changer semantics separately from copper/Quadlock VAG radios; avoid assuming R55 MOST behavior transfers. |
+| P2 | Mercedes/Porsche/Saab optical | D2B/MOST changer-era systems with mature optical gateway products | planned | Establish generation boundaries, coding requirements, display/control capability, and whether one adapter architecture can sensibly serve multiple marques. |
+| P2 | Volvo legacy + optical | HU/MELBUS-era and later optical infotainment families | planned | Determine whether legacy and optical generations offer distinct high-leverage integration paths. |
+| P2 | Nissan/Infiniti factory CDC | Changer-capable OEM families | planned | Identify reusable head-unit generations and whether documentation/ecosystem quality justifies promotion to P1. |
+| P2 | Hyundai/Kia/Suzuki/Subaru | Additional high-volume changer-era families visible in commercial adapter catalogs | planned | Group only where a real shared interface family is demonstrated; otherwise keep brand families separate or defer. |
+| P2 | Chrysler/Jeep and other regional families | Useful mainly for non-European expansion | planned | Research after P1 lanes unless readily available hardware or unusually strong documentation makes the work cheap. |
+
+P1 means the family should receive a sourced pre-hardware note before declaring compatibility research broadly complete. P2 means worthwhile expansion, but not at the cost of indefinitely delaying physical validation.
+
+## Required output from each family pass
+
+A useful family research note should establish, with sources:
+
+- exact radio/navigation families and the model/era boundary they actually cover;
+- connector and network architecture at a level safe to state without captures;
+- factory CD/CD-changer, CD-TEXT, steering-control, and display capabilities where documented;
+- whether changer emulators replace, coexist with, or require coding for the factory changer;
+- which integration class applies: direct copper CDC, vehicle-network-mediated, optical MOST/D2B, proprietary serial bus, or aftermarket head-unit bus;
+- which claims come from manufacturer/service documentation versus commercial compatibility data or community reverse engineering;
+- the smallest practical representative hardware set for later physical testing;
+- explicit hardware-gated questions: frame IDs, timings, electrical levels, source-selection handshakes, display injection, and target-unit behavior.
+
+Related-platform reverse engineering may define a capture hypothesis, but never becomes target-unit truth without a target capture/report.
+
+## Research order
+
+1. Finish the P1 European families that reuse many radios across many cars: VAG, BMW/MINI legacy, PSA expansion, Fiat/Alfa/Lancia expansion, Renault, Ford, and Opel/Vauxhall.
+2. In parallel, characterize the aftermarket-head-unit lane because one protocol family may cover cars from many manufacturers.
+3. Cover the largest Japanese OEM changer families: Toyota/Lexus, Honda/Acura, and Mazda.
+4. Then tackle optical/premium families and P2 regional expansion where documentation or available hardware makes the result worthwhile.
+
+Within a lane, prefer one strong family note over several shallow model pages.
+
+## Stop rule for pre-hardware breadth
+
+Compatibility research is broad enough for the pre-hardware phase when all of the following are true:
+
+- every P1 lane has either a sourced family note or an explicit evidence-based reason to defer/drop it;
+- the repository has characterized at least one reusable family in each major integration class: direct copper CDC, CAN/vehicle-network-mediated, optical MOST/D2B, and aftermarket head-unit bus;
+- the three reference anchors have documented family boundaries so their findings are not accidentally generalized to unrelated radios;
+- the generic audio-beacon fallback remains available for cars where useful vehicle-side state cannot be accessed;
+- additional desk research would mostly add more model names rather than a new integration architecture or materially new design constraint.
+
+At that point, physical testing should take priority. New families can still be added opportunistically when owners contribute hardware evidence.
+
+## Discovery sources and what they prove
+
+These sources justify the **research map**, not PDv1 compatibility claims:
+
+- **Dension, Compatibility.** States that changer-emulator compatibility is primarily determined by the installed head unit and that unsupported head units should not be assumed compatible. https://techsupport.dension.com/061228--Compatibility
+- **Dension, Gateway Lite / Lite BT hardware and car-side cables.** Shows separate reusable harness families for Alfa/Fiat/Lancia, Audi mini-ISO and Quadlock, BMW 17-pin and 40-pin, Honda/Acura, Mazda, Renault, Skoda, Suzuki, Toyota/Lexus, and Volkswagen mini-ISO/Quadlock. https://techsupport.dension.com/638013-W-Gateway-hardware-versions-car-side-cables
+- **Dension, Gateway Pro BT hardware and car-side cables.** Shows CAN/Quadlock-era groupings for Audi, BMW, Peugeot/Citroen, Opel, and Volkswagen. https://techsupport.dension.com/899846-Y-Gateway-hardware-versions-car-side-cables
+- **Dension, Gateway 500 install guide.** Documents changer-emulation use on optical MOST-era Audi, BMW/MINI, Mercedes, Porsche, and Saab systems, including coding requirements on some platforms. https://www.dension.com/files/products/gateway_500/gateway-500-install-guide.pdf
+- **Yatour Digital Music Changer application guide.** Provides broad discovery coverage across European, Japanese, and Korean OEMs and legacy aftermarket head-unit brands. https://manuals.plus/m/bdc75a321375bccd54f0a8c7e4654be92b9bba30e475b35fb375c0a047cd4f2a
+
+All links checked on 2026-09-24. Commercial compatibility catalogs are discovery evidence only; each promoted family still needs its own sourced technical note before implementation assumptions are made.
