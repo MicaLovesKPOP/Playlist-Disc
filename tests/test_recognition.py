@@ -121,3 +121,80 @@ def test_duplicate_matching_cdtext_fields_deduplicate_evidence():
     assert result.status == "recognized"
     assert result.identity == identity
     assert len(result.evidence) == 1
+
+def _recognition_payload(*, status: str, evidence: list[dict], identity=None) -> dict:
+    payload = {
+        "schema_version": 1,
+        "format": "PDv1-recognition",
+        "status": status,
+        "evidence": evidence,
+        "errors": [],
+    }
+    if identity is not None:
+        payload["id"] = identity.id6
+        payload["machine_id"] = identity.machine_id
+    return payload
+
+
+def test_validator_derives_status_and_identity_from_strong_evidence():
+    first = PDIdentity(999901)
+    second = PDIdentity(999902)
+
+    wrong_identity = _recognition_payload(
+        status="recognized",
+        identity=first,
+        evidence=[{"channel": "toc", "machine_id": second.machine_id}],
+    )
+    assert any(
+        "does not match strong evidence" in error
+        for error in validate_recognition_result(wrong_identity)
+    )
+
+    false_unknown = _recognition_payload(
+        status="unknown",
+        evidence=[{"channel": "cdtext", "machine_id": first.machine_id}],
+    )
+    assert any(
+        "expected 'recognized'" in error
+        for error in validate_recognition_result(false_unknown)
+    )
+
+    false_conflict = _recognition_payload(
+        status="conflict",
+        evidence=[
+            {"channel": "toc", "machine_id": first.machine_id},
+            {"channel": "cdtext", "machine_id": first.machine_id},
+        ],
+    )
+    assert any(
+        "expected 'recognized'" in error
+        for error in validate_recognition_result(false_conflict)
+    )
+
+    missing_conflict = _recognition_payload(
+        status="recognized",
+        identity=first,
+        evidence=[
+            {"channel": "toc", "machine_id": first.machine_id},
+            {"channel": "cdtext", "machine_id": second.machine_id},
+        ],
+    )
+    assert any(
+        "expected 'conflict'" in error
+        for error in validate_recognition_result(missing_conflict)
+    )
+
+
+def test_validator_rejects_checksum_invalid_evidence_machine_id():
+    identity = PDIdentity(999901)
+    invalid = identity.machine_id[:-1] + str((int(identity.machine_id[-1]) + 1) % 10)
+    payload = _recognition_payload(
+        status="recognized",
+        identity=identity,
+        evidence=[{"channel": "toc", "machine_id": invalid}],
+    )
+    assert any(
+        error.startswith("evidence.0.machine_id:") and "check digit" in error
+        for error in validate_recognition_result(payload)
+    )
+
