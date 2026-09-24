@@ -42,7 +42,16 @@ def test_canonical_manifest_without_index_requires_resolution():
     plan = compile_catalog_playback(entry, "demo", manifest=_manifest())
     assert plan.status == "requires_lookup"
     assert plan.mode == "recording_resolution"
-    assert plan.lookup == {"type": "canonical_manifest", "recording_count": 2}
+    assert plan.lookup == {
+        "type": "canonical_manifest",
+        "recording_count": 2,
+        "recordings": [
+            {
+                "musicbrainz_recording_id": "11111111-2222-3333-4444-555555555555"
+            },
+            {"isrcs": ["KRABC2600002"]},
+        ],
+    }
     assert validate_playback_plan(plan.to_dict()) == []
 
 
@@ -225,3 +234,53 @@ def test_provider_index_must_match_requested_provider():
         assert "not requested provider" in str(exc)
     else:
         raise AssertionError("expected provider mismatch to fail")
+
+
+def test_unresolved_canonical_plan_carries_selected_provider_override_only():
+    entry = _entry(
+        {
+            "type": "canonical_manifest",
+            "manifest": "manifests/042/042381.json",
+            "membership_policy": "Exact set.",
+        }
+    )
+    manifest = _manifest()
+    manifest["recordings"][0]["provider_overrides"] = {
+        "demo": "demo:track:override",
+        "other": "other:track:secret",
+    }
+    plan = compile_catalog_playback(entry, "demo", manifest=manifest)
+    row = plan.lookup["recordings"][0]
+    assert row["provider_override"] == "demo:track:override"
+    assert "other:track:secret" not in str(plan.to_dict())
+
+
+def test_recording_resolution_plan_rejects_count_mismatch_and_duplicate_identity():
+    entry = _entry(
+        {
+            "type": "canonical_manifest",
+            "manifest": "manifests/042/042381.json",
+            "membership_policy": "Exact set.",
+        }
+    )
+    plan = compile_catalog_playback(entry, "demo", manifest=_manifest()).to_dict()
+
+    bad_count = dict(plan)
+    bad_count["lookup"] = dict(plan["lookup"])
+    bad_count["lookup"]["recording_count"] = 999
+    errors = validate_playback_plan(bad_count)
+    assert any("recording_count" in error for error in errors)
+
+    duplicate = dict(plan)
+    duplicate["lookup"] = dict(plan["lookup"])
+    duplicate["lookup"]["recordings"] = [
+        {
+            "musicbrainz_recording_id": "11111111-2222-3333-4444-555555555555"
+        },
+        {
+            "musicbrainz_recording_id": "11111111-2222-3333-4444-555555555555"
+        },
+    ]
+    duplicate["lookup"]["recording_count"] = 2
+    errors = validate_playback_plan(duplicate)
+    assert any("duplicate recording MBID" in error for error in errors)
