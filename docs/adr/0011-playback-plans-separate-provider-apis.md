@@ -24,3 +24,7 @@ Exact canonical resolution remains the resolver's job; provider authentication, 
 - Partial and ambiguous provider coverage cannot be hidden by plugin-specific guessing.
 - Artist/album support can exist before every provider binding is precomputed.
 - The planner is entirely testable offline and does not require provider credentials.
+
+## Follow-up: self-contained canonical lookup
+
+Draft 0.2 later tightened this decision: a `recording_resolution` plan embeds the exact ordered MBID/ISRC identity rows required for provider resolution, plus only the selected provider's explicit overrides. Provider plugins must not reach back into catalog source files to discover what a plan meant. This preserves the playback plan as the complete semantic handoff and is recorded separately in ADR 0016.

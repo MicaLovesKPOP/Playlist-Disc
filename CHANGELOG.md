@@ -129,6 +129,13 @@
 - Restricted the generic cache to ready/partial `track_list` plans; direct resources do not need materialization and unresolved entity/provider lookups require provider-specific freshness rules.
 - Added privacy/freshness documentation and ADR 0013.
 
+### Self-contained provider lookup plans
+
+- Extended unresolved canonical-manifest playback plans to carry the ordered exact MusicBrainz Recording MBID / ISRC identities needed by a live provider resolver instead of only a recording count.
+- Selected-provider exact resource overrides are included per recording without leaking overrides belonging to other providers.
+- Added playback-plan validation for recording-count consistency and duplicate canonical MBID/ISRC identities, plus regression coverage.
+- Added ADR 0016 documenting that provider plugins must receive complete service-neutral lookup input through the playback-plan contract rather than reading catalog/manifests as a side channel.
+
 ### BLE transport profile
 
 - Added a Draft 0.1 PD Bridge BLE GATT profile with one custom service, reliable adapter→host indications, and host→adapter writes with response.
