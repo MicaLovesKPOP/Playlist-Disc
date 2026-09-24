@@ -68,6 +68,7 @@
 - Added a sourced MINI R55 Boost CD / RAD2 research set covering option-6FC/RAD2 identification, MOST/K-CAN gateway architecture, native CD/MP3/WMA support, optical MOST changer integration, factory steering-wheel controls/display targets, and the distinction between OBD diagnostics and direct MOST access.
 - Added a sourced Citroen C3 II / RD4-family research set covering factory steering/media display surfaces, RD4 CD-TEXT/MP3 levels, Comfort CAN radio/display/changer architecture, AEE2004/2007 family compatibility evidence, and related-platform reverse-engineered CD text/tray/disc/timing/source/changer frame classes while explicitly keeping the target C3's exact IDs capture-gated.
 - Added a `manufacturer_documentation_mirror` research source type so mirrored owner documentation is not mislabeled as a direct manufacturer-hosted source.
+- Established a bounded family-first compatibility coverage plan across major OEM and aftermarket head-unit/changer ecosystems, with P1/P2 research priorities and a stop rule; the three reference cars are architectural anchors rather than the breadth limit.
 
 ### Catalog evolution safety
 
