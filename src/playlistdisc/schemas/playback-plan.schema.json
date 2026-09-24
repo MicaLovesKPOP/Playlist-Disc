@@ -139,5 +139,237 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "direct_resource"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "ready"
+          }
+        },
+        "required": [
+          "resource"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "resources"
+              ]
+            },
+            {
+              "required": [
+                "lookup"
+              ]
+            },
+            {
+              "required": [
+                "resolution"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "track_list"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ready",
+              "partial",
+              "ambiguous"
+            ]
+          }
+        },
+        "required": [
+          "resources"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "resource"
+              ]
+            },
+            {
+              "required": [
+                "lookup"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "entity_lookup"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "requires_lookup"
+          },
+          "lookup": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "artist",
+                  "release_group"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "musicbrainz_id"
+            ]
+          }
+        },
+        "required": [
+          "lookup"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "resource"
+              ]
+            },
+            {
+              "required": [
+                "resources"
+              ]
+            },
+            {
+              "required": [
+                "resolution"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "recording_resolution"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "requires_lookup"
+          },
+          "lookup": {
+            "properties": {
+              "type": {
+                "const": "canonical_manifest"
+              }
+            },
+            "required": [
+              "type",
+              "recording_count"
+            ]
+          }
+        },
+        "required": [
+          "lookup"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "resource"
+              ]
+            },
+            {
+              "required": [
+                "resources"
+              ]
+            },
+            {
+              "required": [
+                "resolution"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "none"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ambiguous",
+              "unavailable",
+              "unplayable"
+            ]
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "resource"
+              ]
+            },
+            {
+              "required": [
+                "resources"
+              ]
+            },
+            {
+              "required": [
+                "lookup"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
 }
