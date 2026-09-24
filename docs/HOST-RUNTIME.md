@@ -36,7 +36,7 @@ The action contract is deliberately discriminated rather than a bag of optional 
 - `disc_selected` counters must increase strictly;
 - `state_sync` may repeat the current counter only for the same still-active machine ID, and may neither regress nor reactivate a removed counter;
 - detection evidence and media-control actions must have been advertised by the adapter when capabilities are known;
-- once a newer adapter session has announced itself, late messages from an older session are ignored, so a stale control packet cannot operate the current playback context;
+- once a newer adapter session has announced itself, the older observed session is retired: late messages from it, including a repeated `hello`, are ignored so buffered traffic cannot roll the runtime back to an old adapter boot or operate the current playback context;
 - current-session removal messages must match the active selection counter rather than being silently accepted.
 
 The offline `bridge-validate` transcript checker enforces the same counter/identity rule for `state_sync`, including rejecting a reused counter that is rebound to a different PD identity or resurrected after removal. These checks do not add transport security; they make replay, reconnect, and stale-message behavior deterministic before any BLE or vehicle implementation exists.

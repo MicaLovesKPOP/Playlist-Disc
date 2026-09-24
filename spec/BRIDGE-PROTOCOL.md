@@ -121,6 +121,8 @@ After a reconnect, `state_sync` communicates current state rather than requiring
 
 A disc left inserted may therefore be selected again after a new vehicle power/adapter session. Playback policy (restart, resume, or ignore repeated selection) belongs to the host/user settings, not the physical disc.
 
+Once a `hello` from a previously unseen adapter session supersedes the current session, an already-observed older session is retired. Late traffic from that retired session, including a repeated `hello`, must not make it current again. Repeating `hello` for the still-current session remains valid reconnect behavior.
+
 ## 7. Safety and privacy
 
 The bridge carries PD identities, controls, capability data, and playback metadata. It must not carry OAuth tokens, account passwords, cookies, or streaming-service secrets.
@@ -152,8 +154,8 @@ See `docs/HOST-RUNTIME.md`.
 `pdv1 bridge-validate <transcript.jsonl>` validates:
 
 - JSON Schema and PD machine-ID check digits;
-- per-session message sequence monotonicity;
-- selection-counter monotonicity across remove/reinsert cycles;
+- per-session message sequence monotonicity, without letting an invalid lower/duplicate sequence rewrite the accepted sequence baseline;
+- selection-counter monotonicity across remove/reinsert cycles, without letting an invalid reused counter replace the active selection;
 - state-sync counter non-regression;
 - declared detection/control/source/now-playing capabilities;
 - stable repeated capability announcements within a session;

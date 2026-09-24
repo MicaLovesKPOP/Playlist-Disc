@@ -255,12 +255,51 @@ def test_stale_adapter_session_controls_cannot_drive_new_playback_context():
     assert runtime.consume(stale) == ()
 
 
+def test_stale_hello_cannot_reactivate_retired_adapter_session():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    runtime.consume(_hello(False))
+    runtime.consume(_selected())
+
+    hello2 = copy.deepcopy(_hello(False))
+    hello2["session"] = "car-2"
+    runtime.consume(hello2)
+    selected2 = copy.deepcopy(_selected())
+    selected2["session"] = "car-2"
+    selected2["seq"] = 1
+    runtime.consume(selected2)
+
+    stale_hello = _hello(False)
+    stale_hello["seq"] = 3
+    assert runtime.consume(stale_hello) == ()
+
+    stale_control = _control(seq=4)
+    assert runtime.consume(stale_control) == ()
+
+    current_control = copy.deepcopy(_control(seq=2))
+    current_control["session"] = "car-2"
+    actions = runtime.consume(current_control)
+    assert len(actions) == 1
+    assert actions[0].type == "provider_control"
+
+
 def test_runtime_rejects_non_increasing_adapter_sequence():
     runtime = HostRuntime(lambda machine_id: _plan())
     runtime.consume(_hello(False))
     runtime.consume(_state_sync(seq=1))
     with pytest.raises(ValueError, match="sequence must increase strictly"):
         runtime.consume(_control(seq=1))
+
+
+def test_runtime_rejects_semantically_invalid_adapter_hello():
+    runtime = HostRuntime(lambda machine_id: _plan())
+    hello = _hello(False)
+    hello["payload"]["capabilities"]["metadata_display"] = {
+        "supported": False,
+        "fields": ["title"],
+        "targets": [],
+    }
+    with pytest.raises(ValueError, match="unsupported display must advertise no fields"):
+        runtime.consume(hello)
 
 
 def test_runtime_rejects_unadvertised_media_control():

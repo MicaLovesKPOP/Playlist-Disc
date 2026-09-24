@@ -28,6 +28,13 @@ def test_bridge_schema_is_packaged_and_rejects_wrong_source():
     assert any("adapter" in error for error in errors)
 
 
+def test_single_message_validation_rejects_inconsistent_display_capability():
+    message = copy.deepcopy(read_bridge_jsonl(VECTOR)[0])
+    message["payload"]["capabilities"]["metadata_display"]["supported"] = False
+    errors = validate_bridge_message(message)
+    assert any("unsupported display must advertise no fields" in error for error in errors)
+
+
 def test_bridge_rejects_invalid_pd_check_digit():
     message = read_bridge_jsonl(VECTOR)[3]
     bad = copy.deepcopy(message)
@@ -42,6 +49,28 @@ def test_bridge_rejects_non_increasing_sequence():
     bad[9]["seq"] = 4
     errors = validate_bridge_transcript(bad)
     assert any("sequence must increase strictly" in error for error in errors)
+
+
+def test_sequence_error_does_not_lower_validation_baseline():
+    hello = copy.deepcopy(read_bridge_jsonl(VECTOR)[0])
+    source_5 = {
+        "protocol": "pdbridge",
+        "version": 1,
+        "source": "adapter",
+        "session": hello["session"],
+        "seq": 5,
+        "type": "source_state",
+        "payload": {"active": False},
+    }
+    source_3 = copy.deepcopy(source_5)
+    source_3["seq"] = 3
+    source_4 = copy.deepcopy(source_5)
+    source_4["seq"] = 4
+
+    errors = validate_bridge_transcript([hello, source_5, source_3, source_4])
+    sequence_errors = [error for error in errors if "sequence must increase strictly" in error]
+    assert len(sequence_errors) == 2
+    assert all("<= 5" in error for error in sequence_errors)
 
 
 def test_bridge_rejects_mismatched_removal_counter():
@@ -72,6 +101,26 @@ def test_selection_counter_cannot_be_reused_after_removal():
     )
     errors = validate_bridge_transcript(messages)
     assert any("selection counter must increase" in error for error in errors)
+
+
+def test_invalid_reused_selection_cannot_replace_active_selection():
+    hello = copy.deepcopy(read_bridge_jsonl(VECTOR)[0])
+    selected = copy.deepcopy(read_bridge_jsonl(VECTOR)[3])
+    selected["seq"] = 1
+    selected["payload"]["selection_counter"] = 2
+
+    reused = copy.deepcopy(selected)
+    reused["seq"] = 2
+    reused["payload"]["selection_counter"] = 1
+    reused["payload"]["machine_id"] = "PD1-999902-5"
+
+    removed = copy.deepcopy(read_bridge_jsonl(VECTOR)[-1])
+    removed["seq"] = 3
+    removed["payload"]["selection_counter"] = 1
+
+    errors = validate_bridge_transcript([hello, selected, reused, removed])
+    assert any("selection counter must increase" in error for error in errors)
+    assert any("does not match active selection 2" in error for error in errors)
 
 
 def test_state_sync_cannot_regress_selection_counter():
@@ -164,6 +213,26 @@ def test_adapter_must_not_emit_unadvertised_media_control():
     bad[0]["payload"]["capabilities"]["media_controls"] = ["previous"]
     errors = validate_bridge_transcript(bad)
     assert any("payload.action" in error and "not advertised" in error for error in errors)
+
+
+def test_stale_hello_does_not_retarget_current_adapter_capabilities():
+    hello1 = copy.deepcopy(read_bridge_jsonl(VECTOR)[0])
+    hello1["payload"]["capabilities"]["auto_source_switch"] = False
+
+    hello2 = copy.deepcopy(hello1)
+    hello2["session"] = "adapter-boot-002"
+    hello2["payload"]["capabilities"]["auto_source_switch"] = True
+
+    stale_hello1 = copy.deepcopy(hello1)
+    stale_hello1["seq"] = 1
+
+    host_hello = copy.deepcopy(read_bridge_jsonl(VECTOR)[1])
+    source_request = copy.deepcopy(read_bridge_jsonl(VECTOR)[4])
+
+    errors = validate_bridge_transcript(
+        [hello1, hello2, stale_hello1, host_hello, source_request]
+    )
+    assert not any("auto_source_switch=false" in error for error in errors)
 
 
 def test_source_request_respects_both_host_and_adapter_capabilities():

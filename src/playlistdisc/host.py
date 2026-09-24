@@ -314,8 +314,14 @@ class HostRuntime:
         msg_type = message["type"]
         payload = message["payload"]
 
-        if msg_type != "hello" and self._current_adapter_session is not None:
-            if session != self._current_adapter_session:
+        if self._current_adapter_session is not None and session != self._current_adapter_session:
+            # A previously observed non-current session has already been superseded.
+            # Treat every late message from it, including a repeated hello, as stale so
+            # buffered traffic cannot roll the live runtime back to an old adapter boot.
+            if session in self._hello_fingerprints:
+                return ()
+            # Only hello is allowed to introduce a genuinely new adapter session.
+            if msg_type != "hello":
                 return ()
 
         previous_seq = self._last_seq.get(session)

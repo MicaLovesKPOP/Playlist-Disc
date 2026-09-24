@@ -62,6 +62,19 @@ def validate_bridge_message(
             PDIdentity.parse(machine_id)
         except ValueError as exc:
             errors.append(f"{location}: {exc}")
+
+    if message["type"] == "hello":
+        display = message["payload"]["capabilities"]["metadata_display"]
+        if display["supported"] and not display["fields"]:
+            errors.append(
+                "payload.capabilities.metadata_display.fields: "
+                "supported display must advertise at least one field"
+            )
+        if not display["supported"] and display["fields"]:
+            errors.append(
+                "payload.capabilities.metadata_display.fields: "
+                "unsupported display must advertise no fields"
+            )
     return errors
 
 
@@ -136,15 +149,18 @@ def validate_bridge_transcript(
         payload = message["payload"]
 
         key = (source, session)
-        if key in last_seq and seq <= last_seq[key]:
+        previous_seq = last_seq.get(key)
+        if previous_seq is not None and seq <= previous_seq:
             errors.append(
                 f"message {index}:seq: {source}/{session} sequence must increase "
-                f"strictly ({seq} <= {last_seq[key]})"
+                f"strictly ({seq} <= {previous_seq})"
             )
-        last_seq[key] = seq
+        else:
+            last_seq[key] = seq
         seen_seq.add((source, session, seq))
 
         if msg_type == "hello":
+            first_hello_for_session = session not in adapter_hello
             fingerprint = _payload_fingerprint(payload)
             previous = adapter_hello.get(session)
             if previous is not None and previous != fingerprint:
@@ -155,19 +171,12 @@ def validate_bridge_transcript(
             adapter_hello[session] = fingerprint
             capabilities = payload["capabilities"]
             adapter_capabilities[session] = capabilities
-            latest_adapter_session = session
-
-            display = capabilities["metadata_display"]
-            if display["supported"] and not display["fields"]:
-                errors.append(
-                    f"message {index}:payload.capabilities.metadata_display.fields: "
-                    "supported display must advertise at least one field"
-                )
-            if not display["supported"] and display["fields"]:
-                errors.append(
-                    f"message {index}:payload.capabilities.metadata_display.fields: "
-                    "unsupported display must advertise no fields"
-                )
+            if (
+                latest_adapter_session is None
+                or session == latest_adapter_session
+                or first_hello_for_session
+            ):
+                latest_adapter_session = session
 
         elif msg_type == "hello_ack":
             fingerprint = _payload_fingerprint(payload)
@@ -247,7 +256,7 @@ def validate_bridge_transcript(
                     )
                 else:
                     last_selection_counter[session] = counter
-                active_selection[session] = (counter, payload["machine_id"])
+                    active_selection[session] = (counter, payload["machine_id"])
 
             elif msg_type == "disc_removed":
                 counter = payload["selection_counter"]

@@ -157,7 +157,9 @@
 
 - Extended transcript validation from structural sequencing into capability contracts: observed detection methods, media controls, source switching, and now-playing support must match the sender's announced session capabilities.
 - Fixed selection-counter semantics so counters stay strictly monotonic across remove/reinsert cycles and state-sync cannot regress them.
-- Repeated `hello` / `hello_ack` announcements may support reconnects but cannot silently mutate identity/capabilities within one sender session.
+- Repeated `hello` / `hello_ack` announcements may support reconnects but cannot silently mutate identity/capabilities within one sender session; superseded adapter sessions stay retired even if a late repeated `hello` arrives.
+- Hardened transcript state handling so non-increasing sequences and reused selection counters report errors without lowering/replacing the last accepted sequence or active selection, preventing one bad event from masking later violations.
+- Moved metadata-display self-consistency into single-message validation as well as transcript validation, so the live host runtime rejects the same semantically invalid `hello` payloads as the offline checker.
 - Made acknowledgements reconnect-safe by requiring both peer `ack_session` and `ack_seq`; optional error references now use the same session+sequence pairing.
 - Added display-capability self-consistency checks, expanded bridge tests, and ADR 0009.
 
