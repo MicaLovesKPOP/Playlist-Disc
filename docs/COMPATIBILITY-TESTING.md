@@ -29,6 +29,12 @@ Research never changes a profile from `planned` to `partial`/`tested`, and it mu
 
 The first populated research set is `docs/research/ALFA-937.md`, mirrored into the Alfa 937 profile so future compatibility tooling can consume the same evidence machine-readably. Its conclusions deliberately stop before CAN IDs, changer frames, bus speeds, or other facts that require captures.
 
+## Coverage planning
+
+The three reference profiles are architectural anchors, not the breadth limit. Broader desk research is tracked by reusable head-unit and integration family in `docs/COMPATIBILITY-COVERAGE.md`. A family research note can cover many vehicle models without claiming that each one has been physically tested.
+
+Do not create concrete compatibility profiles merely to mirror commercial application lists. Add a profile when there is a specific head-unit/vehicle target that can eventually receive a structured physical report. The coverage plan defines P1/P2 research lanes and a stop rule so pre-hardware research spans the important direct-changer, vehicle-network, optical, and aftermarket integration classes without turning into an endless model catalog.
+
 ## Test reports
 
 A physical report records:
