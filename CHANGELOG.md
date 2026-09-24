@@ -37,6 +37,8 @@
 - Established actual checksum-valid program-duration extrema (97–341 seconds).
 - Added a pure-Python Goertzel DTMF decoder for the experimental repeated beacon.
 - Added synthetic attenuation, noise, clipping, filtering, redundancy, and silence tests.
+- Expanded beacon stress coverage across representative digit patterns, 8/16/48 kHz synthetic capture rates, mono 48 kHz WAV input, stronger seeded noise, corrupted repeats, and conflicting valid frames.
+- Broadened beacon capture ingestion from only 16-bit PCM to uncompressed 8/16/24/32-bit integer PCM WAV while keeping generated mastering WAVs unchanged at deterministic 16-bit stereo/44.1 kHz.
 - Added `pdv1 verify-build` to independently cross-check manifest, TOC, CD-TEXT, and audio-beacon identity.
 - Centralized Draft 0.2 build metadata and hardened virtual verification against stale draft labels, namespace/checksum/total-duration mismatches, duration-vector drift, TOC-signature drift, and the wrong beacon profile.
 - CI verifies generated bundles on Python 3.11–3.13 and runs the exhaustive encoding audit separately.

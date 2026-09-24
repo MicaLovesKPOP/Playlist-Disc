@@ -122,6 +122,8 @@ def write_beacon_wav(identity: PDIdentity, path: str | Path) -> Path:
     for value in mono:
         sample = max(-32768, min(32767, round(value * 32767)))
         pcm.extend((sample, sample))
+    if sys.byteorder != "little":
+        pcm.byteswap()
     with wave.open(str(path), "wb") as wav:
         wav.setnchannels(CHANNELS)
         wav.setsampwidth(SAMPLE_WIDTH)
@@ -257,8 +259,32 @@ def decode_beacon_samples(
     return BeaconDecodeResult(frames[0], len(frames), tokens)
 
 
+def _decode_pcm_samples(raw: bytes, sample_width: int) -> list[float]:
+    if sample_width not in {1, 2, 3, 4}:
+        raise ValueError(
+            "beacon decoder supports 8/16/24/32-bit uncompressed integer PCM WAV"
+        )
+    if len(raw) % sample_width:
+        raise ValueError("WAV PCM byte count is not divisible by sample width")
+
+    if sample_width == 1:
+        # WAV 8-bit PCM is unsigned; wider integer PCM is signed little-endian.
+        return [(value - 128) / 128.0 for value in raw]
+
+    denominator = float(1 << (sample_width * 8 - 1))
+    return [
+        int.from_bytes(
+            raw[offset : offset + sample_width],
+            byteorder="little",
+            signed=True,
+        )
+        / denominator
+        for offset in range(0, len(raw), sample_width)
+    ]
+
+
 def read_wav_mono(path: str | Path) -> tuple[list[float], int]:
-    """Read 16-bit PCM WAV into normalized mono floats."""
+    """Read uncompressed integer-PCM WAV into normalized mono floats."""
     with wave.open(str(path), "rb") as wav:
         channels = wav.getnchannels()
         sample_width = wav.getsampwidth()
@@ -266,23 +292,18 @@ def read_wav_mono(path: str | Path) -> tuple[list[float], int]:
         compression = wav.getcomptype()
         raw = wav.readframes(wav.getnframes())
 
-    if sample_width != 2 or compression != "NONE":
-        raise ValueError("beacon decoder currently requires uncompressed 16-bit PCM WAV")
+    if compression != "NONE":
+        raise ValueError("beacon decoder requires uncompressed integer PCM WAV")
     if channels < 1:
         raise ValueError("WAV has no audio channels")
 
-    pcm = array("h")
-    pcm.frombytes(raw)
-    if sys.byteorder != "little":
-        pcm.byteswap()
+    pcm = _decode_pcm_samples(raw, sample_width)
     if len(pcm) % channels:
         raise ValueError("WAV sample count is not divisible by channel count")
 
     mono: list[float] = []
     for index in range(0, len(pcm), channels):
-        mono.append(
-            sum(pcm[index : index + channels]) / (channels * 32768.0)
-        )
+        mono.append(sum(pcm[index : index + channels]) / channels)
     return mono, sample_rate
 
 

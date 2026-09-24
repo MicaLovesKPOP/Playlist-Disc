@@ -100,7 +100,7 @@ Frame symbols are:
 
 where `V` is version (`1`), `DDDDDD` is the six-digit identity, and `C` is the Damm digit. The reference waveform sends two identical frames. Track 1 remains exactly nine seconds long.
 
-Strong beacon recognition requires at least two matching, checksum-valid frames. The reference decoder uses activity segmentation plus Goertzel analysis and is tested against synthetic attenuation, noise, clipping, and basic band-limiting. Those software tests do not replace physical car-path validation.
+Strong beacon recognition requires at least two matching, checksum-valid frames. The reference decoder uses activity segmentation plus Goertzel analysis and is tested against synthetic attenuation, noise, clipping, basic band-limiting, common resampled capture rates, and repeated-frame corruption/conflict cases. Those software tests do not replace physical car-path validation.
 
 ## 7. Recognition safety
 

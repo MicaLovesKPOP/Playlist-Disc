@@ -26,11 +26,12 @@ The exhaustive audit also establishes the actual valid-ID program-duration extre
 The reference implementation can decode its own DTMF beacon using block-level activity detection and Goertzel frequency analysis. Tests exercise:
 
 - normal generated audio;
-- large attenuation;
-- additive seeded noise;
-- hard clipping;
-- simple high-pass/low-pass filtering;
-- the two-frame redundancy rule;
+- large attenuation and seeded additive noise;
+- hard clipping and simple high-pass/low-pass filtering;
+- linear resampling to common synthetic capture rates (8, 16, and 48 kHz);
+- decoding mono 48 kHz captures and 8/16/24/32-bit uncompressed integer PCM WAV input rather than only the generated 16-bit stereo master;
+- the two-frame redundancy rule, including corruption of one repeated frame;
+- conflicting individually valid frames fail closed instead of choosing a winner;
 - silence rejection.
 
 These are synthetic tests, not evidence that a particular car's analogue path will preserve the beacon. Physical testing is still required before the waveform can be frozen.
