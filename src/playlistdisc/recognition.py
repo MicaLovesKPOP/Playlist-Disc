@@ -67,21 +67,46 @@ def validate_recognition_result(
     if messages:
         return messages
 
+    evidence_identities: list[PDIdentity] = []
+    for index, item in enumerate(data["evidence"]):
+        try:
+            evidence_identities.append(PDIdentity.parse(item["machine_id"]))
+        except ValueError as exc:
+            messages.append(f"evidence.{index}.machine_id: {exc}")
+
     status = data["status"]
     has_identity = "machine_id" in data or "id" in data
+    claimed_identity: PDIdentity | None = None
     if status == "recognized":
         if "machine_id" not in data or "id" not in data:
             messages.append("machine_id/id: recognized result requires identity")
         else:
             try:
-                identity = PDIdentity.parse(data["machine_id"])
+                claimed_identity = PDIdentity.parse(data["machine_id"])
             except ValueError as exc:
                 messages.append(f"machine_id: {exc}")
             else:
-                if identity.id6 != data["id"]:
+                if claimed_identity.id6 != data["id"]:
                     messages.append("id: does not match machine_id")
-    elif has_identity:
-        messages.append("machine_id/id: non-recognized result must not claim identity")
+        if claimed_identity is not None and evidence_identities:
+            if any(
+                identity.number != claimed_identity.number
+                for identity in evidence_identities
+            ):
+                messages.append(
+                    "evidence: recognized result evidence must match the claimed identity"
+                )
+    else:
+        if has_identity:
+            messages.append("machine_id/id: non-recognized result must not claim identity")
+        if status == "unknown" and data["evidence"]:
+            messages.append("evidence: unknown result must not contain accepted identity evidence")
+        if status == "conflict":
+            distinct_identities = {identity.number for identity in evidence_identities}
+            if len(distinct_identities) < 2:
+                messages.append(
+                    "evidence: conflict result requires at least two distinct valid identities"
+                )
     return messages
 
 
